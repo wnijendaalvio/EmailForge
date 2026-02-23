@@ -187,12 +187,15 @@ with tab_template:
     )
     include_app_download = st.checkbox("Include app download module", value=True)
     include_usp = st.checkbox("Include USP module", value=False, help="Unique selling propositions: title + 3 feature rows with icons")
+    include_usp_feature = st.checkbox("Include USP feature module", value=False, help="Same content with text left, illustrative images right (two-column layout)")
     include_disclaimer = st.checkbox("Include disclaimer/terms module", value=False)
     modules = [hero_type]
     if include_app_download:
         modules.append("app_download_module")
     if include_usp:
         modules.append("usp_module")
+    if include_usp_feature:
+        modules.append("usp_feature_module")
     if include_disclaimer:
         modules.append("disclaimer_module")
 
