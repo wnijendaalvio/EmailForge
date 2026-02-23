@@ -42,6 +42,14 @@ The app will start and open in your browser at `http://localhost:8501`. If it do
 4. **Download** – Click **Download full_email_template.liquid** to save the file.
 5. **Preview** – Use the **📧 HTML preview** tab to see a rendered preview (English locale), or the **📝 Liquid source** tab to view the raw template.
 
+## Standard input template
+
+Use the **Standard input template** tab to:
+
+1. **Select modules** – Hero (simple or two-column) and optional app download module.
+2. **Edit standard links** – Terms, privacy, app download, social URLs. Save as `standard_links.json` in your project to customize.
+3. **Download** – A blank CSV template and `standard_links.json`. Fill in translations and links, then generate your Liquid template in the **Generate from CSV** tab.
+
 ## CSV format
 
 Use the structure from [SHEET_STRUCTURE_TRANSLATIONS.md](SHEET_STRUCTURE_TRANSLATIONS.md). The app supports:

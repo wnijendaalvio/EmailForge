@@ -7,7 +7,9 @@ Usage:
 """
 import argparse
 import csv
+import re
 import sys
+import tempfile
 from pathlib import Path
 
 # Locale columns in sheet order (Key is column 0). Must match Liquid locale_key.
@@ -18,6 +20,30 @@ LOCALE_COLUMNS = [
     "tr", "uk", "vi",
 ]
 
+# Locale presets for "which languages to include"
+LOCALE_PRESET_EN_ONLY = ["en"]
+LOCALE_PRESET_TOP_5 = ["en", "es", "fr", "ja", "ar", "pt-br"]  # EN + Spanish, French, Japanese, Arabic, Portuguese
+LOCALE_PRESET_GLOBAL = list(LOCALE_COLUMNS)
+
+
+def resolve_include_locales(
+    preset: str,
+    custom: list[str] | None = None,
+) -> list[str]:
+    """Resolve include_locales from preset name or custom list. Always includes 'en' if custom."""
+    if preset == "custom" and custom:
+        result = list(dict.fromkeys(custom))  # preserve order, dedupe
+        if "en" not in result:
+            result = ["en"] + result
+        return [l for l in result if l in LOCALE_COLUMNS]
+    if preset == "en_only":
+        return LOCALE_PRESET_EN_ONLY
+    if preset == "top_5":
+        return LOCALE_PRESET_TOP_5
+    if preset == "global":
+        return LOCALE_PRESET_GLOBAL
+    return LOCALE_PRESET_EN_ONLY
+
 TRANSLATABLE_KEYS = [
     "subject_line", "preheader", "headline", "headline_2", "secondary_headline",
     "body_1", "body_2", "cta_text",
@@ -25,11 +51,15 @@ TRANSLATABLE_KEYS = [
     "hero_two_col_body_1_h2", "hero_two_col_body_1_copy", "hero_two_col_body_2_h2", "hero_two_col_body_2_copy",
     "hero_two_col_body_3_h2", "hero_two_col_body_3_copy", "hero_two_col_body_4_h2", "hero_two_col_body_4_copy",
     "hero_two_col_cta_text",
+    "terms_title", "terms_desc_text", "terms_label", "privacy_label",
+    "usp_title", "usp_1_heading", "usp_1_copy", "usp_2_heading", "usp_2_copy",
+    "usp_3_heading", "usp_3_copy",
 ]
 STRUCTURE_KEYS = [
     "image_url", "image_url_mobile", "image_deeplink", "cta_link", "cta_alias",
     "app_store_rating", "google_play_rating", "app_download_colour",
     "hero_two_col_image_1_url", "hero_two_col_image_2_url", "hero_two_col_image_3_url", "hero_two_col_image_4_url",
+    "usp_1_icon_url", "usp_2_icon_url", "usp_3_icon_url",
 ]
 
 # Map (module, key) -> internal key for new CSV format with Module + module_index columns
@@ -72,6 +102,21 @@ MODULE_KEY_MAP = {
     ("app_download_module", "feature_3"): "app_download_feature_3",
     ("app_download_module", "colour"): "app_download_colour",
     ("app_download_module", "color"): "app_download_colour",
+    ("disclaimer_module", "terms_title"): "terms_title",
+    ("disclaimer_module", "terms_desc"): "terms_desc_text",
+    ("disclaimer_module", "terms_desc_text"): "terms_desc_text",
+    ("disclaimer_module", "terms_label"): "terms_label",
+    ("disclaimer_module", "privacy_label"): "privacy_label",
+    ("usp_module", "title"): "usp_title",
+    ("usp_module", "usp_1_heading"): "usp_1_heading",
+    ("usp_module", "usp_1_copy"): "usp_1_copy",
+    ("usp_module", "usp_1_icon_url"): "usp_1_icon_url",
+    ("usp_module", "usp_2_heading"): "usp_2_heading",
+    ("usp_module", "usp_2_copy"): "usp_2_copy",
+    ("usp_module", "usp_2_icon_url"): "usp_2_icon_url",
+    ("usp_module", "usp_3_heading"): "usp_3_heading",
+    ("usp_module", "usp_3_copy"): "usp_3_copy",
+    ("usp_module", "usp_3_icon_url"): "usp_3_icon_url",
 }
 
 PLACEHOLDER_DESIGN_TOKENS = "{{ DESIGN_TOKENS }}"
@@ -82,7 +127,76 @@ PLACEHOLDER_IMAGE_ROW = "{{ IMAGE_ROW }}"
 PLACEHOLDER_ROWS_BELOW_IMAGE = "{{ ROWS_BELOW_IMAGE }}"
 PLACEHOLDER_HERO_TWO_COLUMN_MODULE = "{{ HERO_TWO_COLUMN_MODULE }}"
 PLACEHOLDER_APP_DOWNLOAD_MODULE = "{{ APP_DOWNLOAD_MODULE }}"
+PLACEHOLDER_USP_MODULE = "{{ USP_MODULE }}"
 PLACEHOLDER_CONFIG = "{{ CONFIG_BLOCK }}"
+PLACEHOLDER_LINKS = "{{ LINKS_BLOCK }}"
+PLACEHOLDER_TERMS_DEFAULTS = "{{ TERMS_DEFAULTS_BLOCK }}"
+
+# Rows for each module in standard input template (csv_key, en_placeholder).
+# Structure keys get link hints; translatable get empty or example.
+MODULE_TEMPLATE_ROWS = {
+    "hero_module": [
+        ("subject_line", ""),
+        ("preheader", ""),
+        ("headline", ""),
+        ("body_1", ""),
+        ("body_2", ""),
+        ("cta_text", ""),
+        ("image_url", ""),
+        ("image_url_mobile", ""),
+        ("image_deeplink", ""),
+        ("cta_link", ""),
+        ("cta_alias", "hero-cta"),
+    ],
+    "hero_module_two_column": [
+        ("subject_line", ""),
+        ("preheader", ""),
+        ("headline", ""),
+        ("subheadline", ""),
+        ("body_1_h2", ""),
+        ("body_1_copy", ""),
+        ("image_1_URL", ""),
+        ("body_2_h2", ""),
+        ("body_2_copy", ""),
+        ("image_2_URL", ""),
+        ("body_3_h2", ""),
+        ("body_3_copy", ""),
+        ("image_3_URL", ""),
+        ("body_4_h2", ""),
+        ("body_4_copy", ""),
+        ("image_4_URL", ""),
+        ("cta_text", ""),
+        ("hero_image_url", ""),
+        ("image_deeplink", ""),
+        ("cta_link", ""),
+        ("cta_alias", "hero-cta"),
+    ],
+    "app_download_module": [
+        ("headline", ""),
+        ("feature_1", ""),
+        ("feature_2", ""),
+        ("feature_3", ""),
+        ("colour", "#fcf7f5"),
+    ],
+    "disclaimer_module": [
+        ("terms_title", ""),
+        ("terms_desc", ""),
+        ("terms_label", ""),
+        ("privacy_label", ""),
+    ],
+    "usp_module": [
+        ("title", "How Vio helps you book like an insider"),
+        ("usp_1_heading", "Compare prices across 100+ sites"),
+        ("usp_1_copy", "See the full picture upfront. No guessing, no bouncing between tabs."),
+        ("usp_1_icon_url", ""),
+        ("usp_2_heading", "Know exactly when to book"),
+        ("usp_2_copy", "Price insights show you the right moment to secure your deal."),
+        ("usp_2_icon_url", ""),
+        ("usp_3_heading", "Stay ahead of price changes"),
+        ("usp_3_copy", "We track prices so you don't have to keep checking."),
+        ("usp_3_icon_url", ""),
+    ],
+}
 
 
 def _load_design_tokens() -> str:
@@ -116,13 +230,56 @@ def _normalise_url(url: str) -> str:
     return url
 
 
-def load_translations(csv_path: Path) -> tuple[dict[str, dict[str, str]], dict[str, str]]:
+def get_csv_locales(csv_path: Path) -> list[str]:
+    """Infer locale columns from CSV headers. Returns locale codes found, in LOCALE_COLUMNS order."""
+    with open(csv_path, newline="", encoding="utf-8-sig") as f:
+        if csv_path.suffix.lower() == ".tsv":
+            reader = csv.DictReader(f, delimiter="\t")
+        else:
+            sample = f.read(4096)
+            f.seek(0)
+            try:
+                dialect = csv.Sniffer().sniff(sample, delimiters=",\t")
+            except csv.Error:
+                dialect = csv.excel
+            reader = csv.DictReader(f, dialect=dialect)
+        fields = reader.fieldnames or []
+    use_module_format = (
+        len(fields) >= 3
+        and (fields[1] or "").strip().lower() == "module"
+        and (fields[2] or "").strip().lower().replace(" ", "") == "module_index"
+    )
+    locale_start = 3 if use_module_format else 1
+    locale_headers = [h for h in fields[locale_start:] if (h or "").strip()]
+    header_norms = {h.strip(): h for h in locale_headers}
+    found: list[str] = []
+    for loc in LOCALE_COLUMNS:
+        norm = loc.replace("-", "_").lower()
+        for key in header_norms:
+            knorm = key.lower().replace("-", "_").replace(" ", "")
+            if loc == key or norm == knorm:
+                found.append(loc)
+                break
+    if not found and locale_headers:
+        for i, h in enumerate(locale_headers):
+            hc = (h or "").strip()
+            if hc in LOCALE_COLUMNS:
+                found.append(hc)
+    return found if found else ["en"]
+
+
+def load_translations(
+    csv_path: Path,
+    include_locales: list[str] | None = None,
+) -> tuple[dict[str, dict[str, str]], dict[str, str]]:
     """
     Read CSV or TSV. Supports two formats:
     A) Legacy: Key, en, ar, ... (locale columns at index 1+)
     B) New: Key, Module, module_index, en, ar, ... (locale columns at index 3+)
+    include_locales: if None, infers from CSV headers via get_csv_locales.
     Return (translations[key][locale] = value, structure[key] = single_value).
     """
+    locales = include_locales or get_csv_locales(csv_path)
     translations: dict[str, dict[str, str]] = {}
     structure: dict[str, str] = {}
     with open(csv_path, newline="", encoding="utf-8-sig") as f:
@@ -139,19 +296,26 @@ def load_translations(csv_path: Path) -> tuple[dict[str, dict[str, str]], dict[s
         if not reader.fieldnames:
             return translations, structure
         fields = reader.fieldnames
-        # Detect format: new format has Module and module_index as columns 1 and 2
         use_module_format = (
             len(fields) >= 3
             and (fields[1] or "").strip().lower() == "module"
             and (fields[2] or "").strip().lower().replace(" ", "") == "module_index"
         )
         locale_start = 3 if use_module_format else 1
+        locale_headers = fields[locale_start:]
         locale_to_header: dict[str, str] = {}
-        for i, loc in enumerate(LOCALE_COLUMNS):
-            idx = locale_start + i
-            if idx < len(fields):
-                locale_to_header[loc] = fields[idx]
-
+        for loc in locales:
+            for h in locale_headers:
+                if not h:
+                    continue
+                hnorm = h.strip().lower().replace(" ", "").replace("_", "-")
+                if loc == hnorm or loc.replace("-", "_") == hnorm.replace("-", "_"):
+                    locale_to_header[loc] = h
+                    break
+            if loc not in locale_to_header and loc in LOCALE_COLUMNS:
+                idx = LOCALE_COLUMNS.index(loc)
+                if idx < len(locale_headers) and (locale_headers[idx] or "").strip():
+                    locale_to_header[loc] = locale_headers[idx].strip()
         key_col = fields[0]
         module_col = fields[1] if use_module_format and len(fields) >= 2 else None
 
@@ -161,23 +325,22 @@ def load_translations(csv_path: Path) -> tuple[dict[str, dict[str, str]], dict[s
                 continue
             module_raw = (row.get(module_col, "") or "").strip().lower().replace(" ", "") if module_col else ""
             values_by_locale: dict[str, str] = {}
-            for loc in LOCALE_COLUMNS:
+            for loc in locales:
                 header = locale_to_header.get(loc)
                 val = (row.get(header, "") if header else "").strip()
                 values_by_locale[loc] = val
 
-            # Resolve internal key
             if use_module_format and module_raw:
                 internal_key = MODULE_KEY_MAP.get((module_raw, key_raw))
                 if internal_key is None:
                     internal_key = MODULE_KEY_MAP.get((module_raw, key_raw.replace("_", "")))
                 if internal_key is None:
-                    continue  # Skip unmapped rows
+                    continue
             else:
                 internal_key = key_raw
 
             if internal_key in STRUCTURE_KEYS:
-                for loc in LOCALE_COLUMNS:
+                for loc in locales:
                     v = values_by_locale.get(loc, "").strip()
                     if v:
                         structure[internal_key] = v
@@ -186,15 +349,20 @@ def load_translations(csv_path: Path) -> tuple[dict[str, dict[str, str]], dict[s
                     structure[internal_key] = values_by_locale.get("en", "").strip()
             else:
                 en_val = values_by_locale.get("en", "").strip()
-                for loc in LOCALE_COLUMNS:
+                for loc in locales:
                     if not values_by_locale.get(loc, "").strip():
                         values_by_locale[loc] = en_val
                 translations[internal_key] = values_by_locale
     return translations, structure
 
 
-def build_content_captures(translations: dict[str, dict[str, str]]) -> str:
-    """Generate Liquid {% capture key %} {% case locale_key %} ... {% endcapture %} for each key."""
+def build_content_captures(
+    translations: dict[str, dict[str, str]],
+    include_locales: list[str] | None = None,
+) -> str:
+    """Generate Liquid {% capture key %} {% case locale_key %} ... {% endcapture %} for each key.
+    include_locales: only output when clauses for these locales (default: all LOCALE_COLUMNS)."""
+    locales = include_locales or LOCALE_COLUMNS
     lines = []
     for key in TRANSLATABLE_KEYS:
         if key not in translations:
@@ -202,8 +370,8 @@ def build_content_captures(translations: dict[str, dict[str, str]]) -> str:
         vals = translations[key]
         lines.append("{%- capture " + key + " -%}")
         lines.append("  {%- case locale_key -%}")
-        for loc in LOCALE_COLUMNS:
-            v = vals.get(loc, "").strip()
+        for loc in locales:
+            v = vals.get(loc, "").strip() or vals.get("en", "").strip()
             v_esc = _escape_liquid_raw(v)
             lines.append('    {%- when "' + loc + '" -%}' + v_esc)
         lines.append('    {%- else -%}' + _escape_liquid_raw(vals.get("en", "").strip()))
@@ -490,6 +658,56 @@ def build_hero_two_column_module(translations: dict[str, dict[str, str]], struct
 {{%- endif -%}}'''
 
 
+def build_usp_module(translations: dict[str, dict[str, str]], structure: dict[str, str]) -> str:
+    """USP module: title + 3 feature rows (icon, heading, copy). width 600, padding s800, gap 24, border-radius lg."""
+    if "usp_title" not in translations:
+        return ""
+    icon1 = _normalise_url(structure.get("usp_1_icon_url") or "")
+    icon2 = _normalise_url(structure.get("usp_2_icon_url") or "")
+    icon3 = _normalise_url(structure.get("usp_3_icon_url") or "")
+    # Placeholder icons when none provided (80x80 frame, light purple bg)
+    placeholder = "https://placehold.co/80/f2e5ff/7130c9?text=•"
+    icon1 = icon1 or placeholder
+    icon2 = icon2 or placeholder
+    icon3 = icon3 or placeholder
+
+    def _usp_row(icon_url: str, heading_var: str, copy_var: str) -> str:
+        return f'''            <tr>
+              <td valign="top" style="padding:0 {{{{ token_space_600 }}}} {{{{ token_space_600 }}}} 0;vertical-align:top;width:80px;">
+                <img src="{_html_escape(icon_url)}" alt="" width="80" height="80" style="display:block;max-width:80px;max-height:80px;object-fit:contain;" />
+              </td>
+              <td valign="top" style="padding:0 0 {{{{ token_space_600 }}}} 0;vertical-align:top;">
+                <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_primary }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {heading_var} | strip }}}}</p>
+                <p style="margin:4px 0 0 0;font-family:{{{{ token_font_stack }}}};font-weight:400;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_body }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {copy_var} | strip }}}}</p>
+              </td>
+            </tr>'''
+
+    return f'''{{%- if usp_title != blank -%}}
+<tr><td style="padding:0;vertical-align:top;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="email-usp-module" style="width:600px;max-width:100%;margin-top:{{{{ token_space_600 }}}};background-color:{{{{ token_neutral_c050 }}}};padding:{{{{ token_space_800 }}}};border-radius:{{{{ token_radius_module }}}};box-sizing:border-box;">
+  <tbody>
+    <tr>
+      <td align="center" style="padding:0 0 {{{{ token_space_600 }}}} 0;">
+        <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:24px;line-height:32px;letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_accent }}}};text-align:center;direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ usp_title | strip }}}}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+          <tbody>
+{_usp_row(icon1, "usp_1_heading", "usp_1_copy")}
+{_usp_row(icon2, "usp_2_heading", "usp_2_copy")}
+{_usp_row(icon3, "usp_3_heading", "usp_3_copy")}
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</td></tr>
+{{%- endif -%}}'''
+
+
 def build_config_block(
     show_header_logo: str = "TRUE",
     show_footer: str = "TRUE",
@@ -510,6 +728,242 @@ def build_config_block(
 {{%- comment -%}} App download colour toggle: write LIGHT or DARK (or override via app_download_colour_preset merge field) {{%- endcomment -%}}
 {{%- assign app_download_colour_toggle = "{norm_preset(app_download_colour_preset)}" -%}}
 {{%- assign app_download_colour_preset = app_download_colour_preset | default: app_download_colour_toggle | upcase | strip -%}}'''
+
+
+DEFAULT_LINKS = {
+    "app_download_page": "https://app.vio.com/v0HW",
+    "homepage": "https://www.vio.com",
+    "terms_of_use": "https://www.vio.com/terms-of-use",
+    "privacy_policy": "https://www.vio.com/privacy-policy",
+    "booking_page": "https://app.vio.com",
+    "notification_preferences": "{{snippets.vio_notification_preferences}}",
+    "notification_preferences_unsubscribe": "{{snippets.vio_notification_preferences_unsubscribe}}",
+    "instagram": "https://www.instagram.com/vio.com.travel",
+    "facebook": "https://www.facebook.com/viodotcom",
+    "linkedin": "https://www.linkedin.com/company/viodotcom/",
+}
+
+
+def load_standard_links(config_path: Path | None = None) -> dict[str, str]:
+    """Load links from standard_links.json. Returns DEFAULT_LINKS if file missing or invalid."""
+    import json
+    path = config_path or Path(__file__).parent / "standard_links.json"
+    if not path.exists():
+        return dict(DEFAULT_LINKS)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data.get("links"), dict):
+            return {k: v.get("url", v) if isinstance(v, dict) else v for k, v in data["links"].items()}
+        return dict(DEFAULT_LINKS) | {k: v for k, v in data.items() if isinstance(v, str)}
+    except (json.JSONDecodeError, TypeError):
+        return dict(DEFAULT_LINKS)
+
+
+def build_terms_defaults_block() -> str:
+    """Build Liquid block with conditional defaults for terms_title, terms_label, privacy_label, terms_desc_text.
+    Only applies when variable is blank (i.e. user did not provide custom text in CSV)."""
+    liquid_path = Path(__file__).parent / "full_email_template.liquid"
+    if not liquid_path.exists():
+        # Minimal fallback when full_email_template not yet generated
+        return """{%- if terms_title == blank -%}{%- capture terms_title -%}Terms and Privacy Policy{%- endcapture -%}{%- endif -%}
+{%- if terms_label == blank -%}{%- capture terms_label -%}Terms{%- endcapture -%}{%- endif -%}
+{%- if privacy_label == blank -%}{%- capture privacy_label -%}Privacy Policy{%- endcapture -%}{%- endif -%}
+{%- if terms_desc_text == blank -%}{%- capture terms_desc_text -%}This booking is covered by our {terms} and {privacyPolicy}.{%- endcapture -%}{%- endif -%}"""
+    text = liquid_path.read_text(encoding="utf-8")
+    # Extract the 4 captures (excl. terms_link, privacy_link which we add separately)
+    blocks = re.findall(
+        r'(\{%- capture (terms_title|terms_label|privacy_label|terms_desc_text) -%\}.+?\{%- endcapture -%\})',
+        text,
+        re.DOTALL,
+    )
+    if len(blocks) != 4:
+        return "{%- comment -%}terms defaults fallback{%- endcomment -%}"
+    out = []
+    for block, name in blocks:
+        var = name.strip()
+        out.append(f'{{%- if {var} == blank -%}}{block}{{%- endif -%}}')
+    return "\n".join(out)
+
+
+def build_links_block(links: dict[str, str] | None = None) -> str:
+    """Build Liquid assigns for standard links. Uses DEFAULT_LINKS for any missing keys."""
+    import json
+    merged = dict(DEFAULT_LINKS)
+    if links:
+        merged.update(links)
+    elif (path := Path(__file__).parent / "standard_links.json").exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data.get("links"), dict):
+                merged.update({k: v.get("url", v) if isinstance(v, dict) else v for k, v in data["links"].items()})
+            else:
+                merged.update({k: v for k, v in data.items() if isinstance(v, str)})
+        except (json.JSONDecodeError, TypeError):
+            pass
+    lines = []
+    for key, url in merged.items():
+        if not isinstance(url, str):
+            continue
+        # Liquid: escape double quotes in URL
+        escaped = url.replace('\\', '\\\\').replace('"', '\\"')
+        var_name = key.replace(".", "_").replace("-", "_")
+        lines.append(f'{{%- assign link_{var_name} = "{escaped}" -%}}')
+    return "\n".join(lines)
+
+
+# Placeholder content for module preview (sample text + placeholder images)
+_PREVIEW_PLACEHOLDERS = {
+    "hero_module": {
+        "subject_line": "Preview",
+        "preheader": "Preview text",
+        "headline": "Your headline here",
+        "body_1": "Body copy goes here. Replace with your message.",
+        "body_2": "Second paragraph of body text.",
+        "cta_text": "Call to action",
+        "image_url": "https://placehold.co/728x400/fcf7f5/615a56?text=Hero+image",
+        "image_deeplink": "#",
+        "cta_link": "#",
+        "cta_alias": "hero-cta",
+    },
+    "hero_module_two_column": {
+        "subject_line": "Preview",
+        "preheader": "Preview",
+        "headline": "Your main headline",
+        "subheadline": "Subheadline",
+        "body_1_h2": "Feature one",
+        "body_1_copy": "Description for this feature block.",
+        "image_1_URL": "https://placehold.co/260x180/fcf7f5/615a56?text=1",
+        "body_2_h2": "Feature two",
+        "body_2_copy": "Description for the second block.",
+        "image_2_URL": "https://placehold.co/260x180/fcf7f5/615a56?text=2",
+        "body_3_h2": "Feature three",
+        "body_3_copy": "Description for the third block.",
+        "image_3_URL": "https://placehold.co/260x180/fcf7f5/615a56?text=3",
+        "body_4_h2": "Feature four",
+        "body_4_copy": "Description for the fourth block.",
+        "image_4_URL": "https://placehold.co/260x180/fcf7f5/615a56?text=4",
+        "cta_text": "Call to action",
+        "hero_image_url": "https://placehold.co/728x400/fcf7f5/615a56?text=Hero",
+        "image_deeplink": "#",
+        "cta_link": "#",
+        "cta_alias": "hero-cta",
+    },
+    "app_download_module": {
+        "headline": "<b>Stay in the loop</b> on the app",
+        "feature_1": "Find extra savings",
+        "feature_2": "Manage your reservations",
+        "feature_3": "Track prices",
+        "colour": "#fcf7f5",
+    },
+    "disclaimer_module": {
+        "terms_title": "Terms and Privacy Policy",
+        "terms_desc": "This booking is covered by our {terms} and {privacyPolicy}.",
+        "terms_label": "Terms",
+        "privacy_label": "Privacy Policy",
+    },
+    "usp_module": {
+        "title": "How Vio helps you book like an insider",
+        "usp_1_heading": "Compare prices across 100+ sites",
+        "usp_1_copy": "See the full picture upfront. No guessing, no bouncing between tabs.",
+        "usp_1_icon_url": "https://placehold.co/80/f2e5ff/7130c9?text=1",
+        "usp_2_heading": "Know exactly when to book",
+        "usp_2_copy": "Price insights show you the right moment to secure your deal.",
+        "usp_2_icon_url": "https://placehold.co/80/f2e5ff/7130c9?text=2",
+        "usp_3_heading": "Stay ahead of price changes",
+        "usp_3_copy": "We track prices so you don't have to keep checking.",
+        "usp_3_icon_url": "https://placehold.co/80/f2e5ff/7130c9?text=3",
+    },
+}
+
+
+def get_module_preview_html(
+    modules: list[str],
+    *,
+    app_download_colour_preset: str = "LIGHT",
+) -> str:
+    """
+    Generate HTML preview of selected modules with placeholder content.
+    Used in Streamlit to show users what their template will look like.
+    """
+    if not modules:
+        return "<p style='padding:20px;color:#615a56;'>Select modules to see a preview.</p>"
+    # Build CSV with placeholder content for selected modules
+    rows: list[tuple[str, str, int, str]] = []  # (Key, Module, module_index, en)
+    module_indices: dict[str, int] = {}
+    for mod in modules:
+        if mod not in MODULE_TEMPLATE_ROWS or mod not in _PREVIEW_PLACEHOLDERS:
+            continue
+        idx = module_indices.get(mod, len(module_indices) + 1)
+        module_indices[mod] = idx
+        placeholders = _PREVIEW_PLACEHOLDERS[mod]
+        for csv_key, _ in MODULE_TEMPLATE_ROWS[mod]:
+            val = placeholders.get(csv_key, placeholders.get(csv_key.replace("_", ""), ""))
+            rows.append((csv_key, mod, str(idx), val))
+    if not rows:
+        return "<p style='padding:20px;color:#615a56;'>Select modules to see a preview.</p>"
+    headers = ["Key", "Module", "module_index", "en"]
+    out = [headers] + [[r[0], r[1], r[2], r[3]] for r in rows]
+    writer = csv.StringIO()
+    csv.writer(writer).writerows(out)
+    csv_content = writer.getvalue()
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+        f.write(csv_content)
+        tmp_path = Path(f.name)
+    try:
+        show_terms = "disclaimer_module" in modules
+        result = generate_template(
+            tmp_path,
+            show_header_logo="FALSE",
+            show_footer="FALSE",
+            show_terms="TRUE" if show_terms else "FALSE",
+            app_download_colour_preset=app_download_colour_preset,
+        )
+        translations, structure = load_translations(tmp_path)
+        html = liquid_to_preview_html(
+            result,
+            translations,
+            structure,
+            show_header_logo=False,
+            show_footer=False,
+            show_terms=show_terms,
+        )
+        return html
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+def generate_standard_input_template(
+    modules: list[str],
+    *,
+    include_locales: list[str] | None = None,
+) -> tuple[str, dict[str, str]]:
+    """
+    Generate a blank CSV template and links config for the selected modules.
+    modules: e.g. ["hero_module_two_column", "app_download_module"] or ["hero_module"]
+    include_locales: locale columns to add (default: ["en"] only for minimal template)
+    Returns (csv_content, links_dict).
+    """
+    import json
+    locales = include_locales or ["en"]
+    rows: list[tuple[str, str, int, list[str]]] = []  # (Key, Module, module_index, [en, ...])
+    module_indices: dict[str, int] = {}
+    for mod in modules:
+        if mod not in MODULE_TEMPLATE_ROWS:
+            continue
+        idx = module_indices.get(mod, len(module_indices) + 1)
+        module_indices[mod] = idx
+        for csv_key, placeholder in MODULE_TEMPLATE_ROWS[mod]:
+            vals = [placeholder if i == 0 else "" for i in range(len(locales))]
+            rows.append((csv_key, mod, idx, vals))
+    headers = ["Key", "Module", "module_index"] + locales
+    out = [headers]
+    for key, mod, idx, vals in rows:
+        out.append([key, mod, str(idx)] + vals)
+    writer = csv.StringIO()
+    csv_writer = csv.writer(writer)
+    csv_writer.writerows(out)
+    links = load_standard_links()
+    return writer.getvalue(), links
 
 
 BASE_TEMPLATE = r'''{%- comment -%}
@@ -558,7 +1012,8 @@ FULL EMAIL HTML (multi-locale from translations CSV)
 {%- if locale_key == "ar" or locale_key == "he" -%}{%- assign headline_align = "right" -%}{%- endif -%}
 {%- assign align = "left" -%}
 {%- if locale_key == "ar" or locale_key == "he" -%}{%- assign align = "right" -%}{%- endif -%}
-{%- assign app_deeplink_url = app_deeplink_url | default: "https://www.vio.com/app" -%}
+''' + PLACEHOLDER_LINKS + '''
+{%- assign app_deeplink_url = app_deeplink_url | default: link_app_download_page -%}
 ''' + PLACEHOLDER_DESIGN_TOKENS + '''
 
 ''' + PLACEHOLDER_CONFIG + '''
@@ -654,172 +1109,9 @@ FULL EMAIL HTML (multi-locale from translations CSV)
 {%- capture unsub_open -%}<a href="{{snippets.vio_notification_preferences_unsubscribe}}" class="untracked" style="color:inherit;text-decoration:underline !important" target="_blank">{%- endcapture -%}
 {%- capture unsub_close -%}</a>{%- endcapture -%}
 {%- assign footer_prefs_html = footer_prefs_text | replace: "<emailPreferences>", email_prefs_open | replace: "</emailPreferences>", email_prefs_close | replace: "<unsubscribe>", unsub_open | replace: "</unsubscribe>", unsub_close -%}
-{%- capture terms_title -%}
-  {%- case locale_key -%}
-    {%- when "ar" -%}الشروط وسياسة الخصوصية
-    {%- when "zh-cn" -%}条款和隐私政策
-    {%- when "zh-tw" -%}條款和私隱政策
-    {%- when "zh-hk" -%}條款及私隱政策
-    {%- when "hr" -%}Uvjeti i politika privatnosti
-    {%- when "cs" -%}Podmínky a zásady ochrany osobních údajů
-    {%- when "da" -%}Vilkår og Privatlivspolitik
-    {%- when "nl" -%}Algemene voorwaarden en privacybeleid
-    {%- when "en-gb" -%}Terms and Privacy Policy
-    {%- when "en" -%}Terms and Privacy Policy
-    {%- when "fil" -%}Mga Tuntunin at Patakaran sa Privacy
-    {%- when "fi" -%}Ehdot ja tietosuojakäytäntö
-    {%- when "fr" -%}Conditions générales et Politique de confidentialité
-    {%- when "fr-ca" -%}Conditions et politique de confidentialité
-    {%- when "de" -%}Bedingungen und Richtlinien
-    {%- when "el" -%}Όρους και Πολιτική απορρήτου
-    {%- when "he" -%}התנאים ומדיניות הפרטיות
-    {%- when "hu" -%}Felhasználási feltételek és adatvédelmi szabályzat
-    {%- when "id" -%}Ketentuan dan Kebijakan Privasi
-    {%- when "it" -%}Termini e Policy
-    {%- when "ja" -%}規約とプライバシーポリシー
-    {%- when "ko" -%}이용 약관 및 개인정보 보호정책
-    {%- when "ms" -%}Terma dan Dasar Privasi
-    {%- when "no" -%}Vilkår og personvernpolicy
-    {%- when "pl" -%}Warunki i Polityka prywatności
-    {%- when "pt" -%}Termos e Política de Privacidade
-    {%- when "pt-br" -%}Termos e Política de Privacidade
-    {%- when "ro" -%}Termeni și politica de confidențialitate
-    {%- when "ru" -%}Условия и политика конфиденциальности
-    {%- when "es" -%}Términos y política de privacidad
-    {%- when "es-419" -%}Términos y Política de privacidad
-    {%- when "sv" -%}Villkor och Integritetspolicy
-    {%- when "th" -%}ข้อกำหนดและนโยบายความเป็นส่วนตัว
-    {%- when "tr" -%}Koşullar ve Gizlilik Politikası
-    {%- when "uk" -%}Умови та політика конфіденційності
-    {%- when "vi" -%}Điều khoản và Chính sách bảo mật
-    {%- else -%}Terms and Privacy Policy
-  {%- endcase -%}
-{%- endcapture -%}
-{%- capture terms_label -%}
-  {%- case locale_key -%}
-    {%- when "ar" -%}الشروط
-    {%- when "zh-cn" -%}条款
-    {%- when "zh-tw" -%}條款
-    {%- when "zh-hk" -%}條款
-    {%- when "hr" -%}Uvjeti
-    {%- when "cs" -%}Podmínky
-    {%- when "da" -%}Vilkår
-    {%- when "nl" -%}voorwaarden
-    {%- when "en-gb" -%}Terms
-    {%- when "en" -%}Terms
-    {%- when "fil" -%}Mga Tuntunin
-    {%- when "fi" -%}Ehdot
-    {%- when "fr" -%}Conditions
-    {%- when "fr-ca" -%}Conditions
-    {%- when "de" -%}Bedingungen
-    {%- when "el" -%}Όρους
-    {%- when "he" -%}התנאים
-    {%- when "hu" -%}Feltételek
-    {%- when "id" -%}Ketentuan
-    {%- when "it" -%}Termini
-    {%- when "ja" -%}規約
-    {%- when "ko" -%}이용 약관
-    {%- when "ms" -%}Terma
-    {%- when "no" -%}Vilkår
-    {%- when "pl" -%}Warunki
-    {%- when "pt" -%}Termos
-    {%- when "pt-br" -%}Termos
-    {%- when "ro" -%}Termeni
-    {%- when "ru" -%}Условия
-    {%- when "es" -%}Términos
-    {%- when "es-419" -%}Términos
-    {%- when "sv" -%}Villkor
-    {%- when "th" -%}ข้อกำหนด
-    {%- when "tr" -%}Koşullar
-    {%- when "uk" -%}Умови
-    {%- when "vi" -%}Điều khoản
-    {%- else -%}Terms
-  {%- endcase -%}
-{%- endcapture -%}
-{%- capture privacy_label -%}
-  {%- case locale_key -%}
-    {%- when "ar" -%}سياسة الخصوصية
-    {%- when "zh-cn" -%}隐私政策
-    {%- when "zh-tw" -%}私隱政策
-    {%- when "zh-hk" -%}私隱政策
-    {%- when "hr" -%}politika privatnosti
-    {%- when "cs" -%}zásady ochrany osobních údajů
-    {%- when "da" -%}Privatlivspolitik
-    {%- when "nl" -%}privacybeleid
-    {%- when "en-gb" -%}Privacy Policy
-    {%- when "en" -%}Privacy Policy
-    {%- when "fil" -%}Patakaran sa Privacy
-    {%- when "fi" -%}tietosuojakäytäntö
-    {%- when "fr" -%}Politique de confidentialité
-    {%- when "fr-ca" -%}politique de confidentialité
-    {%- when "de" -%}Datenschutzrichtlinie
-    {%- when "el" -%}Πολιτική απορρήτου
-    {%- when "he" -%}מדיניות הפרטיות
-    {%- when "hu" -%}adatvédelmi szabályzat
-    {%- when "id" -%}Kebijakan Privasi
-    {%- when "it" -%}Informativa sulla privacy
-    {%- when "ja" -%}プライバシーポリシー
-    {%- when "ko" -%}개인정보 보호정책
-    {%- when "ms" -%}Dasar Privasi
-    {%- when "no" -%}personvernpolicy
-    {%- when "pl" -%}Polityka prywatności
-    {%- when "pt" -%}Política de Privacidade
-    {%- when "pt-br" -%}Política de Privacidade
-    {%- when "ro" -%}politica de confidențialitate
-    {%- when "ru" -%}политика конфиденциальности
-    {%- when "es" -%}política de privacidad
-    {%- when "es-419" -%}Política de privacidad
-    {%- when "sv" -%}Integritetspolicy
-    {%- when "th" -%}นโยบายความเป็นส่วนตัว
-    {%- when "tr" -%}Gizlilik Politikası
-    {%- when "uk" -%}політика конфіденційності
-    {%- when "vi" -%}Chính sách bảo mật
-    {%- else -%}Privacy Policy
-  {%- endcase -%}
-{%- endcapture -%}
-{%- capture terms_link -%}<a href="https://www.vio.com/terms-of-use" target="_blank" style="color:{{ token_text_muted }};text-decoration:underline !important">{{ terms_label | strip }}</a>{%- endcapture -%}
-{%- capture privacy_link -%}<a href="https://www.vio.com/privacy-policy" target="_blank" style="color:{{ token_text_muted }};text-decoration:underline !important">{{ privacy_label | strip }}</a>{%- endcapture -%}
-{%- capture terms_desc_text -%}
-  {%- case locale_key -%}
-    {%- when "ar" -%}يعالج Vio.com حجزك ويساعدك فيه. يخضع هذا الحجز لـ {terms} و {privacyPolicy} الخاصة بنا.
-    {%- when "zh-cn" -%}Vio.com 会处理预订并协助您完成。此预订适用我们的{terms}和{privacyPolicy}。
-    {%- when "zh-tw" -%}Vio.com 處理並協助您完成預訂。我們的 {terms} 和 {privacyPolicy} 承保此預訂。
-    {%- when "zh-hk" -%}Vio.com 處理並協助您完成預訂。此預訂由我們的 {terms} 和 {privacyPolicy} 承保。
-    {%- when "hr" -%}Vio.com obrađuje i pomaže s vašom rezervacijom. Ova rezervacija pokrivena je našim {terms} i {privacyPolicy}.
-    {%- when "cs" -%}Vio.com zpracovává a vyřizuje vaši rezervaci, na kterou se vztahují naše {terms} a {privacyPolicy}.
-    {%- when "da" -%}Vio.com behandler og hjælper med din booking. Denne booking er dækket af vores {terms} og {privacyPolicy}.
-    {%- when "nl" -%}Vio.com verwerkt je boeking en helpt je daarbij. Onze {terms} en ons {privacyPolicy} zijn van toepassing op deze boeking.
-    {%- when "en-gb" -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
-    {%- when "en" -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
-    {%- when "fil" -%}Pinoproseso at tinutulungan ka ng Vio.com sa pagbu-book mo. Saklaw ng aming {terms} at {privacyPolicy} ang booking na ito.
-    {%- when "fi" -%}Vio.com käsittelee varauksesi ja auttaa sen kanssa. {terms} ja {privacyPolicy} koskevat tätä varausta.
-    {%- when "fr" -%}Vio.com traite et facilite votre réservation. Cette réservation est soumise à nos {terms} et à notre {privacyPolicy}.
-    {%- when "fr-ca" -%}Vio.com traite votre réservation et vous assiste dans le processus. Cette réservation est couverte par nos {terms} et notre {privacyPolicy}.
-    {%- when "de" -%}Vio.com bearbeitet Ihre Buchung und unterstützt Sie dabei. Diese Buchung unterliegt unseren {terms} und unserer {privacyPolicy} .
-    {%- when "el" -%}Το Vio.com επεξεργάζεται και βοηθά με την κράτησή σας. Αυτή η κράτηση καλύπτεται από τους {terms} και την {privacyPolicy} μας.
-    {%- when "he" -%}Vio.com מעבדת את ההזמנה שלך ועוזרת לבצע אותה. הזמנה זו כפופה ל{terms} ול{privacyPolicy} שלנו.
-    {%- when "hu" -%}A Vio.com feldolgozza és segíti az Ön foglalását. Erre a foglalásra a {terms} és a {privacyPolicy} érvényes.
-    {%- when "id" -%}Vio.com memproses dan membantu pemesanan Anda. Pemesanan ini dilindungi oleh {terms} dan {privacyPolicy} kami.
-    {%- when "it" -%}Vio.com elabora e fornisce assistenza per la tua prenotazione. Questa prenotazione è coperta dai {terms} e dalla {privacyPolicy} di Vio.
-    {%- when "ja" -%}Vio.comが予約の処理とサポートを行います。この予約には当社の{terms}と{privacyPolicy}が適用されます。
-    {%- when "ko" -%}본 예약은 Vio.com에서 처리하고 지원하며, 당사의 {terms} 및 {privacyPolicy}이 적용됩니다.
-    {%- when "ms" -%}Vio.com memproses dan membantu dengan tempahan anda. Tempahan ini dilindungi oleh {terms} dan {privacyPolicy} kami.
-    {%- when "no" -%}Vio.com behandler og hjelper deg med bestillingen din. Denne bestillingen dekkes av vår {terms} og {privacyPolicy}
-    {%- when "pl" -%}Vio.com pomaga w dokonaniu rezerwacji i przetwarza ją. Ta rezerwacja jest objęta naszymi zasadami, których szczegóły zawierają {terms} i {privacyPolicy}.
-    {%- when "pt" -%}A Vio.com gere e presta-lhe assistência na reserva. Esta reserva está coberta pelos nossos {terms} e a {privacyPolicy}.
-    {%- when "pt-br" -%}Vio.com gerencia e ajuda com sua reserva. Esta reserva é coberta por nossos {terms} e {privacyPolicy}.
-    {%- when "ro" -%}Vio.com procesează și te ajută cu rezervarea ta. Această rezervare este acoperită de {terms} și {privacyPolicy}.
-    {%- when "ru" -%}Vio.com обрабатывает ваше бронирование и обеспечивает поддержку. На это бронирование распространяются наши {terms} и {privacyPolicy}.
-    {%- when "es" -%}Vio.com procesa tu reserva y te ayuda con ella. Esta reserva está cubierta por nuestras {terms} y {privacyPolicy}.
-    {%- when "es-419" -%}Vio.com procesa tu reserva y te brinda asistencia con ella. Esta reserva está cubierta por nuestros {terms} y nuestra {privacyPolicy}.
-    {%- when "sv" -%}Vio.com behandlar och assisterar med din bokning. Denna bokning täcks av våra {terms} och {privacyPolicy} .
-    {%- when "th" -%}Vio.com เป็นผู้ดำเนินการและให้ความช่วยเหลือในการจองของคุณ การจองนี้อยู่ภายใต้{terms} และ{privacyPolicy}ของเรา
-    {%- when "tr" -%}Vio.com rezervasyonunuzu işleme alır ve size yardımcı olur. Bu rezervasyon {terms} ve {privacyPolicy} esaslarımız kapsamındadır.
-    {%- when "uk" -%}Vio.com обробляє ваше бронювання та допомагає вам у ньому. На це бронювання поширюються наші {terms} та {privacyPolicy}.
-    {%- when "vi" -%}Vio.com xử lý và hỗ trợ đặt phòng của bạn. Đặt phòng này được bảo vệ bởi {terms} và {privacyPolicy} của chúng tôi.
-    {%- else -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
-  {%- endcase -%}
-{%- endcapture -%}
+''' + PLACEHOLDER_TERMS_DEFAULTS + '''
+{%- capture terms_link -%}<a href="{{ link_terms_of_use }}" target="_blank" style="color:{{ token_text_muted }};text-decoration:underline !important">{{ terms_label | strip }}</a>{%- endcapture -%}
+{%- capture privacy_link -%}<a href="{{ link_privacy_policy }}" target="_blank" style="color:{{ token_text_muted }};text-decoration:underline !important">{{ privacy_label | strip }}</a>{%- endcapture -%}
 {%- assign terms_desc_html = terms_desc_text | replace: "{terms}", terms_link | replace: "{privacyPolicy}", privacy_link -%}
 
 <!doctype html>
@@ -853,7 +1145,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
         .email-hero-two-col-cta-wrap { width: 100% !important; }
         .email-hero-two-col-cta-cell { width: 100% !important; }
         .email-hero-two-col-cta { width: 100% !important; }
-        .email-header-pad { padding: 16px 0 8px !important; }
+        .email-header-pad { width: 100% !important; max-width: 520px !important; height: 32px !important; padding: 1px 0 !important; }
         .email-terms-outer { padding: 0 10px 20px !important; }
         .email-terms-inner { padding-left: 16px !important; padding-right: 16px !important; }
       }
@@ -874,8 +1166,8 @@ FULL EMAIL HTML (multi-locale from translations CSV)
                     {%- if _show_header_logo_raw == "false" or _show_header_logo_raw == "0" or _show_header_logo_raw == "" -%}{%- assign _show_header_logo = false -%}{%- endif -%}
                     {%- if _show_header_logo -%}
                     <tr>
-                      <td align="center" class="email-header-pad" style="padding: {{ token_space_600 }} 0 {{ token_space_500 }};">
-                        <img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1769680583679_Hero_Logo_Vector_4x_01KG4JXF25SSBE0QK36X2MEAXM.png" width="89" height="30" alt="Vio" style="width:89px;height:30px;display:block;margin:0 auto;" />
+                      <td align="center" class="email-header-pad" style="width:520px;height:32px;max-width:100%;padding:1px 0;opacity:1;line-height:0;">
+                        <img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1769680583679_Hero_Logo_Vector_4x_01KG4JXF25SSBE0QK36X2MEAXM.png" width="89" height="30" alt="Vio" style="width:89px;height:30px;max-width:520px;max-height:32px;display:block;margin:0 auto;object-fit:contain;" />
                       </td>
                     </tr>
                     {%- endif -%}
@@ -895,6 +1187,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
                   <tbody>
 ''' + PLACEHOLDER_ROWS_BELOW_IMAGE + '''
 ''' + PLACEHOLDER_HERO_TWO_COLUMN_MODULE + '''
+''' + PLACEHOLDER_USP_MODULE + '''
 ''' + PLACEHOLDER_APP_DOWNLOAD_MODULE + '''
                   </tbody>
                 </table>
@@ -921,9 +1214,9 @@ FULL EMAIL HTML (multi-locale from translations CSV)
                         <div style="height:40px;line-height:40px;font-size:1px;">&nbsp;</div>
                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto;">
                           <tr>
-                            <td style="padding:0 6px;"><a href="https://www.instagram.com/vio.com.travel" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="Instagram" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-instagram.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
-                            <td style="padding:0 6px;"><a href="https://www.facebook.com/viodotcom" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="Facebook" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-facebook.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
-                            <td style="padding:0 6px;"><a href="https://www.linkedin.com/company/viodotcom/" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="LinkedIn" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-linkedin.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
+                            <td style="padding:0 6px;"><a href="{{ link_instagram }}" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="Instagram" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-instagram.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
+                            <td style="padding:0 6px;"><a href="{{ link_facebook }}" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="Facebook" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-facebook.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
+                            <td style="padding:0 6px;"><a href="{{ link_linkedin }}" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="LinkedIn" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-linkedin.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
                           </tr>
                         </table>
                         <div style="height:40px;line-height:40px;font-size:1px;">&nbsp;</div>
@@ -966,19 +1259,24 @@ def generate_template(
     show_footer: str = "TRUE",
     show_terms: str = "TRUE",
     app_download_colour_preset: str = "LIGHT",
+    links_config: dict[str, str] | None = None,
+    include_locales: list[str] | None = None,
 ) -> str:
-    """Generate the Liquid email template from a translations CSV. Returns the template string."""
+    """Generate the Liquid email template from a translations CSV. Returns the template string.
+    include_locales: locales to include in output (when clauses). If None, inferred from CSV headers."""
     csv_path = Path(csv_path)
     if not csv_path.exists():
         raise FileNotFoundError(f"CSV file not found: {csv_path}")
-    translations, structure = load_translations(csv_path)
+    locales = include_locales or get_csv_locales(csv_path)
+    translations, structure = load_translations(csv_path, include_locales=locales)
     if not translations and not structure:
         sys.exit("No rows found in CSV. Expected column 'Key' and locale columns: en, ar, zh-cn, ...")
-    content_captures = build_content_captures(translations)
+    content_captures = build_content_captures(translations, include_locales=locales)
     rows_above = build_rows_above_image(translations)
     image_row = build_image_row(structure)
     rows_below = build_rows_below_image(translations, structure)
     hero_two_col = build_hero_two_column_module(translations, structure)
+    usp_module = build_usp_module(translations, structure)
     app_download = build_app_download_module(translations, structure)
     config = build_config_block(
         show_header_logo,
@@ -988,15 +1286,19 @@ def generate_template(
     )
     design_tokens = _load_design_tokens()
     app_settings = build_app_download_settings(structure)
+    links_block = build_links_block(links_config)
     result = (
-        BASE_TEMPLATE.replace(PLACEHOLDER_DESIGN_TOKENS, design_tokens)
+        BASE_TEMPLATE.replace(PLACEHOLDER_LINKS, links_block)
+        .replace(PLACEHOLDER_DESIGN_TOKENS, design_tokens)
         .replace(PLACEHOLDER_APP_DOWNLOAD_SETTINGS, app_settings)
         .replace(PLACEHOLDER_CONTENT_CAPTURES, content_captures)
         .replace(PLACEHOLDER_ROWS_ABOVE_IMAGE, rows_above)
         .replace(PLACEHOLDER_IMAGE_ROW, image_row)
         .replace(PLACEHOLDER_ROWS_BELOW_IMAGE, rows_below)
         .replace(PLACEHOLDER_HERO_TWO_COLUMN_MODULE, hero_two_col)
+        .replace(PLACEHOLDER_USP_MODULE, usp_module)
         .replace(PLACEHOLDER_APP_DOWNLOAD_MODULE, app_download)
+        .replace(PLACEHOLDER_TERMS_DEFAULTS, build_terms_defaults_block())
         .replace(PLACEHOLDER_CONFIG, config)
     )
     return result
@@ -1014,16 +1316,35 @@ def main():
         default="LIGHT",
         help='App download banner colour preset: LIGHT (#fcf7f5) or DARK (#7130c9). Override per campaign via app_download_colour_preset merge field.',
     )
+    parser.add_argument(
+        "--locale-preset",
+        dest="locale_preset",
+        choices=["en_only", "top_5", "global"],
+        default=None,
+        help="Limit output to: en_only, top_5 (EN+ES+FR+JA+AR+PT), or global (all). Default: use all locales in CSV.",
+    )
+    parser.add_argument(
+        "--include-locales",
+        dest="include_locales",
+        default=None,
+        help="Comma-separated locale codes, e.g. en,es,fr. Overrides --locale-preset.",
+    )
     args = parser.parse_args()
     csv_path = Path(args.csv_path)
     if not csv_path.exists():
         sys.exit(f"CSV file not found: {csv_path}")
+    include_locales = None
+    if args.include_locales:
+        include_locales = [x.strip() for x in args.include_locales.split(",") if x.strip()]
+    elif args.locale_preset:
+        include_locales = resolve_include_locales(args.locale_preset)
     result = generate_template(
         csv_path,
         show_header_logo=args.show_header_logo,
         show_footer=args.show_footer,
         show_terms=args.show_terms,
         app_download_colour_preset=args.app_download_colour_preset,
+        include_locales=include_locales,
     )
     sys.stdout.write(result)
 
@@ -1070,6 +1391,9 @@ def liquid_to_preview_html(
         "hero_two_col_body_1_h2", "hero_two_col_body_1_copy", "hero_two_col_body_2_h2",
         "hero_two_col_body_2_copy", "hero_two_col_body_3_h2", "hero_two_col_body_3_copy",
         "hero_two_col_body_4_h2", "hero_two_col_body_4_copy", "hero_two_col_cta_text",
+        "terms_title", "terms_desc_text", "terms_label", "privacy_label",
+        "usp_title", "usp_1_heading", "usp_1_copy", "usp_2_heading", "usp_2_copy",
+        "usp_3_heading", "usp_3_copy",
     ]
     replacements: dict[str, str] = {}
     for k in content_vars:
@@ -1084,15 +1408,27 @@ def liquid_to_preview_html(
     replacements["{{ align }}"] = "left"
     replacements["{{ headline_align }}"] = "center"
     replacements["{{ locale_key }}"] = "en"
-    replacements["{{ app_deeplink_url }}"] = structure.get("image_deeplink") or "https://www.vio.com/app"
+    replacements["{{ app_deeplink_url }}"] = structure.get("image_deeplink") or DEFAULT_LINKS["app_download_page"]
     replacements["{{ app_download_colour }}"] = tokens.get("token_neutral_c050", "#fcf7f5")
+    # Link variables (from standard_links)
+    for key, url in DEFAULT_LINKS.items():
+        var = "link_" + key.replace(".", "_").replace("-", "_")
+        replacements[f"{{{{ {var} }}}}"] = url if "snippets" not in url else "#"
     replacements["{{ app_download_text_colour }}"] = tokens.get("token_text_primary", "#180c06")
     # Footer/terms placeholders
     replacements["{{ footer_app_line }}"] = "Book like an insider. Download the app."
     replacements["{{ footer_address | strip }}"] = "FindHotel B.V. Nieuwe Looiersdwarsstraat 17, 1017 TZ, Amsterdam, The Netherlands."
-    replacements["{{ terms_title | strip }}"] = "Terms and Privacy Policy"
+    replacements["{{ terms_title | strip }}"] = (translations.get("terms_title") or {}).get(en, "Terms and Privacy Policy")
     replacements["{{ footer_prefs_html }}"] = "Update your email preferences or unsubscribe."
-    replacements["{{ terms_desc_html }}"] = "This booking is covered by our Terms and Privacy Policy."
+    terms_desc = (translations.get("terms_desc_text") or {}).get(en, "This booking is covered by our {terms} and {privacyPolicy}.")
+    terms_lbl = (translations.get("terms_label") or {}).get(en, "Terms")
+    privacy_lbl = (translations.get("privacy_label") or {}).get(en, "Privacy Policy")
+    link_terms = DEFAULT_LINKS.get("terms_of_use", "#")
+    link_privacy = DEFAULT_LINKS.get("privacy_policy", "#")
+    muted = tokens.get("token_text_muted", "#615a56")
+    terms_a = f'<a href="{link_terms}" target="_blank" style="color:{muted};text-decoration:underline !important">{terms_lbl}</a>'
+    privacy_a = f'<a href="{link_privacy}" target="_blank" style="color:{muted};text-decoration:underline !important">{privacy_lbl}</a>'
+    replacements["{{ terms_desc_html }}"] = terms_desc.replace("{terms}", terms_a).replace("{privacyPolicy}", privacy_a)
 
     html = liquid_content
     for k, v in replacements.items():
@@ -1113,6 +1449,7 @@ def liquid_to_preview_html(
     _replace_conditional("show_terms", show_terms)
     _replace_conditional("app_download_title != blank", "app_download_title" in translations)
     _replace_conditional("hero_two_col_body_1_h2 != blank", "hero_two_col_body_1_h2" in translations)
+    _replace_conditional("usp_title != blank", "usp_title" in translations)
 
     # Remove remaining Liquid: comments, assigns, captures, case/when, for
     html = re.sub(r"{%-?\s*comment\s+-?%}.*?{%-?\s*endcomment\s+-?%}", "", html, flags=re.DOTALL)

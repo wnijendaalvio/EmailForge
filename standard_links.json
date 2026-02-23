@@ -1,0 +1,12 @@
+{
+  "app_download_page": "https://app.vio.com/v0HW",
+  "homepage": "https://www.vio.com",
+  "terms_of_use": "https://www.vio.com/terms-of-use",
+  "privacy_policy": "https://www.vio.com/privacy-policy",
+  "booking_page": "https://app.vio.com",
+  "notification_preferences": "{{snippets.vio_notification_preferences}}",
+  "notification_preferences_unsubscribe": "{{snippets.vio_notification_preferences_unsubscribe}}",
+  "instagram": "https://www.instagram.com/vio.com.travel",
+  "facebook": "https://www.facebook.com/viodotcom",
+  "linkedin": "https://www.linkedin.com/company/viodotcom/"
+}
