@@ -1,0 +1,676 @@
+{%- comment -%}
+  Notification Preferences / What to Expect Email (FULL HTML)
+  - Locale normalization + RTL detection
+  - COUNTRY-BASED locale resolution (same as Price Alerts)
+  - Headline above hero (purple, 48px) + desktop/mobile hero images
+  - Body copy: subheading, purple-tick list (4 items), body2, body3, CTA "Set my preferences"
+  - Purple tick: https://userimg-assets.customeriomail.com/images/client-env-124967/1770901073718_Vio%20Tick_01KH8YVVZXCP5NPHSPMF0RGVTG.png
+{%- endcomment -%}
+
+{%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
+{%- assign lang2 = lang | slice: 0, 2 -%}
+{%- assign locale_key = lang2 -%}
+
+{%- assign country = customer.country_code | default: customer.country | default: customer.cio_iso_country | default: "" | upcase | slice: 0, 2 -%}
+
+{%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
+
+{%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}
+  {%- assign locale_key = "zh-hk" -%}
+{%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}
+  {%- assign locale_key = "zh-tw" -%}
+{%- elsif lang contains "zh-cn" or lang contains "zh-sg" or lang contains "zh-hans" -%}
+  {%- assign locale_key = "zh-cn" -%}
+{%- elsif lang contains "fr-ca" -%}
+  {%- assign locale_key = "fr-ca" -%}
+{%- elsif lang contains "pt-br" -%}
+  {%- assign locale_key = "pt-br" -%}
+{%- elsif lang contains "pt-pt" -%}
+  {%- assign locale_key = "pt" -%}
+{%- elsif lang contains "en-gb" -%}
+  {%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "es" and lang contains "-" and lang != "es-es" -%}
+  {%- assign locale_key = "es-419" -%}
+{%- elsif lang2 == "tl" or lang contains "fil" -%}
+  {%- assign locale_key = "fil" -%}
+{%- elsif lang2 == "nb" or lang2 == "nn" -%}
+  {%- assign locale_key = "no" -%}
+{%- endif -%}
+
+{%- assign is_portuguese = false -%}
+{%- if lang2 == "pt" or lang contains "portuguese" -%}
+  {%- assign is_portuguese = true -%}
+{%- endif -%}
+{%- if is_portuguese -%}
+  {%- if country == "BR" -%}
+    {%- assign locale_key = "pt-br" -%}
+  {%- elsif country == "PT" -%}
+    {%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-pt" -%}
+    {%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-br" -%}
+    {%- assign locale_key = "pt-br" -%}
+  {%- else -%}
+    {%- assign locale_key = "pt-br" -%}
+  {%- endif -%}
+{%- elsif lang2 == "es" and locale_key == "es" -%}
+  {%- assign latam_countries = "MX,AR,CO,CL,PE,VE,EC,GT,HN,SV,NI,PA,PR,DO,CR,BO,PY,UY,CU" | split: "," -%}
+  {%- assign is_latam = false -%}
+  {%- for cc in latam_countries -%}
+    {%- if country == cc -%}{%- assign is_latam = true -%}{%- break -%}{%- endif -%}
+  {%- endfor -%}
+  {%- if is_latam -%}
+    {%- assign locale_key = "es-419" -%}
+  {%- endif -%}
+{%- elsif lang2 == "en" and locale_key == "en" and country == "GB" -%}
+  {%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "fr" and locale_key == "fr" and country == "CA" -%}
+  {%- assign locale_key = "fr-ca" -%}
+{%- endif -%}
+
+{%- assign is_rtl = false -%}
+{%- if locale_key == "ar" or locale_key == "he" or locale_key == "fa" or locale_key == "ur" -%}
+  {%- assign is_rtl = true -%}
+{%- endif -%}
+
+{%- if is_rtl -%}
+  {%- assign dir = "rtl" -%}
+{%- else -%}
+  {%- assign dir = "ltr" -%}
+{%- endif -%}
+
+{%- assign violet_tick_url = "https://userimg-assets.customeriomail.com/images/client-env-124967/1770901073718_Vio%20Tick_01KH8YVVZXCP5NPHSPMF0RGVTG.png" -%}
+{%- assign hero_desktop_url = "https://userimg-assets.customeriomail.com/images/client-env-124967/1770902102787_crm_preferences_hero_English_desktop_01KH8ZV8SQJJ14DNYHP0M9KDS0.jpg" -%}
+{%- assign hero_mobile_url = "https://userimg-assets.customeriomail.com/images/client-env-124967/1770902100790_crm_preferences_hero_English_mobile_01KH8ZV6WCH50C7V32ATGJVQKS.jpg" -%}
+
+{%- comment -%}
+  i18n: Notification Preferences / What to Expect (localized)
+  Keys: subject, preheader, headline, body1, subheading, list_item_1-4, body2, body3, cta
+{%- endcomment -%}
+{%- capture prefs_i18n_json -%}
+{"en": {"subject": "Here's how we'll stay in touch", "preheader": "Update your preferences at any time", "headline": "Let's stay in touch", "body1": "We don't believe in hidden traps or pressure tactics. That's why the updates we send are designed to add clarity, not noise.", "subheading": "Here's what you can expect from us:", "list_item_1": "Recommendations tailored to your travel style", "list_item_2": "Price alerts if a hotel drops or raises its price", "list_item_3": "Deal Freeze reminders, so you don't lose options", "list_item_4": "Clear booking updates, without unnecessary emails", "body2": "No spam. Just useful information, when it matters.", "body3": "And you're always in control. You can turn individual notification types off at any time, without losing access the others. If you're happy with these updates, you don't have to do anything else right now.", "cta": "Set my preferences"}, "ar": {"subject": "إليك كيفية البقاء على اتصال", "preheader": "حدِّث تفضيلاتك في أي وقت", "headline": "لنبقَ على تواصل", "body1": "لا نؤمن بالفخاخ الخفية أو أساليب الضغط. ولهذا السبب تم تصميم التحديثات التي نرسلها لإضافة الوضوح، وليس الضوضاء.", "subheading": "إليك ما يمكنك توقعه منا:", "list_item_1": "توصيات مصممة خصيصًا لتناسب أسلوب سفرك", "list_item_2": "تنبيهات الأسعار إذا انخفض أو ارتفع سعر الفندق", "list_item_3": "تذكير تثبيت العرض، حتى لا تفوّت الخيارات", "list_item_4": "تحديثات الحجوزات الواضحة، من دون رسائل البريد الإلكتروني غير الضرورية", "body2": "لا رسائل مزعجة. فقط معلومات مفيدة، عندما تحتاجها.", "body3": "وأنت دائمًا تتحكم في الأمر. يمكنك إيقاف تشغيل أنواع الإشعارات الفردية في أي وقت، دون فقدان إمكانية الوصول إلى الأنواع الأخرى. إذا كانت هذه التحديثات مناسبة لك، فلست مضطرًا للقيام بأي شيء آخر الآن.", "cta": "اضبط تفضيلاتي"}, "zh-cn": {"subject": "以下是我们的联系方式", "preheader": "您可随时更新偏好设置", "headline": "联系不断，优惠随行", "body1": "套路？施压？我们通通不要！我们提供的更新服务力求清晰实用，排除干扰。", "subheading": "您将收获以下体验：", "list_item_1": "根据旅行风格定制专属推荐", "list_item_2": "及时反映酒店降价或涨价趋势的价格提醒", "list_item_3": "优惠锁定提醒，不错过任何选择", "list_item_4": "清晰的预订进度更新，避免无效邮件", "body2": "无垃圾信息，仅在关键时刻提供实用资讯。", "body3": "掌控权始终在您手中。您可以随时单独关闭某类通知，同时保留其他有用通知。如果对这些更新感到满意，此刻无需动手调整。", "cta": "设置我的偏好"}, "zh-tw": {"subject": "這是我們保持聯繫的方式", "preheader": "您可隨時更新偏好設定", "headline": "讓我們保持聯繫", "body1": "我們不贊成隱藏陷阱，更反對強迫推銷。這就是為什麼我們僅傳遞有價值資訊，不造成多餘干擾。", "subheading": "我們會為您帶來以下貼心服務：", "list_item_1": "專屬推薦：根據您的旅行風格量身打造", "list_item_2": "價錢提醒： 第一手通知價格變動", "list_item_3": "凍結優惠提醒：不會錯過好價格", "list_item_4": "訂單更新明確： 只更新必要資訊，不發送無關郵件。", "body2": "不發送垃圾郵件。僅在重要時刻提供有用資訊。", "body3": "主控權始終在您手上。您可隨時關閉單一類別通知，不影響其他通知的接收權限。如果您對目前的設定感到滿意，現在無需進行任何操作。", "cta": "設定我的偏好"}, "zh-hk": {"subject": "Vio時刻為你", "preheader": "隨時更新你的偏好設定", "headline": "我們時刻助你一臂之力", "body1": "我們不隱藏陷阱或採取強制消費策略。因此，我們推送的最新消息旨在令你更加清楚地了解市況。", "subheading": "以下是你值得留意的更新：", "list_item_1": "根據你的旅行模式提供量身定制的推薦意見。", "list_item_2": "推送酒店價錢下跌或上漲的價錢提醒。", "list_item_3": "提供優惠凍結提示，助你鎖定優惠。", "list_item_4": "清晰顯示預訂更新，同時避免不必要的電郵。", "body2": "我們過濾垃圾電郵，並只會提供實用的重要資訊。", "body3": "此外，你始終可以控制接收那些資訊。你可以隨時選擇不接收個別通知，而不會錯過其他有用的提示。如果你對以上更新感到滿意，則現在無需進行其他操作。", "cta": "設定我的個人偏好"}, "hr": {"subject": "Evo kako ćemo ostati u kontaktu", "preheader": "Ažurirajte svoje postavke u bilo kojem trenutku", "headline": "Ostanimo u kontaktu", "body1": "Ne vjerujemo u skrivene zamke ni taktike pritiska. Zato su obavijesti koje šaljemo tu da donesu jasnoću, a ne smetnje.", "subheading": "Evo što možete očekivati od nas:", "list_item_1": "Preporuke prilagođene vašem stilu putovanja", "list_item_2": "Obavijesti o cijenama kad hotel snizi ili povisi cijenu", "list_item_3": "Podsjetnici za zamrzavanje ponude, kako ne biste izgubili svoje opcije", "list_item_4": "Jadna ažuriranja o rezervaciji, bez nepotrebnih e-mailova", "body2": "Bez spama. Samo korisne informacije, kad je to važno.", "body3": "I uvijek imate kontrolu. Pojedine vrste obavijesti možete isključiti u bilo kojem trenutku, bez gubitka pristupa ostalima. Ako ste zadovoljni ovim ažuriranjima, zasad ne morate ništa poduzeti.", "cta": "Postavi moje postavke"}, "cs": {"subject": "Jak budeme spolu komunikovat", "preheader": "Předvolby můžete kdykoli změnit", "headline": "Buďme v kontaktu", "body1": "Nevěříme ve skryté pasti ani nátlakové taktiky. Proto se vám snažíme zasílat novinky navržené tak, aby byly přehledné a nerušily.", "subheading": "Co od nás můžete očekávat:", "list_item_1": "Doporučení přizpůsobená vašemu stylu cestování", "list_item_2": "Upozornění na cenu, pokud hotel zdraží nebo zlevní", "list_item_3": "Připomenutí, kdy zmrazit ceny, aby vám nic neuteklo", "list_item_4": "Přehledné aktualizace rezervací, bez zbytečných e-mailů", "body2": "Žádný spam. Pouze užitečné informace, když na nich záleží.", "body3": "Navíc máte všechno sami pod kontrolou. Jednotlivé typy oznámení můžete kdykoli vypnout, aniž byste ztratili přístup k ostatním. Pokud vám takové nastavení aktualizací vyhovuje, nemusíte nic dělat.", "cta": "Nastavit předvolby"}, "da": {"subject": "Sådan holder vi kontakten", "preheader": "Opdater dine indstillinger når som helst", "headline": "Lad os holde kontakten", "body1": "Vi tror hverken på skjulte fælder eller pres. Derfor er de opdateringer, vi sender, designet til at give dig overblik, ikke forstyrre dig.", "subheading": "Her er, hvad du kan forvente af os:", "list_item_1": "Anbefalinger, der er tilpasset din rejsestil", "list_item_2": "Prisalarmer, hvis prisen på et hotel falder eller stiger", "list_item_3": "Påmindelser om frysning af tilbud, så du ikke går glip af gode priser", "list_item_4": "Klare opdateringer om din booking – uden unødvendige e-mails", "body2": "Ingen spam. Kun nyttige oplysninger, når du har brug for dem.", "body3": "Og det er altid dig, der har kontrollen. Du til enhver tid slå enkelte notifikationstyper fra, uden at det påvirker de andre. Hvis du er tilfreds med disse opdateringer, behøver du ikke at gøre andet lige nu.", "cta": "Indstil mine præferencer"}, "nl": {"subject": "Zo houden we contact met jou", "preheader": "Werk je voorkeuren bij wanneer jij dat wilt", "headline": "Laten we contact houden", "body1": "We geloven niet in verborgen kosten of drukmiddelen. Daarom zorgen de updates die we sturen voor duidelijkheid en geen ruis.", "subheading": "Dit is wat je van ons kunt verwachten:", "list_item_1": "Aanbevelingen op maat voor jouw reisstijl", "list_item_2": "Prijsmeldingen wanneer hotels hun prijzen verlagen of verhogen", "list_item_3": "Herinneringen aan de prijzen die jij hebt vastgezet, zodat je geen opties verlies", "list_item_4": "Duidelijke boekingsupdates, zonder onnodige e-mails", "body2": "Geen spam. Alleen nuttige informatie, wanneer het ertoe doet.", "body3": "En jij hebt altijd de touwtjes in handen. Je kunt specifieke meldingen uitschakelen zonder toegang tot andere meldingen te verliezen. Als je akkoord gaat met deze updates, hoef je nu niets te doen.", "cta": "Stel voorkeuren in"}, "en-gb": {"subject": "Here's how we'll stay in touch", "preheader": "Update your preferences at any time", "headline": "Let's stay in touch", "body1": "We don't believe in hidden traps or pressure tactics. That's why the updates we send are designed to add clarity, not noise.", "subheading": "Here's what you can expect from us:", "list_item_1": "Recommendations tailored to your travel style", "list_item_2": "Price alerts if a hotel drops or raises its price", "list_item_3": "Deal Freeze reminders, so you don't lose options", "list_item_4": "Clear booking updates, without unnecessary emails", "body2": "No spam. Just useful information, when it matters.", "body3": "And you're always in control. You can turn individual notification types off at any time, without losing access the others. If you're happy with these updates, you don't have to do anything else right now.", "cta": "Set my preferences"}, "fil": {"subject": "Narito kung paano tayo patuloy na makikipag-ugnayan", "preheader": "I-update ang mga preference mo kahit kailan", "headline": "Patuloy tayong magbalitaan", "body1": "Wala kaming nakatagong trap o pressure tactic. Kaya idinisenyo ang mga update na ipinapadala namin para maging malinaw at hindi nakakalito.", "subheading": "Narito ang maaasahan mo mula sa amin.", "list_item_1": "Mga rekomendasyong iniangkop sa style mo sa pagbibiyahe", "list_item_2": "Mga alerto sa presyo kapag bumaba o tumaas ang presyo sa isang hotel", "list_item_3": "Mga paalala sa Pag-freeze ng Promo, para hindi ka maubusan ng mga opsyon", "list_item_4": "Malilinaw na update sa booking, nang walang advertising email", "body2": "Walang spam. Mahahalagang impormasyon, kapag mahalaga ito.", "body3": "Ikaw palagi ang masusunod. Puwede mong i-off ang mga indibidwal na uri ng abiso kahit kailan, nang hindi nawawalan ng access sa iba pa. Kung nasisiyahan ka sa mga update na ito, wala kang kailangang gawin sa ngayon.", "cta": "Itakda ang mga preference ko"}, "fi": {"subject": "Näin pidämme yhteyttä", "preheader": "Päivitä asetukset milloin tahansa", "headline": "Pidetään yhteyttä", "body1": "Emme usko painostamiseen tai muihin kikkoihin. Tästä syystä lähettämämme päivitykset on suunniteltu tuomaan selkeyttä, ei sekavuutta.", "subheading": "Näitä asioita voit odottaa meiltä:", "list_item_1": "Matkustustyyliisi räätälöidyt suositukset", "list_item_2": "Hintailmoitukset, jos hotellin hinta laskee tai nousee", "list_item_3": "Tarjousten jäädytysmuistutukset, jottet menetä vaihtoehtoja", "list_item_4": "Selkeät varauspäivitykset ilman turhia sähköposteja", "body2": "Ei roskapostia. Vain hyödyllistä tietoa, kun se on tarpeen.", "body3": "Lisäksi hallinta on aina sinulla. Voit poistaa yksittäisiä ilmoitustyyppejä käytöstä milloin tahansa menettämättä muita ilmoituksia. Jos olet tyytyväinen näihin päivityksiin, sinun ei tarvitse tehdä mitään.", "cta": "Aseta omat asetukset"}, "fr": {"subject": "Voici comment nous resterons en contact", "preheader": "Mettez à jour vos préférences à tout moment", "headline": "Gardons le contact", "body1": "Nous n'aimons ni les pièges cachés ni les techniques de pression. C'est pourquoi nos communications ont pour but d'apporter de la clarté, pas du bruit.", "subheading": "Voici ce que vous pouvez attendre de nous :", "list_item_1": "Des recommandations adaptées à votre style de voyage", "list_item_2": "Des alertes de prix si un hôtel baisse ou augmente ses prix", "list_item_3": "Des rappels d'offres gelées pour ne pas perdre d'options", "list_item_4": "Des mises à jour claires sur vos réservations, sans e-mails superflus", "body2": "Pas de spam. Seulement des informations utiles, au moment opportun.", "body3": "Vous gardez toujours le contrôle. Vous pouvez désactiver certains types de notifications à tout moment, sans perdre l'accès aux autres. Si ces mises à jour vous conviennent, il n'y a rien d'autre à faire pour le moment.", "cta": "Gérer mes préférences"}, "fr-ca": {"subject": "Voici comment nous resterons en contact", "preheader": "Mettez à jour vos préférences à tout moment", "headline": "Restons en contact", "body1": "Nous ne croyons pas aux pièges cachés ni aux tactiques de pression. C'est pourquoi les mises à jour que nous envoyons sont conçues pour apporter de la clarté, pas du flou.", "subheading": "Voici ce à quoi vous pouvez vous attendre de notre part :", "list_item_1": "Des recommandations adaptées à votre style de voyage", "list_item_2": "Des alertes de prix lorsqu'un hôtel baisse ou augmente son tarif", "list_item_3": "Des rappels pour geler une offre, afin de ne pas perdre vos options", "list_item_4": "Mises à jour de réservation claires, sans courriels inutiles", "body2": "Aucun pourriel Seulement de l'information utile, quand c'est important.", "body3": "Et vous gardez toujours le contrôle. Vous pouvez désactiver certains types de notifications à tout moment, sans perdre l'accès aux autres. Si ces mises à jour vous conviennent, vous n'avez rien d'autre à faire pour le moment.", "cta": "Définir mes préférences"}, "de": {"subject": "So bleiben wir in Kontakt", "preheader": "Sie können Ihre Einstellungen jederzeit aktualisieren.", "headline": "Bleiben wir in Kontakt", "body1": "Wir glauben nicht an versteckte Tricks oder Druck. Unsere Updates sollen Klarheit schaffen - nicht Lärm", "subheading": "Das können Sie von uns erwarten", "list_item_1": "Empfehlungen speziell für Ihre Reisegewohnheiten", "list_item_2": "Preisalarme, wenn der Preis für ein Hotel sinkt oder steigt", "list_item_3": "Erinnerungen an Preis-Sicherungen, damit Sie keine Optionen verpassen", "list_item_4": "Verständliche Buchungsaktualisierungen, ohne unnötige E-Mails", "body2": "Kein Spam. Nur relevante Informationen, wenn sie wirklich wichtig sind.", "body3": "Sie entscheiden, worüber Sie informiert werden möchten. Einzelne Benachrichtigungen können Sie jederzeit deaktivieren, während alle anderen aktiv bleiben. Wenn Sie mit diesen Updates einverstanden sind, müssen Sie jetzt nichts weiter tun.", "cta": "Meine Einstellungen festlegen"}, "el": {"subject": "Δείτε πώς θα επικοινωνούμε", "preheader": "Ενημερώστε τις προτιμήσεις σας ανά πάσα στιγμή", "headline": "Ας μη χαθούμε", "body1": "Δεν μας αρέσουν οι κρυφές χρεώσεις ούτε οι τακτικές πίεσης. Γι' αυτό και οι ενημερώσεις που στέλνουμε στοχεύουν στη σαφήνεια - όχι στο χάος.", "subheading": "Δείτε τι μπορείτε να περιμένετε από εμάς:", "list_item_1": "Συστάσεις προσαρμοσμένες στο δικό σας στυλ ταξιδιώτη.", "list_item_2": "Ειδοποιήσεις τιμών αν ένα ξενοδοχείο μειώσει ή αυξήσει την τιμή", "list_item_3": "Υπενθυμίσεις για πάγωμα προσφορών, για να έχετε πάντα όλες τις επιλογές.", "list_item_4": "Εκκαθάριση ενημερώσεων για κρατήσεις, χωρίς περιττά email", "body2": "Χωρίς συνεχείς ενοχλήσεις. Μόνο χρήσιμες πληροφορίες, όταν έχουν σημασία.", "body3": "Και έχετε πάντα τον έλεγχο. Μπορείτε να απενεργοποιήσετε τις μεμονωμένες ειδοποιήσεις ανά πάσα στιγμή, χωρίς να χάσετε πρόσβαση σε άλλες. Αν είστε ευχαριστημένοι με αυτές τις ενημερώσεις, δεν χρειάζεται να κάνετε τίποτα άλλο για τώρα.", "cta": "Καθορίστε προτιμήσεις"}, "he": {"subject": "ככה נשמור על קשר", "preheader": "עדכנו את ההעדפות שלכם בכל עת", "headline": "בואו נשמור על קשר", "body1": "אנחנו לא מאמינים במלכודות נסתרות או בטקטיקות מלחיצות. לכן העדכונים שאנו שולחים נועדו להוסיף מידע רלוונטי, לא רעש.", "subheading": "תוכלו לצפות מאיתנו ל:", "list_item_1": "המלצות המותאמות לסגנון הטיול שלכם", "list_item_2": "התראות מחירים אם מלון מעלה או מוריד את המחיר", "list_item_3": "תזכורות לדילים מוקפאים, כדי שלא תפספסו מחירים ששריינתם", "list_item_4": "עדכוני הזמנות ברורים, ללא מיילים מיותרים", "body2": "בלי ספאם. רק מידע שימושי, כשזה רלוונטי.", "body3": "ואתם תמיד בשליטה. ניתן לבטל התראות מסויימות בכל עת, מבלי לאבד גישה להתראות אחרות. אם אתם מרוצים מהעדכונים האלה, אין צורך לעשות שום דבר אחר כרגע.", "cta": "הגדרת ההעדפות שלי"}, "hu": {"subject": "Így maradunk kapcsolatban", "preheader": "Frissítse beállításait bármikor", "headline": "Maradjunk kapcsolatban", "body1": "Nem hiszünk a rejtett csapdákban vagy a nyomásgyakorlási taktikákban. Ezért terveztük az általunk küldött frissítéseket úgy, hogy egyértelműséget biztosítsanak, ne zavart.", "subheading": "A következőkre számíthat tőlünk:", "list_item_1": "Az utazási stílusához igazodó javaslatok", "list_item_2": "Árértesítések, ha a szálloda csökkenti vagy emeli az árat", "list_item_3": "Emlékeztetők az ajánlat lefagyasztásáról, hogy ne veszítsen el opciókat", "list_item_4": "Világos foglalási frissítések, felesleges e-mailek nélkül", "body2": "Semmi spam. Csak hasznos információk, amikor szükségesek.", "body3": "És mindig Ön dönt. Az egyes értesítési típusokat bármikor kikapcsolhatja anélkül, hogy elveszítené a többihez való hozzáférést. Ha elégedett a frissítésekkel, akkor most semmi mást nem kell tennie.", "cta": "Preferenciáim beállítása"}, "id": {"subject": "Inilah cara kami berhubungan", "preheader": "Perbarui preferensi Anda kapan saja", "headline": "Ayo jalin hubungan", "body1": "Kami tak percaya perangkap rahasia atau taktik beban. Pembaruan yang kami kirim dibuat menambah kejelasan, bukan kebisingan.", "subheading": "Inilah yang diharapkan dari kami:", "list_item_1": "Saran yang cocok dengan gaya perjalanan Anda", "list_item_2": "Peringatan harga jika harga turun atau naik", "list_item_3": "Pengingat Tahan Promo, sehingga masih ada opsi", "list_item_4": "Update booking jelas, tanpa email yang mengganggu", "body2": "Nol spam. Hanya informasi berguna, saat diperlukan.", "body3": "Anda selalu memegang kendali. Anda dapat mematikan jenis notifikasi individu kapan pun, tanpa kehilangan akses ke yang lain. Jika Anda puas dengan pembaruan ini, Anda tidak perlu melakukan apa pun sekarang.", "cta": "Atur preferensi"}, "it": {"subject": "Ecco come ci terremo in contatto", "preheader": "Aggiorna le preferenze quando vuoi", "headline": "Teniamoci in contatto", "body1": "Nascondere trappole o mettere pressione non è il nostro modo di lavorare. Ecco perché gli aggiornamenti che ti inviamo sono pensati per essere chiari, non per creare confusione.", "subheading": "Da noi puoi ricevere:", "list_item_1": "Consigli personalizzati in base al tuo modo di viaggiare", "list_item_2": "Avvisi sui prezzi se il prezzo di un hotel aumenta o diminuisce", "list_item_3": "Promemoria per bloccare le offerte così da non perdere nessuna opportunità", "list_item_4": "Aggiornamenti chiari sulle prenotazioni, evitando email non necessarie", "body2": "Niente spam. Solo informazioni utili, quando servono.", "body3": "E il controllo rimane a te. Puoi disattivare quando vuoi le notifiche di un determinato tipo e avere ancora accesso alle altre. Se questi aggiornamenti vanno bene per te, non devi fare nient'altro per il momento.", "cta": "Imposta le mie preferenze"}, "ja": {"subject": "今後お届けする情報", "preheader": "設定はいつでも更新できます", "headline": "今後も情報をお届けします", "body1": "私たちは隠れ料金や強引なやり方は使用しません。だからこそ、明確な最新情報をお届けするようにしています。", "subheading": "お客様へのご連絡内容は以下のとおりです。", "list_item_1": "旅のスタイルに合わせたおすすめ情報", "list_item_2": "ホテルの料金が変動した時の価格アラート", "list_item_3": "「ディールを固定」リマインダーで、おトクな機会を逃しません", "list_item_4": "不要なメールではなく、予約状況の明確な更新情報", "body2": "スパムメールはありません。必要な時にお役に立つ情報だけをお届けします。", "body3": "そして、常にお客様が情報の流れをコントロールできます。個別の通知タイプはいつでもオフにできます。他の通知タイプには影響しません。更新される情報にご満足いただける場合、特別な操作は必要ありません。", "cta": "設定を決める"}, "ko": {"subject": "예약에 확신을 더하는 Vio 업데이트", "preheader": "업데이트 환경 설정은 언제든 조정할 수 있어요", "headline": "유용한 업데이트를 받아보세요", "body1": "Vio는 교묘한 속임수나 심리적 압박 전략을 믿지 않습니다. Vio가 보내드리는 업데이트는 예약에 혼선이 아니라 확신을 더하는 이유가 바로 이것입니다.", "subheading": "Vio에서 예약하면 다음과 같은 확실한 이점이 있습니다.", "list_item_1": "내 여행 스타일에 맞는 상품 추천", "list_item_2": "호텔이 가격을 내리거나 올릴 때 가격 알림 제공", "list_item_3": "원하는 상품을 놓치지 않도록 가격 고정 다시 알림 제공", "list_item_4": "불필요한 이메일 없이 명확한 예약 업데이트", "body2": "쓸데없는 것들은 모두 빼고 꼭 필요한 정보만 적시에 제공합니다.", "body3": "그리고 얼마든지 원하는 대로 조정할 수 있습니다. 언제든 원치 않는 개별 알림 유형을 끄고 필요한 알림만 받아볼 수 있습니다. 이러한 업데이트를 받아보는 데 만족하신다면 지금 아무것도 하실 필요가 없습니다.", "cta": "환경 설정 지정하기"}, "ms": {"subject": "Inilah cara kami kekal berhubung", "preheader": "Kemas kini pilihan anda pada bila-bila masa", "headline": "Mari kekal berhubung", "body1": "Kami tidak percaya pada helah tersembunyi atau taktik tekanan. Itulah sebabnya setiap kemas kini yang kami hantar direka untuk menambah kejelasan, bukan kekusutan.", "subheading": "Inilah yang anda boleh jangkakan daripada kami:", "list_item_1": "Cadangan yang disesuaikan dengan gaya perjalanan anda", "list_item_2": "Amaran harga jika berlaku penurunan atau kenaikan harga hotel.", "list_item_3": "Peringatan Kunci Tawaran, agar anda tidak kehilangan pilihan.", "list_item_4": "Kemas kini tempahan yang jelas, tanpa e-mel yang tidak perlu.", "body2": "Tiada spam. Hanya maklumat berguna, apabila diperlukan.", "body3": "Dan kawalan sentiasa di tangan anda. Anda boleh mematikan mana-mana jenis notifikasi pada bila-bila masa, tanpa menjejaskan akses kepada yang lain. Jika anda berpuas hati dengan kemas kini ini, tiada tindakan lanjut diperlukan buat masa ini.", "cta": "Tetapkan pilihan saya"}, "no": {"subject": "Slik holder vi kontakten med deg", "preheader": "Oppdater preferansene dine når som helst", "headline": "La oss holde kontakten", "body1": "Vi tror ikke på skjulte feller eller pressmetoder. Det er derfor oppdateringene vi sender deg er utformet for å legge til klarhet, ikke støy.", "subheading": "Dette er hva du kan forvente av oss:", "list_item_1": "Anbefalinger tilpasset reisestilen din", "list_item_2": "Prisvarsler hvis et hotell senker eller øker prisen", "list_item_3": "Tilbuds-frysepåminnelser, slik at du ikke mister alternativer", "list_item_4": "Klare oppdateringer av bestillinger, uten unødvendige e-poster", "body2": "Ingen søppelpost. Kun nyttig informasjon når det betyr noe.", "body3": "Og du har alltid kontroll. Du kan deaktivere individuelle varslingstyper når som helst, uten å miste tilgang til de andre. Hvis du er fornøyd med disse oppdateringene, trenger du ikke å gjøre noe mer akkurat nå.", "cta": "Angi preferansene mine"}, "pl": {"subject": "W ten sposób możemy pozostać w kontakcie", "preheader": "Zaktualizuj preferencje w dowolnym momencie", "headline": "Pozostańmy w kontakcie", "body1": "Nie uznajemy ukrytych haczyków lub wywoływania nacisku. Dlatego wysyłamy aktualizacje, które zapewniają przejrzystość, a nie wywołują zamieszania.", "subheading": "Tego możesz się po nas spodziewać:", "list_item_1": "Polecenia dopasowane do Twojego stylu podróżowania", "list_item_2": "Alerty cenowe dotyczące zmiany cen w hotelu", "list_item_3": "Przypomnienia o blokowaniu ofert, dzięki którym nie stracisz okazji", "list_item_4": "Przejrzyste aktualizacje rezerwacji, bez zbędnych maili", "body2": "Zero spamu. Wyłącznie przydatne i istotne informacje.", "body3": "Decyzja zawsze należy do Ciebie. W każdej chwili możesz wyłączyć poszczególne rodzaje powiadomień i nie stracić dostępu do pozostałych. Jeśli odpowiadają Ci te aktualizacje, nie musisz nic robić.", "cta": "Ustaw moje preferencje"}, "pt": {"subject": "É assim que vamos manter o contacto", "preheader": "Atualize as suas preferências, quando quiser", "headline": "Vamos manter o contato", "body1": "Não acreditamos em armadilhas ocultas ou táticas de pressão. Por isso, as atualizações que enviamos pretendem esclarecer - não criar ruído.", "subheading": "Isto é o que pode esperar de nós:", "list_item_1": "Recomendações à medida do seu estilo de viagem", "list_item_2": "Alertas de preços, se o hotel baixar ou subir o preço", "list_item_3": "Lembretes para fixar ofertas e não perder hipóteses", "list_item_4": "Atualizações claras de reservas, sem e-mails desnecessários", "body2": "Nada de spam. Apenas informações úteis, quando importa.", "body3": "E o controlo está sempre do seu lado. Pode desativar determinados tipos de notificações, quando quiser, sem perder acesso aos outros. Caso esteja satisfeito/a com estas atualizações, não precisa de fazer mais nada agora.", "cta": "Definir as minhas preferências"}, "pt-br": {"subject": "Você no controle das suas notificações", "preheader": "Atualize suas preferências a qualquer momento", "headline": "Suas preferências, do seu jeito", "body1": "Não trabalhamos com armadilhas ocultas ou pressão. É por isso que as atualizações que enviamos existem para trazer clareza, não ruído.", "subheading": "Confira o que você vai receber da gente:", "list_item_1": "Recomendações adaptadas ao seu estilo de viagem", "list_item_2": "Alertas quando o preço de um hotel cair ou aumentar", "list_item_3": "Lembretes sobre ofertas congeladas, para que você não perca nenhuma opção", "list_item_4": "Avisos importantes sobre suas reservas, sem emails desnecessários", "body2": "Nada de spam. Apenas informações úteis, quando forem relevantes.", "body3": "Lembrando que você pode desligar notificações específicas a qualquer momento, sem perder as demais. E se estiver tudo certo com essas atualizações, não precisa tomar nenhuma outra ação agora.", "cta": "Definir minhas preferências"}, "ro": {"subject": "Iată cum vom păstra legătura", "preheader": "Actualizează-ți preferințele în orice moment", "headline": "Hai să ținem legătura", "body1": "Nu credem în capcane ascunse sau în tactici de presiune. De aceea, actualizările pe care le trimitem sunt concepute pentru a aduce claritate, nu pentru a agita apele.", "subheading": "Iată la ce te poți aștepta de la noi:", "list_item_1": "Recomandări adaptate stilului tău de călătorie", "list_item_2": "Alerte de preț dacă prețul unui hotel scade sau crește", "list_item_3": "Mementouri de înghețare a ofertei, pentru a nu pierde ocaziile", "list_item_4": "Actualizări clare ale rezervărilor, fără e-mailuri inutile", "body2": "Fără spam. Doar informații utile, atunci când acestea contează.", "body3": "Și tu deții întotdeauna controlul. Poți dezactiva în orice moment tipurile de notificări individuale, fără a pierde accesul la celelalte. Dacă ești mulțumit de aceste actualizări, nu trebuie să faci nimic altceva chiar acum.", "cta": "Configurează-mi preferințele"}, "ru": {"subject": "Вот как мы будем с вами связываться", "preheader": "Изменяйте настройки в любое время", "headline": "Будем на связи", "body1": "Мы не используем скрытые ловушки или тактики давления. Поэтому наши обновления добавляют ясность, а не лишний шум.", "subheading": "Вот что вы получите от нас:", "list_item_1": "Персональные рекомендации для вашего стиля путешествий", "list_item_2": "Оповещения о снижении и повышении цен в отеле", "list_item_3": "Напоминания о заморозке предложений без потери вариантов", "list_item_4": "Только важные новости о бронировании", "body2": "Никакого спама. Только полезная информация в нужный момент.", "body3": "Вы всегда контролируете ситуацию. Вы можете отключить отдельные типы уведомлений в любое время, не теряя доступ к другим. Все устраивает? Тогда ничего делать не нужно.", "cta": "Настроить мои предпочтения"}, "es": {"subject": "Así es como estaremos en contacto", "preheader": "Actualiza tus preferencias en cualquier momento", "headline": "Mantengamos el contacto", "body1": "No creemos en las trampas ocultas ni en las tácticas de presión. Por eso, las actualizaciones que enviamos están diseñadas para aportar claridad, no ruido.", "subheading": "Esto es lo que puedes esperar de nosotros:", "list_item_1": "Recomendaciones adaptadas a tu estilo de viaje", "list_item_2": "Alertas de precios si un hotel baja o sube el precio", "list_item_3": "Recordatorios de ofertas congeladas para no perder opciones", "list_item_4": "Actualizaciones de reservas claras, sin correos electrónicos innecesarios", "body2": "Sin spam. Solo información útil, cuando importa.", "body3": "Y siempre tendrás el control. Puedes desactivar tipos de notificaciones individuales en cualquier momento, sin perder acceso a los demás. Si te parecen bien estas actualizaciones, no tienes que hacer nada más ahora mismo.", "cta": "Establecer mis preferencias"}, "es-419": {"subject": "Así es como nos mantendremos en contacto", "preheader": "Actualiza tus preferencias en cualquier momento", "headline": "Mantengámonos en contacto", "body1": "No creemos en trampas ocultas ni en tácticas de presión. Por eso, las actualizaciones que enviamos están diseñadas para agregar claridad, no ruido.", "subheading": "Esto es lo que puedes esperar de nosotros:", "list_item_1": "Recomendaciones adaptadas a tu estilo de viaje", "list_item_2": "Alertas de precio si un hotel baja o aumenta su precio", "list_item_3": "Recordatorios de oferta congelada, para que no pierdas opciones", "list_item_4": "Actualizaciones claras de reservas, sin correos electrónicos innecesarios", "body2": "Sin spam. Solo información útil, cuando importa.", "body3": "Y tú siempre estás en control. Puedes desactivar tipos de notificaciones individuales en cualquier momento, sin perder el acceso a los demás. Si estás contento con estas actualizaciones, no tienes que hacer nada más en este momento.", "cta": "Establecer mis preferencias"}, "sv": {"subject": "Så här håller vi kontakten", "preheader": "Uppdatera dina inställningar när som helst", "headline": "Låt oss hålla kontakten", "body1": "Vi tror inte på dolda fällor eller stressande taktiker. Därför är våra uppdateringar skapade för att ge tydlighet utan att förvirra.", "subheading": "Här är vad du kan förvänta dig av oss:", "list_item_1": "Rekommendationer skräddarsydda för din restil", "list_item_2": "Prisbevakningar som berättar om hotellpriset höjs eller sänks", "list_item_3": "Påminnelser om frysta priser så att du inte missar några alternativ", "list_item_4": "Tydliga bokningsuppdateringar, utan onödiga e-postmeddelanden", "body2": "Ingen skräppost. Bara användbar information när den är viktig.", "body3": "Och du har alltid full kontroll. Du kan när som helst inaktivera enskilda aviseringstyper utan att förlora åtkomst till de andra. Om du tycker att de här uppdateringarna låter bra behöver du inte göra något just nu.", "cta": "Ange mina inställningar"}, "th": {"subject": "นี่คือวิธีที่เราใช้รักษาการติดต่อกับคุณ", "preheader": "อัปเดตการตั้งค่าได้ทุกเมื่อ", "headline": "มารักษาการติดต่อกัน", "body1": "เราไม่นิยมใช้กลลวงหรือเทคนิคกดดันนั่นคือเหตุผลที่การอัปเดตต่างๆ ที่เราส่งให้นั้นมีความชัดเจนและไม่สร้างความรำคาญ", "subheading": "นี่คือสิ่งที่คุณคาดหวังจากเรา:", "list_item_1": "คำแนะนำที่เหมาะกับสไตล์การเดินทางของคุณ", "list_item_2": "แจ้งเตือนราคา หากราคาโรงแรมลดลงหรือเพิ่มขึ้น", "list_item_3": "แจ้งเตือนการล็อกดีล เพื่อให้คุณไม่สูญเสียตัวเลือก", "list_item_4": "อัปเดตการจองที่ชัดเจน ปราศจากอีเมลที่ไม่จำเป็น", "body2": "ไม่มีสแปมเฉพาะข้อมูลที่มีประโยชน์ ในเวลาที่จำเป็น", "body3": "และอยู่ในการดูแลของคุณเสมอคุณสามารถปิดการแจ้งเตือนแต่ละประเภทได้ทุกเมื่อ โดยไม่สูญเสียการเข้าถึงการแจ้งเตือนประเภทอื่นๆหากคุณพอใจกับการอัปเดตเหล่านี้ ยังไม่ต้องทำอะไร ณ ตอนนี้", "cta": "ตั้งค่าความต้องการของฉัน"}, "tr": {"subject": "Sizinle şu yollarla iletişim kuracağız:", "preheader": "Tercihlerinizi dilediğiniz zaman güncelleyin", "headline": "İletişimde kalalım", "body1": "Sürpriz maliyetler veya zorlayıcı stratejileri benimsemiyoruz. Bu nedenle gönderdiğimiz güncellemeler kafa karıştırmak yerine netlik sunmak için tasarlanıyor.", "subheading": "Bizden neler bekleyebileceğinizi öğrenin:", "list_item_1": "Seyahat tarzınıza göre hazırlanmış öneriler", "list_item_2": "Bir otel fiyatı düşerse veya artarsa fiyat uyarıları", "list_item_3": "Seçenekleri kaybetmemeniz için Fırsatı Dondur hatırlatıcıları", "list_item_4": "Net rezervasyon güncellemeleri, gereksiz e-postalara yer yok", "body2": "Spam yok. Sadece gerçekten önemli olan faydalı bilgiler.", "body3": "Ve kontrol her zaman sizde. Her bir bildirim türünü ayrı ayrı, diğerlerine erişiminizi kaybetmeden dilediğiniz zaman kapatabilirsiniz. Bu güncellemelerden memnunsanız şu anda başka bir şey yapmanıza gerek yok.", "cta": "Tercihlerimi ayarla"}, "uk": {"subject": "Ось як ми з вами зв'язуватимемося", "preheader": "Змінюйте налаштування в будь-який час", "headline": "Будьмо на зв'язку", "body1": "Ми не вдаємося до прихованих пасток і не надсилаємо нав'язливих повідомлень. Тому новини від нас додають ясності, а не зайвого шуму.", "subheading": "Чого очікувати від нас:", "list_item_1": "Персональні рекомендації для вашого стилю подорожей", "list_item_2": "Сповіщення про зниження та підвищення цін у готелі", "list_item_3": "Нагадування про заморожування пропозицій, щоб ви не втрачали варіанти", "list_item_4": "Лише важливі новини про бронювання", "body2": "Жодного спаму. Тільки корисна інформація у потрібний момент.", "body3": "Ви завжди контролюєте ситуацію. Ви можете вимкнути деякі типи сповіщень будь-коли, не втрачаючи доступу до інших. Вас усе влаштовує? Тоді більше нічого робити не потрібно.", "cta": "Установити мої налаштування"}, "vi": {"subject": "Đây là cách chúng tôi sẽ giữ liên lạc", "preheader": "Cập nhật tùy chọn của bạn bất cứ lúc nào", "headline": "Hãy giữ liên lạc", "body1": "Chúng tôi không tin vào những cái bẫy ẩn hoặc chiến thuật gây áp lực. Đó là lý do tại sao các bản cập nhật mà chúng tôi gửi đi được thiết kế để làm rõ vấn đề, chứ không phải gây nhiễu thông tin.", "subheading": "Đây là những gì bạn có thể mong đợi từ chúng tôi:", "list_item_1": "Những gợi ý phù hợp với phong cách du lịch của bạn", "list_item_2": "Thông báo giá nếu khách sạn giảm hoặc tăng giá", "list_item_3": "Thông báo nhắc nhở Khóa giá để bạn không bỏ lỡ các lựa chọn", "list_item_4": "Thông tin cập nhật đặt chỗ rõ ràng, không cần email không cần thiết.", "body2": "Không gửi thư rác. Chỉ thông tin hữu ích khi cần thiết.", "body3": "Và bạn luôn kiểm soát. Bạn có thể tắt các loại thông báo riêng lẻ bất kỳ lúc nào, mà không mất quyền truy cập vào các loại thông báo khác. Nếu bạn hài lòng với những cập nhật này, bạn không phải làm bất cứ điều gì khác ngay bây giờ.", "cta": "Đặt tùy chọn của tôi"}}
+{%- endcapture -%}
+
+{%- assign locale_token = '"' | append: locale_key | append: '": {' -%}
+{%- assign en_token = '"en": {' -%}
+{%- assign locale_chunk = prefs_i18n_json | split: locale_token -%}
+{%- if locale_chunk.size > 1 -%}
+  {%- assign locale_chunk = locale_chunk[1] | split: '}' -%}
+  {%- assign locale_chunk = locale_chunk[0] -%}
+{%- else -%}
+  {%- assign locale_chunk = prefs_i18n_json | split: en_token -%}
+  {%- assign locale_chunk = locale_chunk[1] | split: '}' -%}
+  {%- assign locale_chunk = locale_chunk[0] -%}
+{%- endif -%}
+
+{%- capture _subject -%}{{ locale_chunk | split: '"subject": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _preheader -%}{{ locale_chunk | split: '"preheader": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _headline -%}{{ locale_chunk | split: '"headline": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _body1 -%}{{ locale_chunk | split: '"body1": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _subheading -%}{{ locale_chunk | split: '"subheading": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _list1 -%}{{ locale_chunk | split: '"list_item_1": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _list2 -%}{{ locale_chunk | split: '"list_item_2": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _list3 -%}{{ locale_chunk | split: '"list_item_3": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _list4 -%}{{ locale_chunk | split: '"list_item_4": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _body2 -%}{{ locale_chunk | split: '"body2": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _body3 -%}{{ locale_chunk | split: '"body3": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _cta -%}{{ locale_chunk | split: '"cta": "' | last | split: '"' | first }}{%- endcapture -%}
+
+{%- assign prefsSubjectLine = _subject | strip -%}
+{%- assign prefsPreheader = _preheader | strip -%}
+{%- assign prefsHeadline = _headline | strip -%}
+{%- assign prefsBody1 = _body1 | strip -%}
+{%- assign prefsSubheading = _subheading | strip -%}
+{%- assign prefsList1 = _list1 | strip -%}
+{%- assign prefsList2 = _list2 | strip -%}
+{%- assign prefsList3 = _list3 | strip -%}
+{%- assign prefsList4 = _list4 | strip -%}
+{%- assign prefsBody2 = _body2 | strip -%}
+{%- assign prefsBody3 = _body3 | strip -%}
+{%- assign prefsCTA = _cta | strip -%}
+
+{%- capture footer_app_line -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}احجز كأهل البلد. حمّل التطبيق.
+    {%- when "zh-cn" -%}订房有一套。 下载应用。
+    {%- when "zh-tw" -%}懂玩的人，都這樣訂房 下載應用程式
+    {%- when "zh-hk" -%}訂得安心。 下載應用程式。
+    {%- when "hr" -%}Rezervirajte pametnije. Preuzmite aplikaciju.
+    {%- when "cs" -%}Rezervujte levou zadní. Stáhněte si aplikaci.
+    {%- when "da" -%}Book med overblik. Download appen.
+    {%- when "nl" -%}Boeken zonder poespas. Download de app.
+    {%- when "en-gb" -%}Book like an insider. Download the app.
+    {%- when "en" -%}Book like an insider. Download the app.
+    {%- when "fil" -%}Mag-book nang may kumpyansa. I-download ang app.
+    {%- when "fi" -%}Varaa fiksusti. Lataa sovellus.
+    {%- when "fr" -%}Réserver sans se tromper. Télécharger l'application.
+    {%- when "fr-ca" -%}Réservez en toute confiance. Télécharger l'application.
+    {%- when "de" -%}Buchen mit klarem Blick. App herunterladen.
+    {%- when "el" -%}Κάνε τώρα τις πιο έξυπνες κρατήσεις. Κατεβάστε την εφαρμογή.
+    {%- when "he" -%}להזמין חכם זה פשוט. הורידו את האפליקציה.
+    {%- when "hu" -%}Foglaljon magabiztosan. Töltse le az alkalmazást.
+    {%- when "id" -%}Pesan tanpa cemas. Unduh aplikasi.
+    {%- when "it" -%}Prenotare senza pensieri. Scarica l'app.
+    {%- when "ja" -%}納得して予約する。アプリをダウンロード。
+    {%- when "ko" -%}예약에 확신을 더하다. 앱을 다운로드하세요.
+    {%- when "ms" -%}Kejelasan diutamakan. Tempah tanpa ragu. Muat turun aplikasi.
+    {%- when "no" -%}Book som en insider. Last ned appen.
+    {%- when "pl" -%}Rezerwuj jak zawodowiec. Pobierz aplikację.
+    {%- when "pt" -%}Reserve com confiança. Descarregue a app.
+    {%- when "pt-br" -%}Reserve sem erro. Baixe o app.
+    {%- when "ro" -%}Rezervă cu toată încrederea. Descarcă aplicația.
+    {%- when "ru" -%}Бронируйте с умом. Скачайте приложение.
+    {%- when "es" -%}Reservar sin equivocarse. Descarga la app.
+    {%- when "es-419" -%}Reservar sin equivocarse. Descarga la aplicación.
+    {%- when "sv" -%}Boka som en insider. Ladda ner appen.
+    {%- when "th" -%}จองคุ้มว่า ราคาแบบคนวงใน ดาวน์โหลดแอป
+    {%- when "tr" -%}Daha akıllıca rezervasyon yap. Uygulamayı indirin.
+    {%- when "uk" -%}Бронюй як місцевий. Завантажте застосунок.
+    {%- when "vi" -%}Đặt chỗ thông minh hơn. Tải ứng dụng.
+    {%- else -%}Book like an insider. Download the app.
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- capture footer_address -%}
+FindHotel B.V. Nieuwe Looiersdwarsstraat 17, 1017 TZ, Amsterdam, The Netherlands.
+{%- endcapture -%}
+
+{%- capture footer_prefs_text -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}قم بتحديث <emailPreferences>تفضيلات بريدك الإلكتروني</emailPreferences> لاختيار رسائل البريد الإلكتروني التي تتلقاها أو <unsubscribe>إلغاء الاشتراك</unsubscribe> من كل رسائل البريد الإلكتروني.
+    {%- when "zh-cn" -%}更新 <emailPreferences>电子邮件偏好设置</emailPreferences>，选择接收哪些邮件或 <unsubscribe>退订</unsubscribe>所有邮件。
+    {%- when "zh-tw" -%}更新 <emailPreferences>電子郵件偏好</emailPreferences>，選擇要收到哪些電子郵件，或是 <unsubscribe>取消訂閱</unsubscribe>所有電子郵件。
+    {%- when "zh-hk" -%}更新 <emailPreferences>電郵偏好設定</emailPreferences>以選擇接收哪些電郵或 <unsubscribe>取消訂閱</unsubscribe>所有電郵。
+    {%- when "hr" -%}Ažurirajte svoje <emailPreferences>postavke za e-mail</emailPreferences> kako biste odabrali koje e-poruke želite primati ili se u potpunosti <unsubscribe>odjavite</unsubscribe>.
+    {%- when "cs" -%}Upravte si <emailPreferences>předvolby e-mailů</emailPreferences> a vyberte sdělení, která chcete dostávat. Můžete si také <unsubscribe>odhlásit odběr</unsubscribe> veškerých e-mailů.
+    {%- when "da" -%}Opdater <emailPreferences>indstillinger for e-mail</emailPreferences> for at vælge, hvilke e-mails du får, eller <unsubscribe>afmeld</unsubscribe> alle e-mails.
+    {%- when "nl" -%}Werk je <emailPreferences>e-mailvoorkeuren</emailPreferences> bij om te kiezen welke e-mails je wilt ontvangen of om je <unsubscribe>af te melden</unsubscribe> voor alle e-mails.
+    {%- when "en-gb" -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+    {%- when "en" -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+    {%- when "fil" -%}I-update ang <emailPreferences>mga preference mo sa email</emailPreferences> para piliin kung anong mga email ang matatanggap mo o <unsubscribe>mag-unsubscribe</unsubscribe> sa lahat ng email.
+    {%- when "fi" -%}Päivitä <emailPreferences>sähköpostiasetukset</emailPreferences> ja valitse saamasi sähköpostiviestit tai <unsubscribe>peruuta</unsubscribe> kaikkien sähköpostiviestien tilaus.
+    {%- when "fr" -%}Mettez à jour vos <emailPreferences>préférences en matière d'e-mails</emailPreferences> pour choisir ce que vous souhaitez recevoir ou pour vous <unsubscribe>désabonner</unsubscribe> de tous les e-mails.
+    {%- when "fr-ca" -%}Mettez à jour vos <emailPreferences>préférences de courriel</emailPreferences> pour choisir les courriels que vous recevez ou vous <unsubscribe>désabonner</unsubscribe> de tous les courriels.
+    {%- when "de" -%}Aktualisieren Sie Ihre <emailPreferences>E-Mail-Einstellungen</emailPreferences>, um auszuwählen, welche E-Mails Sie erhalten möchten, oder um sich von allen E-Mails <unsubscribe>abzumelden</unsubscribe>.
+    {%- when "el" -%}Ενημερώστε τις <emailPreferences>προτιμήσεις email</emailPreferences> σας για να επιλέξετε ποια email θα λαμβάνετε ή να <unsubscribe>καταργήσετε την εγγραφή σας</unsubscribe> από όλα τα email.
+    {%- when "he" -%}יש לעדכן את <emailPreferences>העדפות האימייל</emailPreferences> שלכם כדי לבחור אילו אימיילים לקבל, או <unsubscribe>לבטל את המינוי</unsubscribe> על כל האימיילים.
+    {%- when "hu" -%}Frissítse <emailPreferences>e-mail-beállításait</emailPreferences>, hogy kiválaszthassa, mely e-maileket szeretné megkapni, vagy <unsubscribe>leiratkozhat</unsubscribe> az összes e-mailről.
+    {%- when "id" -%}Perbarui <emailPreferences>preferensi email</emailPreferences> Anda untuk memilih email mana yang Anda dapatkan atau <unsubscribe>berhenti berlangganan</unsubscribe> dari semua email.
+    {%- when "it" -%}Aggiorna le <emailPreferences>preferenze delle email</emailPreferences> per scegliere quali email ricevere o per <unsubscribe>cancellare l'iscrizione</unsubscribe> a tutte le email.
+    {%- when "ja" -%}<emailPreferences>メール設定</emailPreferences>を更新して、受信するメールを選択したり、すべてのメールの<unsubscribe>登録を解除</unsubscribe>したりできます。
+    {%- when "ko" -%}<emailPreferences>이메일 환경 설정</emailPreferences>을 업데이트하여 받을 이메일을 선택하거나 모든 이메일을 <unsubscribe>구독 해제</unsubscribe>할 수 있어요.
+    {%- when "ms" -%}Kemas kini <emailPreferences>keutamaan e-mel</emailPreferences> anda untuk memilih e-mel yang anda terima atau <unsubscribe>nyahlanggan</unsubscribe> semua e-mel.
+    {%- when "no" -%}Oppdater <emailPreferences>e-postpreferansene</emailPreferences> dine for å velge hvilke e-poster du får, eller <unsubscribe>avslutt abonnementet</unsubscribe> på alle e-poster.
+    {%- when "pl" -%}Aktualizacja <emailPreferences>preferencji dotyczących e-maili</emailPreferences> pozwala wybrać, które wiadomości chcesz otrzymywać, lub <unsubscribe>zrezygnować</unsubscribe> ze wszystkich wiadomości.
+    {%- when "pt" -%}Atualize as suas <emailPreferences>preferências de e-mail</emailPreferences> para escolher os e-mails que recebe ou <unsubscribe>cancele a subscrição</unsubscribe> de todos os e-mails.
+    {%- when "pt-br" -%}Atualize suas <emailPreferences>preferências de e-mail</emailPreferences> para escolher quais e-mails você deseja receber ou <unsubscribe>cancele a inscrição</unsubscribe> de todos os e-mails.
+    {%- when "ro" -%}Actualizează-ți <emailPreferences>preferințele de e-mail</emailPreferences> pentru a alege ce e-mailuri primești sau pentru a te <unsubscribe>dezabona</unsubscribe> de la toate e-mailurile.
+    {%- when "ru" -%}Обновите <emailPreferences>настройки электронной почты</emailPreferences>, чтобы выбрать, какие письма получать, или <unsubscribe>отмените подписку</unsubscribe> на все рассылки.
+    {%- when "es" -%}Actualiza tus <emailPreferences>preferencias de correo electrónico</emailPreferences> para elegir qué correos electrónicos deseas recibir o para <unsubscribe>cancelar la suscripción</unsubscribe> a todos los correos electrónicos.
+    {%- when "es-419" -%}Actualiza tus <emailPreferences>preferencias de correo electrónico</emailPreferences> para elegir qué mensajes quieres recibir o <unsubscribe>cancelar tu suscripción</unsubscribe> de todos los correos.
+    {%- when "sv" -%}Uppdatera dina <emailPreferences>e-postinställningar</emailPreferences> för att välja vilka e-postmeddelanden du får eller <unsubscribe>avsluta</unsubscribe> alla prenumerationer.
+    {%- when "th" -%}อัปเดต <emailPreferences>การตั้งค่าอีเมล</emailPreferences>เพื่อเลือกอีเมลที่คุณต้องการรับหรือ <unsubscribe>ยกเลิกการสมัคร</unsubscribe>รับอีเมลทั้งหมด
+    {%- when "tr" -%}<emailPreferences>E-posta tercihlerinizi</emailPreferences> güncelleyerek hangi e-postaları alacağınızı belirleyebilir ya da tüm e-posta <unsubscribe>aboneliklerinden çıkabilirsiniz</unsubscribe>.
+    {%- when "uk" -%}Оновіть <emailPreferences>налаштування електронних листів</emailPreferences>, щоб вибрати, які електронні листи отримувати, або <unsubscribe>відмовитися від підписки</unsubscribe> на всі електронні листи.
+    {%- when "vi" -%}Cập nhật <emailPreferences>tùy chọn email</emailPreferences> của bạn để chọn email bạn nhận được hoặc <unsubscribe>hủy đăng ký</unsubscribe> khỏi tất cả email.
+    {%- else -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- capture email_prefs_open -%}<a href="{{snippets.vio_notification_preferences}}" style="color:inherit;text-decoration:underline !important" target="_blank">{%- endcapture -%}
+{%- capture email_prefs_close -%}</a>{%- endcapture -%}
+{%- capture unsub_open -%}<a href="{{snippets.vio_notification_preferences_unsubscribe}}" class="untracked" style="color:inherit;text-decoration:underline !important" target="_blank">{%- endcapture -%}
+{%- capture unsub_close -%}</a>{%- endcapture -%}
+
+{%- assign footer_prefs_html = footer_prefs_text
+  | replace: "<emailPreferences>", email_prefs_open
+  | replace: "</emailPreferences>", email_prefs_close
+  | replace: "<unsubscribe>", unsub_open
+  | replace: "</unsubscribe>", unsub_close
+-%}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="{{ locale_key }}" dir="{{ dir }}">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>{{ prefsSubjectLine }}</title>
+
+    <style>
+      @font-face {
+        font-family: "Campton";
+        font-style: normal;
+        font-weight: 400;
+        mso-font-alt: "Circular";
+        src: url(https://price-watch-email-images-explicit-dev-sc-174677.s3.eu-west-1.amazonaws.com/225d48f7/fonts/NeueCampton-Regular.woff2)
+          format("woff2");
+      }
+      @font-face {
+        font-family: "Campton";
+        font-style: normal;
+        font-weight: 450;
+        mso-font-alt: "Circular";
+        src: url(https://price-watch-email-images-explicit-dev-sc-174677.s3.eu-west-1.amazonaws.com/225d48f7/fonts/NeueCampton-Regular.woff2)
+          format("woff2");
+      }
+      @font-face {
+        font-family: "Campton";
+        font-style: normal;
+        font-weight: 500;
+        mso-font-alt: "Circular";
+        src: url(https://price-watch-email-images-explicit-dev-sc-174677.s3.eu-west-1.amazonaws.com/225d48f7/fonts/NeueCampton-Medium.woff2)
+          format("woff2");
+      }
+      @font-face {
+        font-family: "Campton";
+        font-style: normal;
+        font-weight: 600;
+        mso-font-alt: "Circular";
+        src: url(https://price-watch-email-images-explicit-dev-sc-174677.s3.eu-west-1.amazonaws.com/225d48f7/fonts/NeueCampton-SemiBold.woff2)
+          format("woff2");
+      }
+
+      body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table { border-collapse: collapse; }
+      img { border: 0; outline: none; text-decoration: none; display: block; }
+      a { text-decoration: none; }
+
+      #mailcontainer *,
+      #mailcontainer,
+      body,
+      table,
+      td,
+      p,
+      a,
+      span {
+        font-family: "Campton", Circular, Helvetica, Arial;
+      }
+
+      #mailcontainer .outer {
+        background: #fcf7f5;
+        width: 100%;
+      }
+
+      #mailcontainer .card {
+        width: 728px;
+        max-width: 728px;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      #mailcontainer .header-logo {
+        padding: 22px 64px 10px;
+        text-align: center;
+      }
+      #mailcontainer .header-logo img {
+        width: 89px;
+        height: 30px;
+        display: block;
+        margin: 0 auto;
+      }
+
+      #mailcontainer .h1 {
+        color: #6d33d9;
+        font-size: 48px;
+        line-height: 52px;
+        font-weight: 600;
+        text-align: center;
+        margin: 0;
+        padding: 10px 64px 18px;
+        direction: {{ dir }};
+        unicode-bidi: plaintext;
+      }
+
+      /* Hero images: desktop (default) and mobile (shown on small screens) */
+      #mailcontainer .hero-desktop { display: block !important; }
+      #mailcontainer .hero-mobile { display: none !important; }
+
+      #mailcontainer .copy { padding: 28px 64px 28px; }
+      #mailcontainer .copy p {
+        margin: 0 0 24px 0;
+        font-size: 16px;
+        line-height: 24px;
+        color: #111111;
+        font-weight: 400;
+        text-align: left;
+        direction: {{ dir }};
+        unicode-bidi: plaintext;
+      }
+      #mailcontainer .copy p:last-child { margin-bottom: 0; }
+
+      /* Purple tick list */
+      #mailcontainer .tick-list {
+        margin: 0 0 24px 0;
+        padding: 0;
+        list-style: none;
+      }
+      #mailcontainer .tick-list-item {
+        display: table;
+        width: 100%;
+        margin-bottom: 14px;
+        font-size: 16px;
+        line-height: 24px;
+        color: #111111;
+        direction: {{ dir }};
+        unicode-bidi: plaintext;
+      }
+      #mailcontainer .tick-list-item:last-child { margin-bottom: 0; }
+      #mailcontainer .tick-list-item .tick-cell {
+        display: table-cell;
+        vertical-align: top;
+        width: 32px;
+        padding-right: 12px;
+        padding-top: 2px;
+      }
+      #mailcontainer .tick-list-item .tick-cell img {
+        width: 20px;
+        height: 20px;
+        display: block;
+      }
+      #mailcontainer .tick-list-item .text-cell {
+        display: table-cell;
+        vertical-align: top;
+      }
+
+      #mailcontainer .subheading {
+        font-size: 16px;
+        line-height: 24px;
+        color: #111111;
+        font-weight: 400;
+        margin: 0 0 16px 0;
+        direction: {{ dir }};
+        unicode-bidi: plaintext;
+      }
+
+      #mailcontainer .cta-wrap { padding: 0 64px 42px; }
+      #mailcontainer .btn {
+        display: block;
+        width: 100%;
+        background: #6d33d9;
+        color: #ffffff !important;
+        text-align: center;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 20px;
+        padding: 16px 0;
+        border-radius: 10px;
+      }
+
+      @media only screen and (max-width: 520px) {
+        #mailcontainer .card { width: 100% !important; max-width: 100% !important; }
+
+        #mailcontainer .header-logo { padding: 18px 24px 8px !important; }
+        #mailcontainer .header-logo img { width: 89px !important; height: 30px !important; }
+
+        #mailcontainer .h1 {
+          padding: 8px 20px 12px !important;
+          font-size: 20px !important;
+          line-height: 24px !important;
+        }
+
+        #mailcontainer .hero-desktop { display: none !important; }
+        #mailcontainer .hero-mobile { display: block !important; }
+
+        #mailcontainer .copy { padding: 18px 20px 24px !important; }
+        #mailcontainer .copy p,
+        #mailcontainer .subheading,
+        #mailcontainer .tick-list-item { font-size: 14px !important; line-height: 20px !important; }
+
+        #mailcontainer .cta-wrap { padding-left: 20px !important; padding-right: 20px !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="outer" id="mailcontainer" bgcolor="#FCF7F5">
+      <tr>
+        <td align="center" style="padding: 36px 12px 26px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="card" width="728" bgcolor="#FFFFFF">
+            <tr>
+              <td class="header-logo" align="center">
+                <img
+                  src="https://userimg-assets.customeriomail.com/images/client-env-124967/1769680583679_Hero_Logo_Vector_4x_01KG4JXF25SSBE0QK36X2MEAXM.png"
+                  width="89"
+                  height="30"
+                  alt="Vio"
+                  style="width:89px; height:30px;"
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <h1 class="h1">
+                  {{ prefsHeadline }}
+                </h1>
+              </td>
+            </tr>
+
+            <tr>
+              <td align="center" style="padding: 0; line-height: 0;">
+                <a href="{{snippets.vio_notification_preferences}}" target="_blank" style="display:block; text-decoration:none; border:0; outline:none;">
+                  <img
+                    class="hero-desktop"
+                    src="{{ hero_desktop_url }}"
+                    width="728"
+                    alt=""
+                    style="border:0; outline:none; text-decoration:none; width:100%; max-width:728px; height:auto;"
+                  />
+                  <img
+                    class="hero-mobile"
+                    src="{{ hero_mobile_url }}"
+                    width="520"
+                    alt=""
+                    style="border:0; outline:none; text-decoration:none; width:100%; max-width:100%; height:auto;"
+                  />
+                </a>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="copy">
+                <p><strong>{{ prefsBody1 }}</strong></p>
+                <p class="subheading">{{ prefsSubheading }}</p>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">
+                  <tr>
+                    <td style="vertical-align:top; width:32px; padding-right:12px; padding-top:2px; padding-bottom:10px;">
+                      <img src="{{ violet_tick_url }}" alt="" width="20" height="20" style="display:block; width:20px; height:20px;" />
+                    </td>
+                    <td style="vertical-align:top; font-size:16px; line-height:24px; color:#111111; font-family:Campton, Circular, Helvetica, Arial; padding-bottom:10px;">{{ prefsList1 }}</td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align:top; width:32px; padding-right:12px; padding-top:2px; padding-bottom:10px;">
+                      <img src="{{ violet_tick_url }}" alt="" width="20" height="20" style="display:block; width:20px; height:20px;" />
+                    </td>
+                    <td style="vertical-align:top; font-size:16px; line-height:24px; color:#111111; font-family:Campton, Circular, Helvetica, Arial; padding-bottom:10px;">{{ prefsList2 }}</td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align:top; width:32px; padding-right:12px; padding-top:2px; padding-bottom:10px;">
+                      <img src="{{ violet_tick_url }}" alt="" width="20" height="20" style="display:block; width:20px; height:20px;" />
+                    </td>
+                    <td style="vertical-align:top; font-size:16px; line-height:24px; color:#111111; font-family:Campton, Circular, Helvetica, Arial; padding-bottom:10px;">{{ prefsList3 }}</td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align:top; width:32px; padding-right:12px; padding-top:2px;">
+                      <img src="{{ violet_tick_url }}" alt="" width="20" height="20" style="display:block; width:20px; height:20px;" />
+                    </td>
+                    <td style="vertical-align:top; font-size:16px; line-height:24px; color:#111111; font-family:Campton, Circular, Helvetica, Arial;">{{ prefsList4 }}</td>
+                  </tr>
+                </table>
+
+                <p>{{ prefsBody2 }}</p>
+                <p>{{ prefsBody3 }}</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="cta-wrap" align="center">
+                <a class="btn" href="{{snippets.vio_notification_preferences}}" target="_blank">{{ prefsCTA }}</a>
+              </td>
+            </tr>
+
+            <!-- Divider -->
+            <tr>
+              <td align="center" style="padding: 0 0 34px;">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+                  <tr>
+                    <td height="1" style="height:1px;line-height:1px;font-size:1px;background-color:#e8e3e1;">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%">
+                  <tbody>
+                    <tr>
+                      <td style="padding-top:0;padding-bottom:0;padding-right:24px;padding-left:24px">
+                        <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column"></td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column" style="text-align:center">
+                                        <img
+                                          class="imageFix"
+                                          alt="Vio.com"
+                                          src="https://userimg-assets.customeriomail.com/images/client-env-124967/1770377276677_Vector_HighDef_01KGSBAVCB07TGMTGYZBMPCWD9.png"
+                                          style="display:block;outline:none;border:none;text-decoration:none;margin:auto"
+                                          width="90"
+                                        />
+
+                                        <p style="font-size:20px;line-height:28px;font-weight:600;letter-spacing:normal;font-family:Campton, Circular, Helvetica, Arial, sans-serif;text-align:center;margin:0;color:#7130c9;padding-top:12px;padding-bottom:0;padding-right:20px;padding-left:20px;direction:{{ dir }};unicode-bidi:plaintext;">
+                                          {%- assign footer_app_line_html = footer_app_line
+                                            | replace: ". ", "<br />"
+                                            | replace: ".", ""
+                                          -%}
+                                          {{ footer_app_line_html | strip }}
+                                        </p>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                  <tbody>
+                                    <tr>
+                                      <td style="height:14px;font-size:1px;line-height:1px">&nbsp;</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column" style="text-align:center">
+                                        <a href="https://app.vio.com/v0HW?af_web_dp=https%3A%2F%2Fvio.com&amp;af_xp=custom&amp;c={{campaign.name}}&amp;af_ad={{message.name}}&amp;af_channel=customer.io&amp;pid={{message.type}}" data-cio-tag="AppBanner-apple-store-img" style="padding-right:6px;padding-left:0px;display:inline-block">
+                                          <img class="imageFix" alt="Download on App Store" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1756808278001_Appstore_Button_01K44YXW18QJ1S6H2NN0EKBNR2.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px">
+                                        </a>
+                                        <a href="https://app.vio.com/v0HW?af_web_dp=https%3A%2F%2Fvio.com&amp;af_xp=custom&amp;c={{campaign.name}}&amp;af_ad={{message.name}}&amp;af_channel=customer.io&amp;pid={{message.type}}" data-cio-tag="AppBanner-google-store-img" style="padding-right:0px;padding-left:6px;display:inline-block">
+                                          <img class="imageFix" alt="Get it on Google Play" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1756808171416_GooglePlaystore_Button_01K44YTKYFR6XPYK6S73Q4WZ44.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px">
+                                        </a>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <table align="center" width="100%" dir="{{ dir }}" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column">
+                                        <p style="font-size:12px;line-height:16px;font-weight:450;letter-spacing:normal;font-family:Campton, Circular, Helvetica, Arial, sans-serif;text-align:center;margin:0;color:#615a56;padding-top:24px;padding-bottom:6px;padding-right:0;padding-left:0;direction:{{ dir }};unicode-bidi:plaintext;">
+                                          {{ footer_address | strip }}
+                                        </p>
+
+                                        <p style="font-size:12px;line-height:16px;font-weight:450;letter-spacing:normal;font-family:Campton, Circular, Helvetica, Arial, sans-serif;text-align:center;margin:0;color:#615a56;padding-top:0;padding-bottom:0;padding-right:0;padding-left:0;direction:{{ dir }};unicode-bidi:plaintext;">
+                                          {{ footer_prefs_html }}
+                                        </p>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                  <tbody>
+                                    <tr>
+                                      <td style="height:40px;font-size:1px;line-height:1px">&nbsp;</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column" style="text-align:center">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;padding-top:16px">
+                                          <tbody>
+                                            <tr>
+                                              <td style="padding:0 6px;">
+                                                <a href="https://www.instagram.com/vio.com.travel" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block">
+                                                  <img class="imageFix" alt="Vio.com" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-instagram.png" style="display:block;outline:none;border:none;text-decoration:none" width="32">
+                                                </a>
+                                              </td>
+                                              <td style="padding:0 6px;">
+                                                <a href="https://www.facebook.com/viodotcom" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block">
+                                                  <img class="imageFix" alt="Vio.com" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-facebook.png" style="display:block;outline:none;border:none;text-decoration:none" width="32">
+                                                </a>
+                                              </td>
+                                              <td style="padding:0 6px;">
+                                                <a href="https://www.linkedin.com/company/viodotcom/" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block">
+                                                  <img class="imageFix" alt="Vio.com" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-linkedin.png" style="display:block;outline:none;border:none;text-decoration:none" width="32">
+                                                </a>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                  <tbody>
+                                    <tr>
+                                      <td style="height:40px;font-size:1px;line-height:1px">&nbsp;</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    {%- comment -%}
+      For Customer.io:
+      - Subject: {{ prefsSubjectLine }}
+      - Preheader: {{ prefsPreheader }}
+    {%- endcomment -%}
+  </body>
+</html>

@@ -1,0 +1,790 @@
+{%- comment -%}
+  DEAL FREEZE EMAIL (FULL HTML)
+  - Locale normalization + RTL detection
+  - COUNTRY-BASED locale resolution for ambiguous languages (pt/pt-br, es/es-419, en/en-gb, fr/fr-ca)
+  - HERO image per locale
+  - Footer localization (prefs + terms)
+  - Same styling and footer as Price Alerts. Customer.io: Subject {{ deal_freeze_subjectline | strip }}, Preheader {{ deal_freeze_preheader | strip }}
+{%- endcomment -%}
+
+{%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
+{%- assign lang2 = lang | slice: 0, 2 -%}
+{%- assign locale_key = lang2 -%}
+
+{%- comment -%} Country code for resolving ambiguous locales (pt vs pt-br, es vs es-419, etc.)
+  Supports: customer.country, customer.country_code, customer.cio_iso_country (Customer.io geo) {%- endcomment -%}
+{%- assign country = customer.country_code | default: customer.country | default: customer.cio_iso_country | default: "" | upcase | slice: 0, 2 -%}
+
+{%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
+
+{%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}
+  {%- assign locale_key = "zh-hk" -%}
+{%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}
+  {%- assign locale_key = "zh-tw" -%}
+{%- elsif lang contains "zh-cn" or lang contains "zh-sg" or lang contains "zh-hans" -%}
+  {%- assign locale_key = "zh-cn" -%}
+{%- elsif lang contains "fr-ca" -%}
+  {%- assign locale_key = "fr-ca" -%}
+{%- elsif lang contains "pt-br" -%}
+  {%- assign locale_key = "pt-br" -%}
+{%- elsif lang contains "pt-pt" -%}
+  {%- assign locale_key = "pt" -%}
+{%- elsif lang contains "en-gb" -%}
+  {%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "es" and lang contains "-" and lang != "es-es" -%}
+  {%- assign locale_key = "es-419" -%}
+{%- elsif lang2 == "tl" or lang contains "fil" -%}
+  {%- assign locale_key = "fil" -%}
+{%- elsif lang2 == "nb" or lang2 == "nn" -%}
+  {%- assign locale_key = "no" -%}
+{%- endif -%}
+
+{%- comment -%}
+  COUNTRY-BASED overrides: when language is ambiguous, use country to pick the correct locale.
+  Handles: Brazil (pt-br), Portugal (pt), Latin America Spanish (es-419), UK English (en-gb), Canadian French (fr-ca).
+  Also handles "portuguese" stored as full word - resolves via country.
+{%- endcomment -%}
+{%- assign is_portuguese = false -%}
+{%- if lang2 == "pt" or lang contains "portuguese" -%}
+  {%- assign is_portuguese = true -%}
+{%- endif -%}
+{%- if is_portuguese -%}
+  {%- if country == "BR" -%}
+    {%- assign locale_key = "pt-br" -%}
+  {%- elsif country == "PT" -%}
+    {%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-pt" -%}
+    {%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-br" -%}
+    {%- assign locale_key = "pt-br" -%}
+  {%- else -%}
+    {%- comment -%} Default: Brazil has ~10x more Portuguese speakers than Portugal {%- endcomment -%}
+    {%- assign locale_key = "pt-br" -%}
+  {%- endif -%}
+{%- elsif lang2 == "es" and locale_key == "es" -%}
+  {%- assign latam_countries = "MX,AR,CO,CL,PE,VE,EC,GT,HN,SV,NI,PA,PR,DO,CR,BO,PY,UY,CU" | split: "," -%}
+  {%- assign is_latam = false -%}
+  {%- for cc in latam_countries -%}
+    {%- if country == cc -%}{%- assign is_latam = true -%}{%- break -%}{%- endif -%}
+  {%- endfor -%}
+  {%- if is_latam -%}
+    {%- assign locale_key = "es-419" -%}
+  {%- endif -%}
+{%- elsif lang2 == "en" and locale_key == "en" and country == "GB" -%}
+  {%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "fr" and locale_key == "fr" and country == "CA" -%}
+  {%- assign locale_key = "fr-ca" -%}
+{%- endif -%}
+
+{%- assign is_rtl = false -%}
+{%- if locale_key == "ar" or locale_key == "he" or locale_key == "fa" or locale_key == "ur" -%}
+  {%- assign is_rtl = true -%}
+{%- endif -%}
+
+{%- if is_rtl -%}
+  {%- assign dir = "rtl" -%}
+{%- else -%}
+  {%- assign dir = "ltr" -%}
+{%- endif -%}
+
+{%- assign headline_align = "center" -%}
+{%- if locale_key == "ar" or locale_key == "he" -%}
+  {%- assign headline_align = "right" -%}
+{%- endif -%}
+
+{%- comment -%}
+  HERO image localization (Deal Freeze)
+{%- endcomment -%}
+{%- capture deal_freeze_hero_url -%}
+  {%- case locale_key -%}
+    {%- when "vi" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633964514_DealFreeze_Vietnam_01KH0YYKV6385VFY2265GFNCKE.jpg
+    {%- when "uk" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633965394_DealFreeze_Ukranian_01KH0YYN1BW7HESH76RH64X6KH.jpg
+    {%- when "tr" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633966417_DealFreeze_Turkish_01KH0YYP7Y9TTG3K0M0T7K9FPE.jpg
+    {%- when "th" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633967480_DealFreeze_Thai_01KH0YYQQ4SYMDJM1CZN9JJ07Q.jpg
+    {%- when "sv" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633968643_DealFreeze_Swedish_01KH0YYRV4VCS9STSV51HNG9EE.jpg
+    {%- when "es" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633969740_DealFreeze_Spanish_01KH0YYSYEPSTZ950YG7BX60DB.jpg
+    {%- when "es-419" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633969740_DealFreeze_Spanish_01KH0YYSYEPSTZ950YG7BX60DB.jpg
+    {%- when "ru" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633970862_DealFreeze_Russian_01KH0YYV4GMMC76F8GH6VFFTD1.jpg
+    {%- when "ro" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633971908_DealFreeze_Romanian_01KH0YYW8352GYRQ7GYXZ8ZD88.jpg
+    {%- when "pt-br" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633973020_DealFreeze_Portuguese_Brazil_01KH0YYXEK9BN0PKVF3M1Q41SG.jpg
+    {%- when "pt" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633974138_DealFreeze_Portugal_01KH0YZ0CNXA4S4PASDW0XD5AD.jpg
+    {%- when "pl" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633975261_DealFreeze_Polish_01KH0YZ1X091DJPJHSPC7QFVWY.jpg
+    {%- when "no" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633976701_DealFreeze_Norway_01KH0YZ31DWERYA19JPS9EZQ7F.jpg
+    {%- when "ms" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633977855_DealFreeze_Malay_01KH0YZ47RZP8XFY5HPYKT574R.jpg
+    {%- when "ko" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633978883_DealFreeze_Korean_01KH0YZ5CR3V9BHEJY79Y926J6.jpg
+    {%- when "ja" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633980080_DealFreeze_Japanese_01KH0YZ6HW20EM3HC2YX25TE2D.jpg
+    {%- when "it" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633980999_DealFreeze_Italian_01KH0YZ7X72M9MWSR1NJN8NZB9.jpg
+    {%- when "id" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633983429_DealFreeze_Indonesian_01KH0YZ91NZB6JE3SVWHE1GS0P.jpg
+    {%- when "hu" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633984607_DealFreeze_Hungarian_01KH0YZA5JC0ACYS9Z2JD3AJ57.jpg
+    {%- when "el" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633985907_DealFreeze_Greece_01KH0YZBB5TSTJTDZ5ZWPYVM1Z.jpg
+    {%- when "de" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633987262_DealFreeze_Germany_01KH0YZCHH60F9QFRRYF1HWMYP.jpg
+    {%- when "fr-ca" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633988589_DealFreeze_French_Canada_01KH0YZDR3XQFC7W7PPXE0AMWM.jpg
+    {%- when "fr" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633989700_DealFreeze_French_01KH0YZFH7GA0V1CE4K0P50EP2.jpg
+    {%- when "fi" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633990723_DealFreeze_Finnish_01KH0YZGQZC6TE79XHRY1VYJBM.jpg
+    {%- when "en-gb" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633991783_DealFreeze_English_UK_01KH0YZHYDM2XD33X3QA8QTJ2P.jpg
+    {%- when "nl" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633993170_DealFreeze_Dutch_01KH0YZKHYPQP9GF7GQ0V3B172.jpg
+    {%- when "da" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633995243_DealFreeze_Danish_01KH0YZN5C2SA0BA6ZBQMN3RYP.jpg
+    {%- when "cs" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633996332_DealFreeze_Czech_01KH0YZPCZJWX3JAEPN09BHXW8.jpg
+    {%- when "zh-tw" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633997606_DealFreeze_Chinese_Taiwan_01KH0YZSTY5Q3CY2DT8QRVG1NM.jpg
+    {%- when "zh-hk" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770633998822_DealFreeze_Chinese_HongKong_01KH0YZRNM5HDNYE8VR3W1X4C7.jpg
+    {%- when "ar" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770651641434_DealFreeze_Arabic_01KH1GZSR1N46530YGC4MKSG9D.jpg
+    {%- when "zh-cn" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1770632764913_DealFreeze_Chinese_01KH0YZQJ08YHPAFGNQQF3V5X2.jpg
+    {%- else -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1769680327130_DealFreeze_English_UK_01KH0YZHYDM2XD33X3QA8QTJ2P.jpg
+  {%- endcase -%}
+{%- endcapture -%}
+{%- assign deal_freeze_hero_url = deal_freeze_hero_url | strip -%}
+
+{%- comment -%}
+  UPDATED: Price Alerts i18n map (from your sheet)
+  NOTE: Avoid double quotes inside values, or escape them as &quot;.
+{%- endcomment -%}
+{%- capture deal_freeze_i18n_json -%}
+{"ar": {"subject": "تم تثبيت السعر، تم إزالة الضغط.", "preheader": "اضمن السعر اليوم مجانًا", "headline": "تثبيت عرض مجانًا", "body1": "باستخدام Vio، يمكنك الوصول إلى السعر اليوم مجانًا، بدون الحاجة إلى إضافة تفاصيل البطاقة. ما عليك سوى تثبيت العرض والدفع إذا كنت ترغب في المتابعة - أو إلغاؤه تمامًا.", "body2": "لا ضغط، الخيارات مفتوحة أمامك.", "cta": "تثبيت العرض"}, "zh-cn": {"subject": "价格锁定，安心无忧。", "preheader": "免费锁定今日价格", "headline": "免费锁定优惠", "body1": "选择 Vio，无需提交银行卡详情，即可免费锁定今日价格。先锁定优惠，再决定是否付款或取消，自由随心，轻松掌控。", "body2": "放下压力，随心选择。", "cta": "锁定优惠"}, "zh-tw": {"subject": "價格先凍結，輕鬆不用急。", "preheader": "鎖定今日價格，無需支付費用", "headline": "免費凍結優惠", "body1": "在 Vio，鎖定今日價格無需支付費用，免填卡片詳細資訊。輕鬆凍結優惠：滿意再付款，隨時可取消。", "body2": "減輕壓力，保持選項開放。", "cta": "凍結優惠"}, "zh-hk": {"subject": "凍結價錢，安心預訂。", "preheader": "免費鎖定今天的預訂價錢", "headline": "為你凍結優惠", "body1": "透過Vio，你可以免費鎖定今天的預訂價錢，同時無需提供付款卡詳情。你只需凍結優惠，付款後即可繼續享用。如果你有其他選擇，也可完全取消優惠。", "body2": "給你充足時間揀選合適酒店。", "cta": "凍結交易"}, "hr": {"subject": "Zamrznuta cijena, bez pritiska.", "preheader": "Zaključajte današnju cijenu besplatno", "headline": "Zamrznite ponude besplatno", "body1": "Uz Vio možete besplatno zaključati današnju cijenu, bez unosa podataka o kartici. Jednostavno zamrznite ponudu i platite ako odlučite nastaviti – ili je u potpunosti otkažite.", "body2": "Manje pritiska, više opcija.", "cta": "Zamrzni ponudu"}, "cs": {"subject": "Cena zmrazena, bez tlaku.", "preheader": "Zajistěte si dnešní cenu zdarma", "headline": "Cenu vám zmrazíme. Zdarma.", "body1": "S Vio si můžete zajistit dnešní cenu. Zdarma a bez zadávání platebních údajů. Stačí nabídku zaručit a později ji uhradit, nebo zrušit.", "body2": "Žádný nátlak, otevřené možnosti.", "cta": "Zaručit nabídku"}, "da": {"subject": "Prisen er frosset, presset er væk.", "preheader": "Fastlås dagens pris helt gratis", "headline": "Frys tilbud – helt gratis", "body1": "Med Vio kan du fastlåse dagens pris helt gratis, uden at der kræves kortoplysninger. Du fryser bare tilbuddet og betaler, hvis du vil afsted – ellers annullerer du bare.", "body2": "Ingen stress, alle muligheder er åbne.", "cta": "Frys et tilbud"}, "nl": {"subject": "Prijs vastgezet, geen stress meer.", "preheader": "Zet de prijs van vandaag gratis vast", "headline": "Gratis deals vastzetten", "body1": "Met Vio kun je de prijs van vandaag gratis vastzetten, zonder dat je je kaartgegevens hoeft in te voeren. Zet de deal vast en betaal wanneer je de prijs wilt betalen, of annuleer deze zoekopdracht.", "body2": "Geen druk, opties open.", "cta": "Deal vastzetten"}, "en": {"subject": "Price frozen, pressure off.", "preheader": "Lock in today's price for free", "headline": "Freeze deals for free", "body1": "With Vio, you can lock in today's price for free, with no card details required. Simply freeze the deal, and pay if you want to go ahead – or cancel it entirely.", "body2": "Pressure off, options open.", "cta": "Freeze a deal"}, "en-gb": {"subject": "Price frozen, pressure off.", "preheader": "Lock in today's price for free", "headline": "Freeze deals for free", "body1": "With Vio, you can lock in today's price for free, with no card details required. Simply freeze the deal, and pay if you want to go ahead – or cancel it entirely.", "body2": "Pressure off, options open.", "cta": "Freeze a deal"}, "fil": {"subject": "Naka-freeze ang presyo, walang pressure.", "preheader": "I-lock im ang presyo ngayong araw nang libre", "headline": "I-freeze ang mga promo nang libre", "body1": "Sa Vio, puwede mong i-lock in ang presyo ngayong araw nang libre, hindi kailangan ng mga detalye ng card. I-freeze lang ang promo, at bayaran kung gusto mong tumuloy—o kanselahin lahat ito.", "body2": "Walang pressure, marami kang opsyon.", "cta": "I-freeze ang isang promo"}, "fi": {"subject": "Ei paineita, hinta jäädytetty.", "preheader": "Lukitse tämän päivän hinta ilmaiseksi", "headline": "Jäädytä tarjoukset maksutta", "body1": "Vion avulla voit lukita tämän päivän hinnan ilmaiseksi ilman maksukortin tietojen antamista. Jäädytä tarjous ja maksa, jos haluat varata – voit myös peruuttaa sen kokonaan.", "body2": "Vaihtoehdot avoinna ilman paineita.", "cta": "Jäädytä tarjous"}, "fr": {"subject": "Prix gelé, aucune pression.", "preheader": "Bloquez le prix d'aujourd'hui gratuitement", "headline": "Des offres gelées gratuitement", "body1": "Avec Vio, vous pouvez verrouiller le prix du jour gratuitement, sans utiliser de carte bancaire. Il suffit de geler l'offre, puis de payer si vous souhaitez poursuivre, ou sinon tout annuler.", "body2": "Aucune pression, options ouvertes.", "cta": "Gelez une offre"}, "fr-ca": {"subject": "Prix gelé, moins de pression.", "preheader": "Bloquez le prix d'aujourd'hui - gratuitement", "headline": "Gelez gratuitement vos offres", "body1": "Avec Vio, vous pouvez bloquer le prix d'aujourd'hui gratuitement, sans avoir à fournir les détails de votre carte Il suffit de geler l'offre et de payer si vous le souhaitez, ou de l'annuler complètement.", "body2": "Zéro pression, plus d'options.", "cta": "Geler une offre"}, "de": {"subject": "Preis sichern, auf den Urlaub freuen.", "preheader": "Günstige Preise kostenlos sichern", "headline": "Kostenloses Sichern von Angeboten", "body1": "Mit Vio können Sie sich den heutigen günstigen Preis kostenlos sichern, ohne Kreditkartendaten angeben zu müssen. Sie können sich das Angebot jetzt sichern und später bezahlen. Oder Sie stornieren es einfach wieder.", "body2": "Entspannt entscheiden, alle Optionen offen.", "cta": "Angebot reservieren"}, "el": {"subject": "Η τιμή έχει παγώσει. Μην αγχώνεστε.", "preheader": "Κλειδώστε τη σημερινή τιμή δωρεάν", "headline": "Παγώστε τις προσφορές δωρεάν!", "body1": "Η Vio σας δίνει τη δυνατότητα να κλειδώσετε τη σημερινή τιμή δωρεάν, χωρίς να απαιτούνται στοιχεία κάρτας. Η διαδικασία είναι εύκολη: παγώστε την προσφορά και πληρώνετε, αν θέλετε να συνεχίσετε. Αν όχι, την ακυρώστε.", "body2": "Χωρίς πίεση, με ανοιχτές επιλογές.", "cta": "Πάγωμα προσφοράς"}, "he": {"subject": "המחיר מוקפא, אין לחץ.", "preheader": "תנעלו את המחיר של היום בחינם", "headline": "להקפיא דילים בחינם", "body1": "עם Vio אפשר לנעול את המחיר של היום בחינם, ללא צורך בפרטי כרטיס אשראי. אפשר פשוט להקפיא את הדיל ולשלם אם תרצו להתקדם - או לבטל אותו לגמרי.", "body2": "בלי לחץ, אפשרויות פתוחות.", "cta": "שמירת חדר"}, "hu": {"subject": "Az ár lefagyasztva, semmi nyomás.", "preheader": "Rögzítse a mai árat ingyen", "headline": "Fagyassza be ingyenesen az ajánlatokat", "body1": "A Vio-val ingyen rögzítheti a mai árat, kártyaadatokra nem lesz szükség. Egyszerűen fagyassza le az ajánlatot, és fizessen, ha folytatni szeretné – vagy teljesen törölje.", "body2": "Nincs nyomás, opciók nyitva.", "cta": "Ajánlat befagyasztása"}, "id": {"subject": "Harga dikunci, beban sirna.", "preheader": "Kunci harga hari ini gratis", "headline": "Kunci harga, nggak keluar biaya", "body1": "Dengan Vio, Anda dapat mengunci harga hari ini secara gratis, tanpa Detail kartu. Tahan Promo, dan bayar jika Anda mau melanjutkan – atau batalkan sepenuhnya.", "body2": "Tekanan hilang, opsi terbuka.", "cta": "Kunci harga"}, "it": {"subject": "Prezzo bloccato, stress evitato.", "preheader": "Blocca il prezzo di oggi gratis", "headline": "Blocca l'offerta, è gratis", "body1": "Con Vio, puoi bloccare il prezzo di oggi gratis, non servono i dati della carta. Blocca l'offerta e paga se vuoi procedere, oppure cancella senza problemi.", "body2": "Meno stress, opzioni aperte.", "cta": "Blocca un'offerta"}, "ja": {"subject": "価格を固定し、プレッシャーから解放されましょう。", "preheader": "現在の価格を無料で固定できます", "headline": "無料で価格を固定", "body1": "Vioなら、カード情報を入力せずに、現在の価格を無料で固定できます。ディールを固定し、予約が決まったら料金をお支払いいただきます。そうでなければキャンセルされます。", "body2": "プレッシャーから解放され、選択肢が広がります。", "cta": "ディールを固定"}, "ko": {"subject": "할인 가격 고정으로 불안감을 떨쳐버리세요", "preheader": "무료로 오늘의 가격 고정하기", "headline": "무료로 할인 가격을 홀드하세요", "body1": "Vio에서는 오늘의 가격을 무료로 고정할 수 있습니다. 카드 정보는 필요 없어요. 쉽게 할인 가격을 고정한 다음, 예약하려면 결제하고 아니면 완전히 취소할 수 있습니다.", "body2": "부담 없이, 선택의 폭을 넓히세요.", "cta": "상품 홀드하기"}, "ms": {"subject": "Harga dikunci, tiada lagi tekanan.", "preheader": "Kunci harga hari ini secara percuma", "headline": "Kunci harga tanpa komitmen", "body1": "Dengan Vio, anda boleh mengunci harga hari ini secara percuma — tanpa perlu butiran kad. Hanya kunci tawaran tersebut, dan buat bayaran jika anda mahu meneruskannya – atau batalkan sepenuhnya.", "body2": "Tekanan dilepaskan, pilihan dibuka.", "cta": "Kunci harga"}, "no": {"subject": "Prisen er frosset, presset er borte.", "preheader": "Lås dagens pris kostnadsfritt", "headline": "Frys tilbud – helt gratis", "body1": "Med Vio kan du låse dagens pris kostnadsfritt, uten å måtte oppgi kortinformasjon. Du kan ganske enkelt fryse tilbudet og betale hvis du vil fortsette – eller kansellere det helt.", "body2": "Presset borte, alternativer åpne.", "cta": "Frys et tilbud"}, "pl": {"subject": "Cena zablokowana i presja znika.", "preheader": "Zablokuj bezpłatnie aktualną cenę", "headline": "Blokowanie cen za darmo", "body1": "Na Vio możesz bezpłatnie zablokować aktualną cenę – bez podawania informacji dotyczących karty! Wystarczy zablokować ofertę i zapłacić, gdy zdecydujesz się na rezerwację (albo całkowicie anulować działanie).", "body2": "Presja opadła, a możliwości stoją otworem.", "cta": "Blokuj cenę"}, "pt": {"subject": "Preço fixado, stress aliviado.", "preheader": "Bloqueie o preço de hoje, gratuitamente", "headline": "Congele ofertas sem pagar mais por isso", "body1": "Com a Vio, pode bloquear o preço de hoje, gratuitamente e sem introduzir detalhes do cartão. Basta fixar a oferta. Se quiser avançar, paga; caso contrário, cancela na totalidade.", "body2": "Decida com calma, mantenha as opções em aberto.", "cta": "Fixar uma oferta"}, "pt-br": {"subject": "Preço congelado, zero pressão.", "preheader": "Garanta o preço de hoje gratuitamente", "headline": "Reserve agora, pague depois", "body1": "Com a Vio, você pode garantir o preço de hoje sem custo e sem cartão. Congele a oferta, decida depois: pague ou cancele quando quiser.", "body2": "Vio. Reserve sem erro e sem pressa.", "cta": "Congelar uma oferta"}, "ro": {"subject": "Prețul este înghețat, iar tu nu simți niciun fel de presiune.", "preheader": "Îngheață gratuit prețul de astăzi", "headline": "Îngheață oferte - fără niciun cost", "body1": "Cu Vio, poți îngheța prețul de astăzi gratuit, fără să fie necesare datele de pe card. Pur și simplu blochează oferta și plătește dacă dorești să mergi mai departe, sau anuleaz-o cu totul.", "body2": "Presiunea a scăzut, opțiunile sunt deschise.", "cta": "Îngheață o ofertă"}, "ru": {"subject": "Цена зафиксирована — можно не спешить.", "preheader": "Зафиксируйте сегодняшнюю цену бесплатно", "headline": "Заморозьте предложение бесплатно", "body1": "Бесплатная фиксация цены с Vio — реквизиты карты не требуются. Просто заморозьте предложение: заплатите, если решите продолжить, или отмените его без обязательств.", "body2": "Ажиотаж спадает, новые возможности открываются.", "cta": "Заморозить"}, "es": {"subject": "Precio congelado, sin estrés.", "preheader": "Bloquea el precio de hoy de forma gratuita", "headline": "Congela las ofertas gratis", "body1": "Con Vio, puedes bloquear el precio de hoy gratis, sin necesidad de dar los detalles de la tarjeta. Solo tienes que congelar la oferta y pagar si quieres seguir adelante, o cancelarla por completo.", "body2": "Sin presión, con opciones abiertas.", "cta": "Congelar una oferta"}, "es-419": {"subject": "Precio congelado, sin presión.", "preheader": "Asegura el precio de hoy sin costo.", "headline": "Asegura el precio sin pagar extra", "body1": "Con Vio, puedes asegurar el precio de hoy de forma gratuita, sin que se requieran los detalles de la tarjeta. Solo tienes que congelar la oferta y pagar si quieres continuar, o cancelarlo por completo.", "body2": "Opciones abiertas, sin presiones.", "cta": "Congelar una oferta"}, "sv": {"subject": "Frys priset och släpp pressen.", "preheader": "Lås dagens pris utan kostnad", "headline": "Frys priser – helt gratis", "body1": "Med Vio kan du låsa dagens pris helt gratis – utan att ange kortuppgifter. Frys dealen och betala om du vill fortsätta – eller avboka helt och hållet.", "body2": "Ingen stress, alternativ öppna.", "cta": "Frys ett pris"}, "th": {"subject": "ล็อกราคา ลดแรงกดดัน", "preheader": "ล็อกราคาวันนี้ฟรี", "headline": "ล็อกข้อเสนอไว้ก่อนได้ฟรี", "body1": "ด้วย Vio คุณสามารถล็อกราคาวันนี้ได้ฟรีโดยไม่ต้องกรอกข้อมูลบัตรเพียงล็อกดีล และชำระเงินหากคุณต้องการดำเนินการต่อ หรือยกเลิกทั้งหมดก็ได้", "body2": "ไม่ต้องกดดัน", "cta": "ล็อกข้อเสนอ"}, "tr": {"subject": "Fiyat donduruldu, rahatınıza bakabilirsiniz.", "preheader": "Bugünkü fiyatı ücretsiz sabitleyin", "headline": "Fiyatı ücretsiz sabitle.", "body1": "Vio ile kart ayrıntıları gerekmeden bugünkü fiyatı ücretsiz sabitleyebilirsiniz. Fırsatı dondurun ve istediğiniz zaman ödeme yapın veya tamamen iptal edin.", "body2": "Baskı yok, seçenekler açık.", "cta": "Fırsatı dondurun"}, "uk": {"subject": "Ціну заморожено — можна не поспішати.", "preheader": "Зафіксуйте сьогоднішню ціну безкоштовно", "headline": "Заморозьте пропозицію безкоштовно", "body1": "Безкоштовна фіксація ціни з Vio — реквізити картки не потрібні. Просто заморозьте пропозицію: заплатіть, якщо вирішите продовжити, або скасуйте її без зобов'язань.", "body2": "Жодного тиску, доступні варіанти.", "cta": "Заморозити"}, "vi": {"subject": "Giá đã khóa, áp lực giảm đi.", "preheader": "Khóa giá hôm nay miễn phí", "headline": "Đóng băng ưu đãi, hoàn toàn miễn phí.", "body1": "Với Vio, bạn có thể khóa giá hôm nay miễn phí, không cần chi tiết thẻ. Chỉ cần khóa giá và thanh toán nếu bạn muốn tiếp tục – hoặc hủy hoàn toàn.", "body2": "Không cần chi tiết thẻ.", "cta": "Khóa giá"}}
+{%- endcapture -%}
+
+{%- assign locale_token = '"' | append: locale_key | append: '": {' -%}
+{%- assign en_token = '"en": {' -%}
+{%- assign locale_chunk = deal_freeze_i18n_json | split: locale_token -%}
+{%- if locale_chunk.size > 1 -%}
+  {%- assign locale_chunk = locale_chunk[1] | split: '}' -%}
+  {%- assign locale_chunk = locale_chunk[0] -%}
+{%- else -%}
+  {%- assign locale_chunk = deal_freeze_i18n_json | split: en_token -%}
+  {%- assign locale_chunk = locale_chunk[1] | split: '}' -%}
+  {%- assign locale_chunk = locale_chunk[0] -%}
+{%- endif -%}
+
+{%- capture _subject -%}{{ locale_chunk | split: '"subject": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _preheader -%}{{ locale_chunk | split: '"preheader": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _headline -%}{{ locale_chunk | split: '"headline": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _body1 -%}{{ locale_chunk | split: '"body1": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _body2 -%}{{ locale_chunk | split: '"body2": "' | last | split: '"' | first }}{%- endcapture -%}
+{%- capture _cta -%}{{ locale_chunk | split: '"cta": "' | last | split: '"' | first }}{%- endcapture -%}
+
+{%- assign deal_freeze_subjectline = _subject | strip -%}
+{%- assign deal_freeze_preheader = _preheader | strip -%}
+{%- assign deal_freeze_headline = _headline | strip -%}
+{%- assign deal_freeze_body1 = _body1 | strip -%}
+{%- assign deal_freeze_body2 = _body2 | strip -%}
+{%- assign deal_freeze_cta = _cta | strip -%}
+
+{%- capture footer_app_line -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}احجز كأهل البلد. حمّل التطبيق.
+    {%- when "zh-cn" -%}订房有一套。 下载应用。
+    {%- when "zh-tw" -%}懂玩的人，都這樣訂房 下載應用程式
+    {%- when "zh-hk" -%}訂得安心。 下載應用程式。
+    {%- when "hr" -%}Rezervirajte pametnije. Preuzmite aplikaciju.
+    {%- when "cs" -%}Rezervujte levou zadní. Stáhněte si aplikaci.
+    {%- when "da" -%}Book med overblik. Download appen.
+    {%- when "nl" -%}Boeken zonder poespas. Download de app.
+    {%- when "en-gb" -%}Book like an insider. Download the app.
+    {%- when "en" -%}Book like an insider. Download the app.
+    {%- when "fil" -%}Mag-book nang may kumpyansa. I-download ang app.
+    {%- when "fi" -%}Varaa fiksusti. Lataa sovellus.
+    {%- when "fr" -%}Réserver sans se tromper. Télécharger l'application.
+    {%- when "fr-ca" -%}Réservez en toute confiance. Télécharger l'application.
+    {%- when "de" -%}Buchen mit klarem Blick. App herunterladen.
+    {%- when "el" -%}Κάνε τώρα τις πιο έξυπνες κρατήσεις. Κατεβάστε την εφαρμογή.
+    {%- when "he" -%}להזמין חכם זה פשוט. הורידו את האפליקציה.
+    {%- when "hu" -%}Foglaljon magabiztosan. Töltse le az alkalmazást.
+    {%- when "id" -%}Pesan tanpa cemas. Unduh aplikasi.
+    {%- when "it" -%}Prenotare senza pensieri. Scarica l'app.
+    {%- when "ja" -%}納得して予約する。アプリをダウンロード。
+    {%- when "ko" -%}예약에 확신을 더하다. 앱을 다운로드하세요.
+    {%- when "ms" -%}Kejelasan diutamakan. Tempah tanpa ragu. Muat turun aplikasi.
+    {%- when "no" -%}Book som en insider. Last ned appen.
+    {%- when "pl" -%}Rezerwuj jak zawodowiec. Pobierz aplikację.
+    {%- when "pt" -%}Reserve com confiança. Descarregue a app.
+    {%- when "pt-br" -%}Reserve sem erro. Baixe o app.
+    {%- when "ro" -%}Rezervă cu toată încrederea. Descarcă aplicația.
+    {%- when "ru" -%}Бронируйте с умом. Скачайте приложение.
+    {%- when "es" -%}Reservar sin equivocarse. Descarga la app.
+    {%- when "es-419" -%}Reservar sin equivocarse. Descarga la aplicación.
+    {%- when "sv" -%}Boka som en insider. Ladda ner appen.
+    {%- when "th" -%}จองคุ้มว่า ราคาแบบคนวงใน ดาวน์โหลดแอป
+    {%- when "tr" -%}Daha akıllıca rezervasyon yap. Uygulamayı indirin.
+    {%- when "uk" -%}Бронюй як місцевий. Завантажте застосунок.
+    {%- when "vi" -%}Đặt chỗ thông minh hơn. Tải ứng dụng.
+    {%- else -%}Book like an insider. Download the app.
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- capture footer_address -%}
+FindHotel B.V. Nieuwe Looiersdwarsstraat 17, 1017 TZ, Amsterdam, The Netherlands.
+{%- endcapture -%}
+
+{%- capture footer_prefs_text -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}قم بتحديث <emailPreferences>تفضيلات بريدك الإلكتروني</emailPreferences> لاختيار رسائل البريد الإلكتروني التي تتلقاها أو <unsubscribe>إلغاء الاشتراك</unsubscribe> من كل رسائل البريد الإلكتروني.
+    {%- when "zh-cn" -%}更新 <emailPreferences>电子邮件偏好设置</emailPreferences>，选择接收哪些邮件或 <unsubscribe>退订</unsubscribe>所有邮件。
+    {%- when "zh-tw" -%}更新 <emailPreferences>電子郵件偏好</emailPreferences>，選擇要收到哪些電子郵件，或是 <unsubscribe>取消訂閱</unsubscribe>所有電子郵件。
+    {%- when "zh-hk" -%}更新 <emailPreferences>電郵偏好設定</emailPreferences>以選擇接收哪些電郵或 <unsubscribe>取消訂閱</unsubscribe>所有電郵。
+    {%- when "hr" -%}Ažurirajte svoje <emailPreferences>postavke za e-mail</emailPreferences> kako biste odabrali koje e-poruke želite primati ili se u potpunosti <unsubscribe>odjavite</unsubscribe>.
+    {%- when "cs" -%}Upravte si <emailPreferences>předvolby e-mailů</emailPreferences> a vyberte sdělení, která chcete dostávat. Můžete si také <unsubscribe>odhlásit odběr</unsubscribe> veškerých e-mailů.
+    {%- when "da" -%}Opdater <emailPreferences>indstillinger for e-mail</emailPreferences> for at vælge, hvilke e-mails du får, eller <unsubscribe>afmeld</unsubscribe> alle e-mails.
+    {%- when "nl" -%}Werk je <emailPreferences>e-mailvoorkeuren</emailPreferences> bij om te kiezen welke e-mails je wilt ontvangen of om je <unsubscribe>af te melden</unsubscribe> voor alle e-mails.
+    {%- when "en-gb" -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+    {%- when "en" -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+    {%- when "fil" -%}I-update ang <emailPreferences>mga preference mo sa email</emailPreferences> para piliin kung anong mga email ang matatanggap mo o <unsubscribe>mag-unsubscribe</unsubscribe> sa lahat ng email.
+    {%- when "fi" -%}Päivitä <emailPreferences>sähköpostiasetukset</emailPreferences> ja valitse saamasi sähköpostiviestit tai <unsubscribe>peruuta</unsubscribe> kaikkien sähköpostiviestien tilaus.
+    {%- when "fr" -%}Mettez à jour vos <emailPreferences>préférences en matière d'e-mails</emailPreferences> pour choisir ce que vous souhaitez recevoir ou pour vous <unsubscribe>désabonner</unsubscribe> de tous les e-mails.
+    {%- when "fr-ca" -%}Mettez à jour vos <emailPreferences>préférences de courriel</emailPreferences> pour choisir les courriels que vous recevez ou vous <unsubscribe>désabonner</unsubscribe> de tous les courriels.
+    {%- when "de" -%}Aktualisieren Sie Ihre <emailPreferences>E-Mail-Einstellungen</emailPreferences>, um auszuwählen, welche E-Mails Sie erhalten möchten, oder um sich von allen E-Mails <unsubscribe>abzumelden</unsubscribe>.
+    {%- when "el" -%}Ενημερώστε τις <emailPreferences>προτιμήσεις email</emailPreferences> σας για να επιλέξετε ποια email θα λαμβάνετε ή να <unsubscribe>καταργήσετε την εγγραφή σας</unsubscribe> από όλα τα email.
+    {%- when "he" -%}יש לעדכן את <emailPreferences>העדפות האימייל</emailPreferences> שלכם כדי לבחור אילו אימיילים לקבל, או <unsubscribe>לבטל את המינוי</unsubscribe> על כל האימיילים.
+    {%- when "hu" -%}Frissítse <emailPreferences>e-mail-beállításait</emailPreferences>, hogy kiválaszthassa, mely e-maileket szeretné megkapni, vagy <unsubscribe>leiratkozhat</unsubscribe> az összes e-mailről.
+    {%- when "id" -%}Perbarui <emailPreferences>preferensi email</emailPreferences> Anda untuk memilih email mana yang Anda dapatkan atau <unsubscribe>berhenti berlangganan</unsubscribe> dari semua email.
+    {%- when "it" -%}Aggiorna le <emailPreferences>preferenze delle email</emailPreferences> per scegliere quali email ricevere o per <unsubscribe>cancellare l'iscrizione</unsubscribe> a tutte le email.
+    {%- when "ja" -%}<emailPreferences>メール設定</emailPreferences>を更新して、受信するメールを選択したり、すべてのメールの<unsubscribe>登録を解除</unsubscribe>したりできます。
+    {%- when "ko" -%}<emailPreferences>이메일 환경 설정</emailPreferences>을 업데이트하여 받을 이메일을 선택하거나 모든 이메일을 <unsubscribe>구독 해제</unsubscribe>할 수 있어요.
+    {%- when "ms" -%}Kemas kini <emailPreferences>keutamaan e-mel</emailPreferences> anda untuk memilih e-mel yang anda terima atau <unsubscribe>nyahlanggan</unsubscribe> semua e-mel.
+    {%- when "no" -%}Oppdater <emailPreferences>e-postpreferansene</emailPreferences> dine for å velge hvilke e-poster du får, eller <unsubscribe>avslutt abonnementet</unsubscribe> på alle e-poster.
+    {%- when "pl" -%}Aktualizacja <emailPreferences>preferencji dotyczących e-maili</emailPreferences> pozwala wybrać, które wiadomości chcesz otrzymywać, lub <unsubscribe>zrezygnować</unsubscribe> ze wszystkich wiadomości.
+    {%- when "pt" -%}Atualize as suas <emailPreferences>preferências de e-mail</emailPreferences> para escolher os e-mails que recebe ou <unsubscribe>cancele a subscrição</unsubscribe> de todos os e-mails.
+    {%- when "pt-br" -%}Atualize suas <emailPreferences>preferências de e-mail</emailPreferences> para escolher quais e-mails você deseja receber ou <unsubscribe>cancele a inscrição</unsubscribe> de todos os e-mails.
+    {%- when "ro" -%}Actualizează-ți <emailPreferences>preferințele de e-mail</emailPreferences> pentru a alege ce e-mailuri primești sau pentru a te <unsubscribe>dezabona</unsubscribe> de la toate e-mailurile.
+    {%- when "ru" -%}Обновите <emailPreferences>настройки электронной почты</emailPreferences>, чтобы выбрать, какие письма получать, или <unsubscribe>отмените подписку</unsubscribe> на все рассылки.
+    {%- when "es" -%}Actualiza tus <emailPreferences>preferencias de correo electrónico</emailPreferences> para elegir qué correos electrónicos deseas recibir o para <unsubscribe>cancelar la suscripción</unsubscribe> a todos los correos electrónicos.
+    {%- when "es-419" -%}Actualiza tus <emailPreferences>preferencias de correo electrónico</emailPreferences> para elegir qué mensajes quieres recibir o <unsubscribe>cancelar tu suscripción</unsubscribe> de todos los correos.
+    {%- when "sv" -%}Uppdatera dina <emailPreferences>e-postinställningar</emailPreferences> för att välja vilka e-postmeddelanden du får eller <unsubscribe>avsluta</unsubscribe> alla prenumerationer.
+    {%- when "th" -%}อัปเดต <emailPreferences>การตั้งค่าอีเมล</emailPreferences>เพื่อเลือกอีเมลที่คุณต้องการรับหรือ <unsubscribe>ยกเลิกการสมัคร</unsubscribe>รับอีเมลทั้งหมด
+    {%- when "tr" -%}<emailPreferences>E-posta tercihlerinizi</emailPreferences> güncelleyerek hangi e-postaları alacağınızı belirleyebilir ya da tüm e-posta <unsubscribe>aboneliklerinden çıkabilirsiniz</unsubscribe>.
+    {%- when "uk" -%}Оновіть <emailPreferences>налаштування електронних листів</emailPreferences>, щоб вибрати, які електронні листи отримувати, або <unsubscribe>відмовитися від підписки</unsubscribe> на всі електронні листи.
+    {%- when "vi" -%}Cập nhật <emailPreferences>tùy chọn email</emailPreferences> của bạn để chọn email bạn nhận được hoặc <unsubscribe>hủy đăng ký</unsubscribe> khỏi tất cả email.
+    {%- else -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- capture email_prefs_open -%}<a href="{{snippets.vio_notification_preferences}}" style="color:inherit;text-decoration:underline !important" target="_blank">{%- endcapture -%}
+{%- capture email_prefs_close -%}</a>{%- endcapture -%}
+{%- capture unsub_open -%}<a href="{{snippets.vio_notification_preferences_unsubscribe}}" class="untracked" style="color:inherit;text-decoration:underline !important" target="_blank">{%- endcapture -%}
+{%- capture unsub_close -%}</a>{%- endcapture -%}
+
+{%- assign footer_prefs_html = footer_prefs_text
+  | replace: "<emailPreferences>", email_prefs_open
+  | replace: "</emailPreferences>", email_prefs_close
+  | replace: "<unsubscribe>", unsub_open
+  | replace: "</unsubscribe>", unsub_close
+-%}
+
+{%- capture terms_title -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}الشروط وسياسة الخصوصية
+    {%- when "zh-cn" -%}条款和隐私政策
+    {%- when "zh-tw" -%}條款和私隱政策
+    {%- when "zh-hk" -%}條款及私隱政策
+    {%- when "hr" -%}Uvjeti i politika privatnosti
+    {%- when "cs" -%}Podmínky a zásady ochrany osobních údajů
+    {%- when "da" -%}Vilkår og Privatlivspolitik
+    {%- when "nl" -%}Algemene voorwaarden en privacybeleid
+    {%- when "en-gb" -%}Terms and Privacy Policy
+    {%- when "en" -%}Terms and Privacy Policy
+    {%- when "fil" -%}Mga Tuntunin at Patakaran sa Privacy
+    {%- when "fi" -%}Ehdot ja tietosuojakäytäntö
+    {%- when "fr" -%}Conditions générales et Politique de confidentialité
+    {%- when "fr-ca" -%}Conditions et politique de confidentialité
+    {%- when "de" -%}Bedingungen und Richtlinien
+    {%- when "el" -%}Όρους και Πολιτική απορρήτου
+    {%- when "he" -%}התנאים ומדיניות הפרטיות
+    {%- when "hu" -%}Felhasználási feltételek és adatvédelmi szabályzat
+    {%- when "id" -%}Ketentuan dan Kebijakan Privasi
+    {%- when "it" -%}Termini e Policy
+    {%- when "ja" -%}規約とプライバシーポリシー
+    {%- when "ko" -%}이용 약관 및 개인정보 보호정책
+    {%- when "ms" -%}Terma dan Dasar Privasi
+    {%- when "no" -%}Vilkår og personvernpolicy
+    {%- when "pl" -%}Warunki i Polityka prywatności
+    {%- when "pt" -%}Termos e Política de Privacidade
+    {%- when "pt-br" -%}Termos e Política de Privacidade
+    {%- when "ro" -%}Termeni și politica de confidențialitate
+    {%- when "ru" -%}Условия и политика конфиденциальности
+    {%- when "es" -%}Términos y política de privacidad
+    {%- when "es-419" -%}Términos y Política de privacidad
+    {%- when "sv" -%}Villkor och Integritetspolicy
+    {%- when "th" -%}ข้อกำหนดและนโยบายความเป็นส่วนตัว
+    {%- when "tr" -%}Koşullar ve Gizlilik Politikası
+    {%- when "uk" -%}Умови та політика конфіденційnosti
+    {%- when "vi" -%}Điều khoản và Chính sách bảo mật
+    {%- else -%}Terms and Privacy Policy
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- capture terms_desc_text -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}يعالج Vio.com حجزك ويساعدك فيه. يخضع هذا الحجز لـ {terms} و {privacyPolicy} الخاصة بنا.
+    {%- when "zh-cn" -%}Vio.com 会处理预订并协助您完成。此预订适用我们的{terms}和{privacyPolicy}。
+    {%- when "zh-tw" -%}Vio.com 處理並協助您完成預訂。我們的 {terms} 和 {privacyPolicy} 承保此預訂。
+    {%- when "zh-hk" -%}Vio.com 處理並協助您完成預訂。此預訂由我們的 {terms} 和 {privacyPolicy} 承保。
+    {%- when "hr" -%}Vio.com obrađuje i pomaže s vašom rezervacijom. Ova rezervacija pokrivena je našim {terms} i {privacyPolicy}.
+    {%- when "cs" -%}Vio.com zpracovává a vyřizuje vaši rezervaci, na kterou se vztahují naše {terms} a {privacyPolicy}.
+    {%- when "da" -%}Vio.com behandler og hjælper med din booking. Denne booking er dækket af vores {terms} og {privacyPolicy}.
+    {%- when "nl" -%}Vio.com verwerkt je boeking en helpt je daarbij. Onze {terms} en ons {privacyPolicy} zijn van toepassing op deze boeking.
+    {%- when "en-gb" -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
+    {%- when "en" -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
+    {%- when "fil" -%}Pinoproseso at tinutulungan ka ng Vio.com sa pagbu-book mo. Saklaw ng aming {terms} at {privacyPolicy} ang booking na ito.
+    {%- when "fi" -%}Vio.com käsittelee varauksesi ja auttaa sen kanssa. {terms} ja {privacyPolicy} koskevat tätä varausta.
+    {%- when "fr" -%}Vio.com traite et facilite votre réservation. Cette réservation est soumise à nos {terms} et à notre {privacyPolicy}.
+    {%- when "fr-ca" -%}Vio.com traite votre réservation et vous assiste dans le processus. Cette réservation est couverte par nos {terms} et notre {privacyPolicy}.
+    {%- when "de" -%}Vio.com bearbeitet Ihre Buchung und unterstützt Sie dabei. Diese Buchung unterliegt unseren {terms} und unserer {privacyPolicy} .
+    {%- when "el" -%}Το Vio.com επεξεργάζεται και βοηθά με την κράτησή σας. Αυτή η κράτηση καλύπτεται από τους {terms} και την {privacyPolicy} μας.
+    {%- when "he" -%}Vio.com מעבדת את ההזמנה שלך ועוזרת לבצע אותה. הזמנה זו כפופה ל{terms} ול{privacyPolicy} שלנו.
+    {%- when "hu" -%}A Vio.com feldolgozza és segíti az Ön foglalását. Erre a foglalásra a {terms} és a {privacyPolicy} érvényes.
+    {%- when "id" -%}Vio.com memproses dan membantu pemesanan Anda. Pemesanan ini dilindungi oleh {terms} dan {privacyPolicy} kami.
+    {%- when "it" -%}Vio.com elabora e fornisce assistenza per la tua prenotazione. Questa prenotazione è coperta dai {terms} e dalla {privacyPolicy} di Vio.
+    {%- when "ja" -%}Vio.comが予約の処理とサポートを行います。この予約には当社の{terms}と{privacyPolicy}が適用されます。
+    {%- when "ko" -%}본 예약은 Vio.com에서 처리하고 지원하며, 당사의 {terms} 및 {privacyPolicy}이 적용됩니다.
+    {%- when "ms" -%}Vio.com memproses dan membantu dengan tempahan anda. Tempahan ini dilindungi oleh {terms} dan {privacyPolicy} kami.
+    {%- when "no" -%}Vio.com behandler og hjelper deg med bestillingen din. Denne bestillingen dekkes av vår {terms} og {privacyPolicy}
+    {%- when "pl" -%}Vio.com pomaga w dokonaniu rezerwacji i przetwarza ją. Ta rezerwacja jest objęta naszymi zasadami, których szczegóły zawierają {terms} i {privacyPolicy}.
+    {%- when "pt" -%}A Vio.com gere e presta-lhe assistência na reserva. Esta reserva está coberta pelos nossos {terms} e a {privacyPolicy}.
+    {%- when "pt-br" -%}Vio.com gerencia e ajuda com sua reserva. Esta reserva é coberta por nossos {terms} e {privacyPolicy}.
+    {%- when "ro" -%}Vio.com procesează și te ajută cu rezervarea ta. Această rezervare este acoperită de {terms} și {privacyPolicy}.
+    {%- when "ru" -%}Vio.com обрабатывает ваше бронирование и обеспечивает поддержку. На это бронирование распространяются наши {terms} и {privacyPolicy}.
+    {%- when "es" -%}Vio.com procesa tu reserva y te ayuda con ella. Esta reserva está cubierta por nuestras {terms} y {privacyPolicy}.
+    {%- when "es-419" -%}Vio.com procesa tu reserva y te brinda asistencia con ella. Esta reserva está cubierta por nuestros {terms} y nuestra {privacyPolicy}.
+    {%- when "sv" -%}Vio.com behandlar och assisterar med din bokning. Denna bokning täcks av våra {terms} och {privacyPolicy} .
+    {%- when "th" -%}Vio.com เป็นผู้ดำเนินการและให้ความช่วยเหลือในการจองของคุณ การจองนี้อยู่ภายใต้{terms} และ{privacyPolicy}ของเรา
+    {%- when "tr" -%}Vio.com rezervasyonunuzu işleme alır ve size yardımcı olur. Bu rezervasyon {terms} ve {privacyPolicy} esaslarımız kapsamındadır.
+    {%- when "uk" -%}Vio.com обробляє ваше бронювання та допомагає вам у ньому. На це бронювання поширюються наші {terms} та {privacyPolicy}.
+    {%- when "vi" -%}Vio.com xử lý và hỗ trợ đặt phòng của bạn. Đặt phòng này được bảo vệ bởi {terms} và {privacyPolicy} của chúng tôi.
+    {%- else -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- capture terms_link -%}<a href="https://www.vio.com/terms-of-use" target="_blank" style="color:#615a56;text-decoration:underline !important">Terms</a>{%- endcapture -%}
+{%- capture privacy_link -%}<a href="https://www.vio.com/privacy-policy" target="_blank" style="color:#615a56;text-decoration:underline !important">Privacy Policy</a>{%- endcapture -%}
+
+{%- assign terms_desc_html = terms_desc_text
+  | replace: "{terms}", terms_link
+  | replace: "{privacyPolicy}", privacy_link
+-%}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="{{ locale_key }}" dir="{{ dir }}">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>{{ deal_freeze_subjectline | strip }}</title>
+
+    <style>
+      @font-face {
+        font-family: "Campton";
+        font-style: normal;
+        font-weight: 400;
+        mso-font-alt: "Circular";
+        src: url(https://price-watch-email-images-explicit-dev-sc-174677.s3.eu-west-1.amazonaws.com/225d48f7/fonts/NeueCampton-Regular.woff2)
+          format("woff2");
+      }
+      @font-face {
+        font-family: "Campton";
+        font-style: normal;
+        font-weight: 450;
+        mso-font-alt: "Circular";
+        src: url(https://price-watch-email-images-explicit-dev-sc-174677.s3.eu-west-1.amazonaws.com/225d48f7/fonts/NeueCampton-Regular.woff2)
+          format("woff2");
+      }
+      @font-face {
+        font-family: "Campton";
+        font-style: normal;
+        font-weight: 500;
+        mso-font-alt: "Circular";
+        src: url(https://price-watch-email-images-explicit-dev-sc-174677.s3.eu-west-1.amazonaws.com/225d48f7/fonts/NeueCampton-Medium.woff2)
+          format("woff2");
+      }
+      @font-face {
+        font-family: "Campton";
+        font-style: normal;
+        font-weight: 600;
+        mso-font-alt: "Circular";
+        src: url(https://price-watch-email-images-explicit-dev-sc-174677.s3.eu-west-1.amazonaws.com/225d48f7/fonts/NeueCampton-SemiBold.woff2)
+          format("woff2");
+      }
+
+      /* Resets */
+      body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table { border-collapse: collapse; }
+      img { border: 0; outline: none; text-decoration: none; display: block; }
+      a { text-decoration: none; }
+
+      /* Apply Campton globally inside the email container */
+      #mailcontainer *,
+      #mailcontainer,
+      body,
+      table,
+      td,
+      p,
+      a,
+      span {
+        font-family: "Campton", Circular, Helvetica, Arial;
+      }
+
+      /* Outer area (outside card) */
+      #mailcontainer .outer {
+        background: #fcf7f5;
+        width: 100%;
+      }
+
+      /* Card container — 728px */
+      #mailcontainer .card {
+        width: 728px;
+        max-width: 728px;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      /* Header logo (above hero) */
+      #mailcontainer .header-logo {
+        padding: 22px 64px 10px;
+        text-align: {{ headline_align }};
+      }
+      #mailcontainer .header-logo img {
+        width: 89px;
+        height: 30px;
+        display: block;
+        margin: 0 auto;
+      }
+
+      /* Headline (desktop) */
+      #mailcontainer .h1 {
+        color: #6d33d9;
+        font-size: 38px;
+        line-height: 42px;
+        font-weight: 600;
+        text-align: center;
+        margin: 0;
+        padding: 10px 64px 18px;
+        direction: {{ dir }};
+        unicode-bidi: plaintext;
+      }
+
+      /* Hero */
+      #mailcontainer .hero {
+        width: 100%;
+        max-width: 728px;
+        height: auto;
+        display: block;
+      }
+
+      /* Copy spacing */
+      #mailcontainer .copy { padding: 28px 64px 0; }
+      #mailcontainer .copy p {
+        margin: 0 0 24px 0;
+        font-size: 16px;
+        line-height: 24px;
+        color: #111111;
+        font-weight: 400;
+        text-align: {{ headline_align }};
+        direction: {{ dir }};
+        unicode-bidi: plaintext;
+      }
+      #mailcontainer .copy p:last-child { margin-bottom: 24px; }
+
+      /* CTA */
+      #mailcontainer .cta-wrap { padding: 0 64px 22px; }
+      #mailcontainer .btn {
+        display: block;
+        width: 100%;
+        background: #6d33d9;
+        color: #ffffff;
+        text-align: center;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 20px;
+        padding: 16px 0;
+        border-radius: 10px;
+      }
+
+      /* Divider */
+      #mailcontainer .divider-wrap { padding: 0 64px 22px; }
+      #mailcontainer .divider-td {
+        border-top: 1px solid #e8e3e1;
+        font-size: 0;
+        line-height: 0;
+      }
+
+      /* Mobile */
+      @media only screen and (max-width: 520px) {
+        #mailcontainer .card { width: 100% !important; max-width: 100% !important; }
+
+        #mailcontainer .header-logo { padding: 18px 24px 8px !important; }
+        #mailcontainer .header-logo img { width: 89px !important; height: 30px !important; }
+
+        #mailcontainer .h1 {
+          padding: 8px 20px 12px !important;
+          font-size: 16px !important;
+          line-height: 20px !important;
+        }
+
+        #mailcontainer .copy { padding: 18px 20px 0 !important; }
+        #mailcontainer .copy p { font-size: 14px !important; line-height: 20px !important; }
+
+        #mailcontainer .cta-wrap,
+        #mailcontainer .divider-wrap { padding-left: 20px !important; padding-right: 20px !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;visibility:hidden;mso-hide:all;">
+      {{ deal_freeze_preheader | strip }}
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="outer" id="mailcontainer" bgcolor="#FCF7F5">
+      <tr>
+        <td align="center" style="padding: 36px 12px 26px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="card" width="728" bgcolor="#FFFFFF">
+            <!-- Header logo (centered, above hero) -->
+            <tr>
+              <td class="header-logo" align="center">
+                <img
+                  src="https://userimg-assets.customeriomail.com/images/client-env-124967/1769680583679_Hero_Logo_Vector_4x_01KG4JXF25SSBE0QK36X2MEAXM.png"
+                  width="89"
+                  height="30"
+                  alt="Vio"
+                  style="width:89px; height:30px;"
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <h1 class="h1">
+                  {{ deal_freeze_headline | strip }}
+                </h1>
+              </td>
+            </tr>
+
+            <tr>
+              <td align="center">
+                <a
+                  href="{{snippets.homePageURL}}"
+                  target="_blank"
+                  style="display:block; text-decoration:none; border:0; outline:none;"
+                >
+                  <img
+                    class="hero"
+                    src="{{ deal_freeze_hero_url }}"
+                    width="728"
+                    alt=""
+                    style="display:block; border:0; outline:none; text-decoration:none;"
+                  />
+                </a>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="copy">
+                <p>{{ deal_freeze_body1 | strip }}</p>
+                <p>{{ deal_freeze_body2 | strip }}</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="cta-wrap" align="center">
+                <a class="btn" href="{{snippets.homePageURL}}" target="_blank">{{ deal_freeze_cta | strip }}</a>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="divider-wrap">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="divider-td" height="1">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%">
+                  <tbody>
+                    <tr>
+                      <td style="padding-top:0;padding-bottom:0;padding-right:24px;padding-left:24px">
+                        <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:40px 0">
+                                          <tbody>
+                                            <tr>
+                                              <td style="height:1px;background-color:#ddd7d5;font-size:1px;line-height:1px">&nbsp;</td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <!-- Logo + footer line -->
+                                <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column" style="text-align:center">
+                                        <img
+                                          class="imageFix"
+                                          alt="Vio.com"
+                                          src="https://userimg-assets.customeriomail.com/images/client-env-124967/1770377276677_Vector_HighDef_01KGSBAVCB07TGMTGYZBMPCWD9.png"
+                                          style="display:block;outline:none;border:none;text-decoration:none;margin:auto"
+                                          width="90"
+                                        />
+
+                                        <p style="font-size:20px;line-height:28px;font-weight:600;letter-spacing:normal;font-family:Campton, Circular, Helvetica, Arial, sans-serif;text-align:center;margin:0;color:#7130c9;padding-top:12px;padding-bottom:0;padding-right:20px;padding-left:20px;direction:{{ dir }};unicode-bidi:plaintext;">
+                                          {%- assign footer_app_line_html = footer_app_line
+                                            | replace: ". ", "<br />"
+                                            | replace: ".", ""
+                                          -%}
+                                          {{ footer_app_line_html | strip }}
+                                        </p>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <!-- Spacer between text and buttons -->
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                  <tbody>
+                                    <tr>
+                                      <td style="height:14px;font-size:1px;line-height:1px">&nbsp;</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <!-- App store buttons -->
+                                <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column" style="text-align:center">
+                                        <a href="https://app.vio.com/v0HW?af_web_dp=https%3A%2F%2Fvio.com&amp;af_xp=custom&amp;c={{campaign.name}}&amp;af_ad={{message.name}}&amp;af_channel=customer.io&amp;pid={{message.type}}" data-cio-tag="AppBanner-apple-store-img" style="padding-right:6px;padding-left:0px;display:inline-block">
+                                          <img class="imageFix" alt="Download on App Store" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1756808278001_Appstore_Button_01K44YXW18QJ1S6H2NN0EKBNR2.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px">
+                                        </a>
+                                        <a href="https://app.vio.com/v0HW?af_web_dp=https%3A%2F%2Fvio.com&amp;af_xp=custom&amp;c={{campaign.name}}&amp;af_ad={{message.name}}&amp;af_channel=customer.io&amp;pid={{message.type}}" data-cio-tag="AppBanner-google-store-img" style="padding-right:0px;padding-left:6px;display:inline-block">
+                                          <img class="imageFix" alt="Get it on Google Play" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1756808171416_GooglePlaystore_Button_01K44YTKYFR6XPYK6S73Q4WZ44.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px">
+                                        </a>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <!-- Address + prefs -->
+                                <table align="center" width="100%" dir="{{ dir }}" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column">
+                                        <p style="font-size:12px;line-height:16px;font-weight:450;letter-spacing:normal;font-family:Campton, Circular, Helvetica, Arial, sans-serif;text-align:center;margin:0;color:#615a56;padding-top:24px;padding-bottom:6px;padding-right:0;padding-left:0;direction:{{ dir }};unicode-bidi:plaintext;">
+                                          {{ footer_address | strip }}
+                                        </p>
+
+                                        <p style="font-size:12px;line-height:16px;font-weight:450;letter-spacing:normal;font-family:Campton, Circular, Helvetica, Arial, sans-serif;text-align:center;margin:0;color:#615a56;padding-top:0;padding-bottom:0;padding-right:0;padding-left:0;direction:{{ dir }};unicode-bidi:plaintext;">
+                                          {{ footer_prefs_html }}
+                                        </p>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <!-- Spacer -->
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                  <tbody>
+                                    <tr>
+                                      <td style="height:40px;font-size:1px;line-height:1px">&nbsp;</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <!-- Social icons -->
+                                <table align="center" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                  <tbody style="width:100%">
+                                    <tr style="width:100%">
+                                      <td data-id="__react-email-column" style="text-align:center">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;padding-top:16px">
+                                          <tbody>
+                                            <tr>
+                                              <td style="padding:0 6px;">
+                                                <a href="https://www.instagram.com/vio.com.travel" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block">
+                                                  <img class="imageFix" alt="Vio.com" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-instagram.png" style="display:block;outline:none;border:none;text-decoration:none" width="32">
+                                                </a>
+                                              </td>
+                                              <td style="padding:0 6px;">
+                                                <a href="https://www.facebook.com/viodotcom" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block">
+                                                  <img class="imageFix" alt="Vio.com" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-facebook.png" style="display:block;outline:none;border:none;text-decoration:none" width="32">
+                                                </a>
+                                              </td>
+                                              <td style="padding:0 6px;">
+                                                <a href="https://www.linkedin.com/company/viodotcom/" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block">
+                                                  <img class="imageFix" alt="Vio.com" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-linkedin.png" style="display:block;outline:none;border:none;text-decoration:none" width="32">
+                                                </a>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                                <!-- Spacer -->
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                  <tbody>
+                                    <tr>
+                                      <td style="height:40px;font-size:1px;line-height:1px">&nbsp;</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            <!-- End Footer -->
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Bottom terms block (OUTSIDE the card + still on outer background) -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FCF7F5" style="width:100%;background:#FCF7F5;">
+      <tr>
+        <td align="center" style="padding: 0 12px 28px;">
+          <table align="center" width="728" border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width:728px;width:100%;padding-left:20px;padding-right:20px">
+            <tbody>
+              <tr>
+                <td>
+                  <p style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:normal;font-family:Campton, Circular, Helvetica, Arial, sans-serif;text-align:center;margin:0;color:#615a56;padding-top:32px;padding-bottom:0;padding-right:0;padding-left:0;direction:{{ dir }};unicode-bidi:plaintext;">
+                    {{ terms_title | strip }}
+                  </p>
+
+                  <p style="font-size:12px;line-height:16px;font-weight:450;letter-spacing:normal;font-family:Campton, Circular, Helvetica, Arial, sans-serif;text-align:center;margin:0;color:#615a56;padding-top:0;padding-bottom:32px;padding-right:0;padding-left:4px;direction:{{ dir }};unicode-bidi:plaintext;">
+                    {{ terms_desc_html }}
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    {%- comment -%}
+      For Customer.io:
+      - Subject: {{ deal_freeze_subjectline | strip }}
+      - Preheader: {{ deal_freeze_preheader | strip }}
+    {%- endcomment -%}
+  </body>
+</html>

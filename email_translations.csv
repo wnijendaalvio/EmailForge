@@ -1,0 +1,24 @@
+Key,Module,module_index,en
+subject_line,hero_module_two_column,1,Welcome to Vio
+preheader,hero_module_two_column,1,You’re in. Time to book like an insider.
+headline,hero_module_two_column,1,Time to start booking like an insider.
+subheadline,hero_module_two_column,1,Welcome to Vio
+body_1_h2,hero_module_two_column,1,Compare prices across 100+ sites 
+body_1_copy,hero_module_two_column,1,"See the full picture upfront. No guessing, no bouncing between tabs."
+image_1_URL,hero_module_two_column,1,https://userimg-assets.customeriomail.com/images/client-env-124967/1771340729327_WelcomeToVio_PriceComparison_EN_01KHP2531FB2KY1SB3C7G6DFTP.jpg
+body_2_h2,hero_module_two_column,1,Know exactly when to book 
+body_2_copy,hero_module_two_column,1,Price insights show you the right moment to secure your deal.
+image_2_URL,hero_module_two_column,1,https://userimg-assets.customeriomail.com/images/client-env-124967/1771340730041_WelcomeToVio_PriceInsights_EN_01KHP253QTNKZ7HNJYSNAAHB5M.jpg
+body_3_h2,hero_module_two_column,1,Stay ahead of price changes 
+body_3_copy,hero_module_two_column,1,We track prices so you don't have to keep checking.
+image_3_URL,hero_module_two_column,1,https://userimg-assets.customeriomail.com/images/client-env-124967/1771340730742_WelcomeToVio_PriceAlerts_EN_01KHP254DNX2S3JAH8FEFRNJFN.jpg
+body_4_h2,hero_module_two_column,1,Freeze deals for free 
+body_4_copy,hero_module_two_column,1,Need more time to decide? Lock in today's price while you decide.
+image_4_URL,hero_module_two_column,1,https://userimg-assets.customeriomail.com/images/client-env-124967/1771340728327_WelcomeToVio_DealFreeze_EN_01KHP25268MRHG2ETRNQKX97EE.jpg
+cta_text,hero_module_two_column,1,Freeze a deal
+hero_image_url,hero_module_two_column,1,https://userimg-assets.customeriomail.com/images/client-env-124967/1771342193836_WelcomeToVio_Hero_EN_01KHP3HS77NFA5WT99477W3VX7.jpg
+image_deeplink,hero_module_two_column,1,https://app.vio.com/v0HW
+cta_link,hero_module_two_column,1,https://app.vio.com/v0HW
+cta_alias,hero_module_two_column,1,hero-cta
+headline,app_download_module,2,<b>Stay in the loop</b> on the Vio app
+colour,app_download_module,2,#fcf7f5

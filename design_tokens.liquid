@@ -1,0 +1,128 @@
+{%- comment -%}
+  DESIGN TOKENS - Vio email design system
+  Include this at the top of any email template to use standardized tokens.
+  Usage: style="color:{{ token_brand_c600 }}; padding:{{ token_space_600 }} 0;"
+  Or use utility classes: class="text-brand bg-neutral-c000 py-600 px-800"
+{%- endcomment -%}
+
+{%- comment -%} COLOURS {%- endcomment -%}
+{%- comment -%} neutral {%- endcomment -%}
+{%- assign token_neutral_c000 = "#ffffff" -%}
+{%- assign token_neutral_c050 = "#fcf7f5" -%}
+{%- assign token_neutral_c100 = "#eee9e7" -%}
+{%- assign token_neutral_c200 = "#ddd7d5" -%}
+{%- assign token_neutral_c300 = "#c5bdba" -%}
+{%- assign token_neutral_c400 = "#9b9392" -%}
+{%- assign token_neutral_c500 = "#807775" -%}
+{%- assign token_neutral_c600 = "#615a56" -%}
+{%- assign token_neutral_c700 = "#524947" -%}
+{%- assign token_neutral_c800 = "#3b3430" -%}
+{%- assign token_neutral_c900 = "#2c2421" -%}
+{%- assign token_neutral_c950 = "#180c06" -%}
+{%- assign token_neutral_c999 = "#000000" -%}
+{%- comment -%} brand {%- endcomment -%}
+{%- assign token_brand_c050 = "#f8f5ff" -%}
+{%- assign token_brand_c100 = "#f2e5ff" -%}
+{%- assign token_brand_c200 = "#e1ceff" -%}
+{%- assign token_brand_c300 = "#c8b0ff" -%}
+{%- assign token_brand_c400 = "#b193f6" -%}
+{%- assign token_brand_c500 = "#9865fc" -%}
+{%- assign token_brand_c600 = "#7130c9" -%}
+{%- assign token_brand_c700 = "#5700a9" -%}
+{%- assign token_brand_c800 = "#3d0083" -%}
+{%- assign token_brand_c900 = "#25005b" -%}
+{%- assign token_brand_c950 = "#1a003a" -%}
+{%- comment -%} interactive (same as brand for email) {%- endcomment -%}
+{%- assign token_interactive_c050 = "#f9f5ff" -%}
+{%- assign token_interactive_c100 = "#f2e5ff" -%}
+{%- assign token_interactive_c200 = "#e1ceff" -%}
+{%- assign token_interactive_c300 = "#c8b0ff" -%}
+{%- assign token_interactive_c400 = "#b193f6" -%}
+{%- assign token_interactive_c500 = "#9865fc" -%}
+{%- assign token_interactive_c600 = "#7130c9" -%}
+{%- assign token_interactive_c700 = "#5700a9" -%}
+{%- assign token_interactive_c800 = "#3d0083" -%}
+{%- assign token_interactive_c900 = "#25005b" -%}
+{%- assign token_interactive_c950 = "#1a003a" -%}
+{%- comment -%} success {%- endcomment -%}
+{%- assign token_success_c050 = "#ebffec" -%}
+{%- assign token_success_c100 = "#d6fada" -%}
+{%- assign token_success_c200 = "#b5f1b1" -%}
+{%- assign token_success_c300 = "#9ce2a4" -%}
+{%- assign token_success_c400 = "#66d976" -%}
+{%- assign token_success_c500 = "#43c05c" -%}
+{%- assign token_success_c600 = "#2ea54a" -%}
+{%- assign token_success_c700 = "#0e812a" -%}
+{%- assign token_success_c800 = "#145e27" -%}
+{%- assign token_success_c900 = "#0d441c" -%}
+{%- assign token_success_c950 = "#082c12" -%}
+{%- comment -%} warning {%- endcomment -%}
+{%- assign token_warning_c050 = "#fff9f3" -%}
+{%- assign token_warning_c100 = "#fff0e3" -%}
+{%- assign token_warning_c200 = "#ffdab8" -%}
+{%- assign token_warning_c300 = "#ffb670" -%}
+{%- assign token_warning_c400 = "#ff912e" -%}
+{%- assign token_warning_c500 = "#ff7105" -%}
+{%- assign token_warning_c600 = "#e25c00" -%}
+{%- assign token_warning_c700 = "#c24a00" -%}
+{%- assign token_warning_c800 = "#9a3b00" -%}
+{%- assign token_warning_c900 = "#6f2900" -%}
+{%- assign token_warning_c950 = "#4a1c00" -%}
+{%- comment -%} danger {%- endcomment -%}
+{%- assign token_danger_c050 = "#fff2f4" -%}
+{%- assign token_danger_c100 = "#ffe7eb" -%}
+{%- assign token_danger_c200 = "#ffc5cc" -%}
+{%- assign token_danger_c300 = "#ff99a4" -%}
+{%- assign token_danger_c400 = "#ff5b70" -%}
+{%- assign token_danger_c500 = "#ff2444" -%}
+{%- assign token_danger_c600 = "#d91b38" -%}
+{%- assign token_danger_c700 = "#b2142e" -%}
+{%- assign token_danger_c800 = "#8b0f23" -%}
+{%- assign token_danger_c900 = "#5e0a18" -%}
+{%- assign token_danger_c950 = "#3d0710" -%}
+{%- comment -%} accent {%- endcomment -%}
+{%- assign token_accent_c050 = "#fffbf0" -%}
+{%- assign token_accent_c100 = "#fff6da" -%}
+{%- assign token_accent_c200 = "#ffecb1" -%}
+{%- assign token_accent_c300 = "#ffe183" -%}
+{%- assign token_accent_c400 = "#ffd44f" -%}
+{%- assign token_accent_c500 = "#ffc103" -%}
+{%- assign token_accent_c600 = "#faab00" -%}
+{%- assign token_accent_c700 = "#cc8800" -%}
+{%- assign token_accent_c800 = "#a77200" -%}
+{%- assign token_accent_c900 = "#6d4b00" -%}
+{%- assign token_accent_c950 = "#342700" -%}
+
+{%- comment -%} Semantic aliases (map to tokens) {%- endcomment -%}
+{%- assign token_bg_page = token_neutral_c050 -%}
+{%- assign token_bg_card = token_neutral_c000 -%}
+{%- assign token_bg_brand = token_brand_c600 -%}
+{%- assign token_text_primary = token_neutral_c950 -%}
+{%- comment -%} Body text - slightly softer than primary {%- endcomment -%}
+{%- assign token_text_body = "#111111" -%}
+{%- assign token_text_muted = token_neutral_c600 -%}
+{%- assign token_text_on_brand = token_neutral_c000 -%}
+{%- assign token_accent = token_brand_c600 -%}
+{%- assign token_border = token_neutral_c200 -%}
+{%- assign token_cta_bg = token_brand_c600 -%}
+
+{%- comment -%} SPACING (px) - Scale: 100=4, 200=8, 300=12, 400=16, 500=20, 600=24, 700=28, 800=32, 900=40, 1000=48, 1200=64 {%- endcomment -%}
+{%- assign token_space_100 = "4px" -%}
+{%- assign token_space_200 = "8px" -%}
+{%- assign token_space_300 = "12px" -%}
+{%- assign token_space_400 = "16px" -%}
+{%- assign token_space_500 = "20px" -%}
+{%- assign token_space_600 = "24px" -%}
+{%- assign token_space_700 = "28px" -%}
+{%- assign token_space_800 = "32px" -%}
+{%- assign token_space_900 = "40px" -%}
+{%- assign token_space_1000 = "48px" -%}
+{%- assign token_space_1200 = "64px" -%}
+
+{%- comment -%} LAYOUT {%- endcomment -%}
+{%- assign token_width_page = "728" -%}
+{%- assign token_width_content = "600" -%}
+{%- assign token_radius_card = "24px" -%}
+{%- assign token_radius_button = "10px" -%}
+{%- assign token_radius_module = "16px" -%}
+{%- assign token_font_stack = "Campton, Circular, Helvetica, Arial, sans-serif" -%}

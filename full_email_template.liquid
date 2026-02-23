@@ -1,0 +1,1315 @@
+{%- comment -%}
+FULL EMAIL HTML (multi-locale from translations CSV)
+- Requires CSV with Key + locale columns. Run: python3 csv_translations_to_email.py email_translations.csv
+{%- endcomment -%}
+
+{%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
+{%- assign lang2 = lang | slice: 0, 2 -%}
+{%- assign locale_key = lang2 -%}
+{%- assign country = customer.country_code | default: customer.country | default: customer.cio_iso_country | default: "" | upcase | slice: 0, 2 -%}
+{%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
+{%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}{%- assign locale_key = "zh-hk" -%}
+{%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}{%- assign locale_key = "zh-tw" -%}
+{%- elsif lang contains "zh-cn" or lang contains "zh-sg" or lang contains "zh-hans" -%}{%- assign locale_key = "zh-cn" -%}
+{%- elsif lang contains "fr-ca" -%}{%- assign locale_key = "fr-ca" -%}
+{%- elsif lang contains "pt-br" -%}{%- assign locale_key = "pt-br" -%}
+{%- elsif lang contains "pt-pt" -%}{%- assign locale_key = "pt" -%}
+{%- elsif lang contains "en-gb" -%}{%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "es" and lang contains "-" and lang != "es-es" -%}{%- assign locale_key = "es-419" -%}
+{%- elsif lang2 == "tl" or lang contains "fil" -%}{%- assign locale_key = "fil" -%}
+{%- elsif lang2 == "nb" or lang2 == "nn" -%}{%- assign locale_key = "no" -%}
+{%- endif -%}
+{%- assign is_portuguese = false -%}
+{%- if lang2 == "pt" or lang contains "portuguese" -%}{%- assign is_portuguese = true -%}{%- endif -%}
+{%- if is_portuguese -%}
+  {%- if country == "BR" -%}{%- assign locale_key = "pt-br" -%}
+  {%- elsif country == "PT" -%}{%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-pt" -%}{%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-br" -%}{%- assign locale_key = "pt-br" -%}
+  {%- else -%}{%- assign locale_key = "pt-br" -%}
+  {%- endif -%}
+{%- elsif lang2 == "es" and locale_key == "es" -%}
+  {%- assign latam_countries = "MX,AR,CO,CL,PE,VE,EC,GT,HN,SV,NI,PA,PR,DO,CR,BO,PY,UY,CU" | split: "," -%}
+  {%- assign is_latam = false -%}
+  {%- for cc in latam_countries -%}{%- if country == cc -%}{%- assign is_latam = true -%}{%- break -%}{%- endif -%}{%- endfor -%}
+  {%- if is_latam -%}{%- assign locale_key = "es-419" -%}{%- endif -%}
+{%- elsif lang2 == "en" and locale_key == "en" and country == "GB" -%}{%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "fr" and locale_key == "fr" and country == "CA" -%}{%- assign locale_key = "fr-ca" -%}
+{%- endif -%}
+
+{%- assign rtl_locales = "ar,he,fa,ur" | split: "," -%}
+{%- assign dir = "ltr" -%}
+{%- if rtl_locales contains locale_key -%}{%- assign dir = "rtl" -%}{%- endif -%}
+{%- assign headline_align = "center" -%}
+{%- if locale_key == "ar" or locale_key == "he" -%}{%- assign headline_align = "right" -%}{%- endif -%}
+{%- assign align = "left" -%}
+{%- if locale_key == "ar" or locale_key == "he" -%}{%- assign align = "right" -%}{%- endif -%}
+{%- assign app_deeplink_url = app_deeplink_url | default: "https://www.vio.com/app" -%}
+{%- comment -%}
+  DESIGN TOKENS - Vio email design system
+  Include this at the top of any email template to use standardized tokens.
+  Usage: style="color:{{ token_brand_c600 }}; padding:{{ token_space_600 }} 0;"
+  Or use utility classes: class="text-brand bg-neutral-c000 py-600 px-800"
+{%- endcomment -%}
+
+{%- comment -%} COLOURS {%- endcomment -%}
+{%- comment -%} neutral {%- endcomment -%}
+{%- assign token_neutral_c000 = "#ffffff" -%}
+{%- assign token_neutral_c050 = "#fcf7f5" -%}
+{%- assign token_neutral_c100 = "#eee9e7" -%}
+{%- assign token_neutral_c200 = "#ddd7d5" -%}
+{%- assign token_neutral_c300 = "#c5bdba" -%}
+{%- assign token_neutral_c400 = "#9b9392" -%}
+{%- assign token_neutral_c500 = "#807775" -%}
+{%- assign token_neutral_c600 = "#615a56" -%}
+{%- assign token_neutral_c700 = "#524947" -%}
+{%- assign token_neutral_c800 = "#3b3430" -%}
+{%- assign token_neutral_c900 = "#2c2421" -%}
+{%- assign token_neutral_c950 = "#180c06" -%}
+{%- assign token_neutral_c999 = "#000000" -%}
+{%- comment -%} brand {%- endcomment -%}
+{%- assign token_brand_c050 = "#f8f5ff" -%}
+{%- assign token_brand_c100 = "#f2e5ff" -%}
+{%- assign token_brand_c200 = "#e1ceff" -%}
+{%- assign token_brand_c300 = "#c8b0ff" -%}
+{%- assign token_brand_c400 = "#b193f6" -%}
+{%- assign token_brand_c500 = "#9865fc" -%}
+{%- assign token_brand_c600 = "#7130c9" -%}
+{%- assign token_brand_c700 = "#5700a9" -%}
+{%- assign token_brand_c800 = "#3d0083" -%}
+{%- assign token_brand_c900 = "#25005b" -%}
+{%- assign token_brand_c950 = "#1a003a" -%}
+{%- comment -%} interactive (same as brand for email) {%- endcomment -%}
+{%- assign token_interactive_c050 = "#f9f5ff" -%}
+{%- assign token_interactive_c100 = "#f2e5ff" -%}
+{%- assign token_interactive_c200 = "#e1ceff" -%}
+{%- assign token_interactive_c300 = "#c8b0ff" -%}
+{%- assign token_interactive_c400 = "#b193f6" -%}
+{%- assign token_interactive_c500 = "#9865fc" -%}
+{%- assign token_interactive_c600 = "#7130c9" -%}
+{%- assign token_interactive_c700 = "#5700a9" -%}
+{%- assign token_interactive_c800 = "#3d0083" -%}
+{%- assign token_interactive_c900 = "#25005b" -%}
+{%- assign token_interactive_c950 = "#1a003a" -%}
+{%- comment -%} success {%- endcomment -%}
+{%- assign token_success_c050 = "#ebffec" -%}
+{%- assign token_success_c100 = "#d6fada" -%}
+{%- assign token_success_c200 = "#b5f1b1" -%}
+{%- assign token_success_c300 = "#9ce2a4" -%}
+{%- assign token_success_c400 = "#66d976" -%}
+{%- assign token_success_c500 = "#43c05c" -%}
+{%- assign token_success_c600 = "#2ea54a" -%}
+{%- assign token_success_c700 = "#0e812a" -%}
+{%- assign token_success_c800 = "#145e27" -%}
+{%- assign token_success_c900 = "#0d441c" -%}
+{%- assign token_success_c950 = "#082c12" -%}
+{%- comment -%} warning {%- endcomment -%}
+{%- assign token_warning_c050 = "#fff9f3" -%}
+{%- assign token_warning_c100 = "#fff0e3" -%}
+{%- assign token_warning_c200 = "#ffdab8" -%}
+{%- assign token_warning_c300 = "#ffb670" -%}
+{%- assign token_warning_c400 = "#ff912e" -%}
+{%- assign token_warning_c500 = "#ff7105" -%}
+{%- assign token_warning_c600 = "#e25c00" -%}
+{%- assign token_warning_c700 = "#c24a00" -%}
+{%- assign token_warning_c800 = "#9a3b00" -%}
+{%- assign token_warning_c900 = "#6f2900" -%}
+{%- assign token_warning_c950 = "#4a1c00" -%}
+{%- comment -%} danger {%- endcomment -%}
+{%- assign token_danger_c050 = "#fff2f4" -%}
+{%- assign token_danger_c100 = "#ffe7eb" -%}
+{%- assign token_danger_c200 = "#ffc5cc" -%}
+{%- assign token_danger_c300 = "#ff99a4" -%}
+{%- assign token_danger_c400 = "#ff5b70" -%}
+{%- assign token_danger_c500 = "#ff2444" -%}
+{%- assign token_danger_c600 = "#d91b38" -%}
+{%- assign token_danger_c700 = "#b2142e" -%}
+{%- assign token_danger_c800 = "#8b0f23" -%}
+{%- assign token_danger_c900 = "#5e0a18" -%}
+{%- assign token_danger_c950 = "#3d0710" -%}
+{%- comment -%} accent {%- endcomment -%}
+{%- assign token_accent_c050 = "#fffbf0" -%}
+{%- assign token_accent_c100 = "#fff6da" -%}
+{%- assign token_accent_c200 = "#ffecb1" -%}
+{%- assign token_accent_c300 = "#ffe183" -%}
+{%- assign token_accent_c400 = "#ffd44f" -%}
+{%- assign token_accent_c500 = "#ffc103" -%}
+{%- assign token_accent_c600 = "#faab00" -%}
+{%- assign token_accent_c700 = "#cc8800" -%}
+{%- assign token_accent_c800 = "#a77200" -%}
+{%- assign token_accent_c900 = "#6d4b00" -%}
+{%- assign token_accent_c950 = "#342700" -%}
+
+{%- comment -%} Semantic aliases (map to tokens) {%- endcomment -%}
+{%- assign token_bg_page = token_neutral_c050 -%}
+{%- assign token_bg_card = token_neutral_c000 -%}
+{%- assign token_bg_brand = token_brand_c600 -%}
+{%- assign token_text_primary = token_neutral_c950 -%}
+{%- comment -%} Body text - slightly softer than primary {%- endcomment -%}
+{%- assign token_text_body = "#111111" -%}
+{%- assign token_text_muted = token_neutral_c600 -%}
+{%- assign token_text_on_brand = token_neutral_c000 -%}
+{%- assign token_accent = token_brand_c600 -%}
+{%- assign token_border = token_neutral_c200 -%}
+{%- assign token_cta_bg = token_brand_c600 -%}
+
+{%- comment -%} SPACING (px) - Scale: 100=4, 200=8, 300=12, 400=16, 500=20, 600=24, 700=28, 800=32, 900=40, 1000=48, 1200=64 {%- endcomment -%}
+{%- assign token_space_100 = "4px" -%}
+{%- assign token_space_200 = "8px" -%}
+{%- assign token_space_300 = "12px" -%}
+{%- assign token_space_400 = "16px" -%}
+{%- assign token_space_500 = "20px" -%}
+{%- assign token_space_600 = "24px" -%}
+{%- assign token_space_700 = "28px" -%}
+{%- assign token_space_800 = "32px" -%}
+{%- assign token_space_900 = "40px" -%}
+{%- assign token_space_1000 = "48px" -%}
+{%- assign token_space_1200 = "64px" -%}
+
+{%- comment -%} LAYOUT {%- endcomment -%}
+{%- assign token_width_page = "728" -%}
+{%- assign token_width_content = "600" -%}
+{%- assign token_radius_card = "24px" -%}
+{%- assign token_radius_button = "10px" -%}
+{%- assign token_radius_module = "16px" -%}
+{%- assign token_font_stack = "Campton, Circular, Helvetica, Arial, sans-serif" -%}
+
+{%- assign show_header_logo = "TRUE" -%}
+{%- assign show_footer = "TRUE" -%}
+{%- assign show_terms = "TRUE" -%}
+{%- comment -%} App download colour toggle: write LIGHT or DARK (or override via app_download_colour_preset merge field) {%- endcomment -%}
+{%- assign app_download_colour_toggle = "LIGHT" -%}
+{%- assign app_download_colour_preset = app_download_colour_preset | default: app_download_colour_toggle | upcase | strip -%}
+{%- assign _preset = app_download_colour_preset | default: app_download_colour_toggle | upcase | strip -%}
+{%- assign _preset_colour = token_neutral_c050 -%}
+{%- if _preset == "DARK" -%}{%- assign _preset_colour = token_brand_c600 -%}{%- endif -%}
+{%- assign app_download_colour = app_download_colour | default: _preset_colour | downcase | replace: " ", "" -%}
+{%- assign _app_bg = app_download_colour -%}
+{%- assign app_download_text_colour = token_text_on_brand -%}
+{%- if _app_bg == "#fcf7f5" or _app_bg == "#ffffff" or _app_bg == "#f8f5ff" or _app_bg == "#eee9e7" or _app_bg == "#ddd7d5" -%}
+  {%- assign app_download_text_colour = token_text_primary -%}
+{%- endif -%}
+
+
+{%- capture subject_line -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Welcome to Vio
+    {%- when "ar" -%}Welcome to Vio
+    {%- when "zh-cn" -%}Welcome to Vio
+    {%- when "zh-tw" -%}Welcome to Vio
+    {%- when "zh-hk" -%}Welcome to Vio
+    {%- when "hr" -%}Welcome to Vio
+    {%- when "cs" -%}Welcome to Vio
+    {%- when "da" -%}Welcome to Vio
+    {%- when "nl" -%}Welcome to Vio
+    {%- when "en-gb" -%}Welcome to Vio
+    {%- when "fil" -%}Welcome to Vio
+    {%- when "fi" -%}Welcome to Vio
+    {%- when "fr" -%}Welcome to Vio
+    {%- when "fr-ca" -%}Welcome to Vio
+    {%- when "de" -%}Welcome to Vio
+    {%- when "el" -%}Welcome to Vio
+    {%- when "he" -%}Welcome to Vio
+    {%- when "hu" -%}Welcome to Vio
+    {%- when "id" -%}Welcome to Vio
+    {%- when "it" -%}Welcome to Vio
+    {%- when "ja" -%}Welcome to Vio
+    {%- when "ko" -%}Welcome to Vio
+    {%- when "ms" -%}Welcome to Vio
+    {%- when "no" -%}Welcome to Vio
+    {%- when "pl" -%}Welcome to Vio
+    {%- when "pt" -%}Welcome to Vio
+    {%- when "pt-br" -%}Welcome to Vio
+    {%- when "ro" -%}Welcome to Vio
+    {%- when "ru" -%}Welcome to Vio
+    {%- when "es" -%}Welcome to Vio
+    {%- when "es-419" -%}Welcome to Vio
+    {%- when "sv" -%}Welcome to Vio
+    {%- when "th" -%}Welcome to Vio
+    {%- when "tr" -%}Welcome to Vio
+    {%- when "uk" -%}Welcome to Vio
+    {%- when "vi" -%}Welcome to Vio
+    {%- else -%}Welcome to Vio
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture preheader -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}You’re in. Time to book like an insider.
+    {%- when "ar" -%}You’re in. Time to book like an insider.
+    {%- when "zh-cn" -%}You’re in. Time to book like an insider.
+    {%- when "zh-tw" -%}You’re in. Time to book like an insider.
+    {%- when "zh-hk" -%}You’re in. Time to book like an insider.
+    {%- when "hr" -%}You’re in. Time to book like an insider.
+    {%- when "cs" -%}You’re in. Time to book like an insider.
+    {%- when "da" -%}You’re in. Time to book like an insider.
+    {%- when "nl" -%}You’re in. Time to book like an insider.
+    {%- when "en-gb" -%}You’re in. Time to book like an insider.
+    {%- when "fil" -%}You’re in. Time to book like an insider.
+    {%- when "fi" -%}You’re in. Time to book like an insider.
+    {%- when "fr" -%}You’re in. Time to book like an insider.
+    {%- when "fr-ca" -%}You’re in. Time to book like an insider.
+    {%- when "de" -%}You’re in. Time to book like an insider.
+    {%- when "el" -%}You’re in. Time to book like an insider.
+    {%- when "he" -%}You’re in. Time to book like an insider.
+    {%- when "hu" -%}You’re in. Time to book like an insider.
+    {%- when "id" -%}You’re in. Time to book like an insider.
+    {%- when "it" -%}You’re in. Time to book like an insider.
+    {%- when "ja" -%}You’re in. Time to book like an insider.
+    {%- when "ko" -%}You’re in. Time to book like an insider.
+    {%- when "ms" -%}You’re in. Time to book like an insider.
+    {%- when "no" -%}You’re in. Time to book like an insider.
+    {%- when "pl" -%}You’re in. Time to book like an insider.
+    {%- when "pt" -%}You’re in. Time to book like an insider.
+    {%- when "pt-br" -%}You’re in. Time to book like an insider.
+    {%- when "ro" -%}You’re in. Time to book like an insider.
+    {%- when "ru" -%}You’re in. Time to book like an insider.
+    {%- when "es" -%}You’re in. Time to book like an insider.
+    {%- when "es-419" -%}You’re in. Time to book like an insider.
+    {%- when "sv" -%}You’re in. Time to book like an insider.
+    {%- when "th" -%}You’re in. Time to book like an insider.
+    {%- when "tr" -%}You’re in. Time to book like an insider.
+    {%- when "uk" -%}You’re in. Time to book like an insider.
+    {%- when "vi" -%}You’re in. Time to book like an insider.
+    {%- else -%}You’re in. Time to book like an insider.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture headline -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Time to start booking like an insider.
+    {%- when "ar" -%}Time to start booking like an insider.
+    {%- when "zh-cn" -%}Time to start booking like an insider.
+    {%- when "zh-tw" -%}Time to start booking like an insider.
+    {%- when "zh-hk" -%}Time to start booking like an insider.
+    {%- when "hr" -%}Time to start booking like an insider.
+    {%- when "cs" -%}Time to start booking like an insider.
+    {%- when "da" -%}Time to start booking like an insider.
+    {%- when "nl" -%}Time to start booking like an insider.
+    {%- when "en-gb" -%}Time to start booking like an insider.
+    {%- when "fil" -%}Time to start booking like an insider.
+    {%- when "fi" -%}Time to start booking like an insider.
+    {%- when "fr" -%}Time to start booking like an insider.
+    {%- when "fr-ca" -%}Time to start booking like an insider.
+    {%- when "de" -%}Time to start booking like an insider.
+    {%- when "el" -%}Time to start booking like an insider.
+    {%- when "he" -%}Time to start booking like an insider.
+    {%- when "hu" -%}Time to start booking like an insider.
+    {%- when "id" -%}Time to start booking like an insider.
+    {%- when "it" -%}Time to start booking like an insider.
+    {%- when "ja" -%}Time to start booking like an insider.
+    {%- when "ko" -%}Time to start booking like an insider.
+    {%- when "ms" -%}Time to start booking like an insider.
+    {%- when "no" -%}Time to start booking like an insider.
+    {%- when "pl" -%}Time to start booking like an insider.
+    {%- when "pt" -%}Time to start booking like an insider.
+    {%- when "pt-br" -%}Time to start booking like an insider.
+    {%- when "ro" -%}Time to start booking like an insider.
+    {%- when "ru" -%}Time to start booking like an insider.
+    {%- when "es" -%}Time to start booking like an insider.
+    {%- when "es-419" -%}Time to start booking like an insider.
+    {%- when "sv" -%}Time to start booking like an insider.
+    {%- when "th" -%}Time to start booking like an insider.
+    {%- when "tr" -%}Time to start booking like an insider.
+    {%- when "uk" -%}Time to start booking like an insider.
+    {%- when "vi" -%}Time to start booking like an insider.
+    {%- else -%}Time to start booking like an insider.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture secondary_headline -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Welcome to Vio
+    {%- when "ar" -%}Welcome to Vio
+    {%- when "zh-cn" -%}Welcome to Vio
+    {%- when "zh-tw" -%}Welcome to Vio
+    {%- when "zh-hk" -%}Welcome to Vio
+    {%- when "hr" -%}Welcome to Vio
+    {%- when "cs" -%}Welcome to Vio
+    {%- when "da" -%}Welcome to Vio
+    {%- when "nl" -%}Welcome to Vio
+    {%- when "en-gb" -%}Welcome to Vio
+    {%- when "fil" -%}Welcome to Vio
+    {%- when "fi" -%}Welcome to Vio
+    {%- when "fr" -%}Welcome to Vio
+    {%- when "fr-ca" -%}Welcome to Vio
+    {%- when "de" -%}Welcome to Vio
+    {%- when "el" -%}Welcome to Vio
+    {%- when "he" -%}Welcome to Vio
+    {%- when "hu" -%}Welcome to Vio
+    {%- when "id" -%}Welcome to Vio
+    {%- when "it" -%}Welcome to Vio
+    {%- when "ja" -%}Welcome to Vio
+    {%- when "ko" -%}Welcome to Vio
+    {%- when "ms" -%}Welcome to Vio
+    {%- when "no" -%}Welcome to Vio
+    {%- when "pl" -%}Welcome to Vio
+    {%- when "pt" -%}Welcome to Vio
+    {%- when "pt-br" -%}Welcome to Vio
+    {%- when "ro" -%}Welcome to Vio
+    {%- when "ru" -%}Welcome to Vio
+    {%- when "es" -%}Welcome to Vio
+    {%- when "es-419" -%}Welcome to Vio
+    {%- when "sv" -%}Welcome to Vio
+    {%- when "th" -%}Welcome to Vio
+    {%- when "tr" -%}Welcome to Vio
+    {%- when "uk" -%}Welcome to Vio
+    {%- when "vi" -%}Welcome to Vio
+    {%- else -%}Welcome to Vio
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture app_download_title -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "ar" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "zh-cn" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "zh-tw" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "zh-hk" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "hr" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "cs" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "da" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "nl" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "en-gb" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "fil" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "fi" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "fr" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "fr-ca" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "de" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "el" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "he" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "hu" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "id" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "it" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "ja" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "ko" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "ms" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "no" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "pl" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "pt" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "pt-br" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "ro" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "ru" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "es" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "es-419" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "sv" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "th" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "tr" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "uk" -%}<b>Stay in the loop</b> on the Vio app
+    {%- when "vi" -%}<b>Stay in the loop</b> on the Vio app
+    {%- else -%}<b>Stay in the loop</b> on the Vio app
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_body_1_h2 -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Compare prices across 100+ sites
+    {%- when "ar" -%}Compare prices across 100+ sites
+    {%- when "zh-cn" -%}Compare prices across 100+ sites
+    {%- when "zh-tw" -%}Compare prices across 100+ sites
+    {%- when "zh-hk" -%}Compare prices across 100+ sites
+    {%- when "hr" -%}Compare prices across 100+ sites
+    {%- when "cs" -%}Compare prices across 100+ sites
+    {%- when "da" -%}Compare prices across 100+ sites
+    {%- when "nl" -%}Compare prices across 100+ sites
+    {%- when "en-gb" -%}Compare prices across 100+ sites
+    {%- when "fil" -%}Compare prices across 100+ sites
+    {%- when "fi" -%}Compare prices across 100+ sites
+    {%- when "fr" -%}Compare prices across 100+ sites
+    {%- when "fr-ca" -%}Compare prices across 100+ sites
+    {%- when "de" -%}Compare prices across 100+ sites
+    {%- when "el" -%}Compare prices across 100+ sites
+    {%- when "he" -%}Compare prices across 100+ sites
+    {%- when "hu" -%}Compare prices across 100+ sites
+    {%- when "id" -%}Compare prices across 100+ sites
+    {%- when "it" -%}Compare prices across 100+ sites
+    {%- when "ja" -%}Compare prices across 100+ sites
+    {%- when "ko" -%}Compare prices across 100+ sites
+    {%- when "ms" -%}Compare prices across 100+ sites
+    {%- when "no" -%}Compare prices across 100+ sites
+    {%- when "pl" -%}Compare prices across 100+ sites
+    {%- when "pt" -%}Compare prices across 100+ sites
+    {%- when "pt-br" -%}Compare prices across 100+ sites
+    {%- when "ro" -%}Compare prices across 100+ sites
+    {%- when "ru" -%}Compare prices across 100+ sites
+    {%- when "es" -%}Compare prices across 100+ sites
+    {%- when "es-419" -%}Compare prices across 100+ sites
+    {%- when "sv" -%}Compare prices across 100+ sites
+    {%- when "th" -%}Compare prices across 100+ sites
+    {%- when "tr" -%}Compare prices across 100+ sites
+    {%- when "uk" -%}Compare prices across 100+ sites
+    {%- when "vi" -%}Compare prices across 100+ sites
+    {%- else -%}Compare prices across 100+ sites
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_body_1_copy -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "ar" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "zh-cn" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "zh-tw" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "zh-hk" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "hr" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "cs" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "da" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "nl" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "en-gb" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "fil" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "fi" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "fr" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "fr-ca" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "de" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "el" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "he" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "hu" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "id" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "it" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "ja" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "ko" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "ms" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "no" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "pl" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "pt" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "pt-br" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "ro" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "ru" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "es" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "es-419" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "sv" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "th" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "tr" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "uk" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- when "vi" -%}See the full picture upfront. No guessing, no bouncing between tabs.
+    {%- else -%}See the full picture upfront. No guessing, no bouncing between tabs.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_body_2_h2 -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Know exactly when to book
+    {%- when "ar" -%}Know exactly when to book
+    {%- when "zh-cn" -%}Know exactly when to book
+    {%- when "zh-tw" -%}Know exactly when to book
+    {%- when "zh-hk" -%}Know exactly when to book
+    {%- when "hr" -%}Know exactly when to book
+    {%- when "cs" -%}Know exactly when to book
+    {%- when "da" -%}Know exactly when to book
+    {%- when "nl" -%}Know exactly when to book
+    {%- when "en-gb" -%}Know exactly when to book
+    {%- when "fil" -%}Know exactly when to book
+    {%- when "fi" -%}Know exactly when to book
+    {%- when "fr" -%}Know exactly when to book
+    {%- when "fr-ca" -%}Know exactly when to book
+    {%- when "de" -%}Know exactly when to book
+    {%- when "el" -%}Know exactly when to book
+    {%- when "he" -%}Know exactly when to book
+    {%- when "hu" -%}Know exactly when to book
+    {%- when "id" -%}Know exactly when to book
+    {%- when "it" -%}Know exactly when to book
+    {%- when "ja" -%}Know exactly when to book
+    {%- when "ko" -%}Know exactly when to book
+    {%- when "ms" -%}Know exactly when to book
+    {%- when "no" -%}Know exactly when to book
+    {%- when "pl" -%}Know exactly when to book
+    {%- when "pt" -%}Know exactly when to book
+    {%- when "pt-br" -%}Know exactly when to book
+    {%- when "ro" -%}Know exactly when to book
+    {%- when "ru" -%}Know exactly when to book
+    {%- when "es" -%}Know exactly when to book
+    {%- when "es-419" -%}Know exactly when to book
+    {%- when "sv" -%}Know exactly when to book
+    {%- when "th" -%}Know exactly when to book
+    {%- when "tr" -%}Know exactly when to book
+    {%- when "uk" -%}Know exactly when to book
+    {%- when "vi" -%}Know exactly when to book
+    {%- else -%}Know exactly when to book
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_body_2_copy -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Price insights show you the right moment to secure your deal.
+    {%- when "ar" -%}Price insights show you the right moment to secure your deal.
+    {%- when "zh-cn" -%}Price insights show you the right moment to secure your deal.
+    {%- when "zh-tw" -%}Price insights show you the right moment to secure your deal.
+    {%- when "zh-hk" -%}Price insights show you the right moment to secure your deal.
+    {%- when "hr" -%}Price insights show you the right moment to secure your deal.
+    {%- when "cs" -%}Price insights show you the right moment to secure your deal.
+    {%- when "da" -%}Price insights show you the right moment to secure your deal.
+    {%- when "nl" -%}Price insights show you the right moment to secure your deal.
+    {%- when "en-gb" -%}Price insights show you the right moment to secure your deal.
+    {%- when "fil" -%}Price insights show you the right moment to secure your deal.
+    {%- when "fi" -%}Price insights show you the right moment to secure your deal.
+    {%- when "fr" -%}Price insights show you the right moment to secure your deal.
+    {%- when "fr-ca" -%}Price insights show you the right moment to secure your deal.
+    {%- when "de" -%}Price insights show you the right moment to secure your deal.
+    {%- when "el" -%}Price insights show you the right moment to secure your deal.
+    {%- when "he" -%}Price insights show you the right moment to secure your deal.
+    {%- when "hu" -%}Price insights show you the right moment to secure your deal.
+    {%- when "id" -%}Price insights show you the right moment to secure your deal.
+    {%- when "it" -%}Price insights show you the right moment to secure your deal.
+    {%- when "ja" -%}Price insights show you the right moment to secure your deal.
+    {%- when "ko" -%}Price insights show you the right moment to secure your deal.
+    {%- when "ms" -%}Price insights show you the right moment to secure your deal.
+    {%- when "no" -%}Price insights show you the right moment to secure your deal.
+    {%- when "pl" -%}Price insights show you the right moment to secure your deal.
+    {%- when "pt" -%}Price insights show you the right moment to secure your deal.
+    {%- when "pt-br" -%}Price insights show you the right moment to secure your deal.
+    {%- when "ro" -%}Price insights show you the right moment to secure your deal.
+    {%- when "ru" -%}Price insights show you the right moment to secure your deal.
+    {%- when "es" -%}Price insights show you the right moment to secure your deal.
+    {%- when "es-419" -%}Price insights show you the right moment to secure your deal.
+    {%- when "sv" -%}Price insights show you the right moment to secure your deal.
+    {%- when "th" -%}Price insights show you the right moment to secure your deal.
+    {%- when "tr" -%}Price insights show you the right moment to secure your deal.
+    {%- when "uk" -%}Price insights show you the right moment to secure your deal.
+    {%- when "vi" -%}Price insights show you the right moment to secure your deal.
+    {%- else -%}Price insights show you the right moment to secure your deal.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_body_3_h2 -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Stay ahead of price changes
+    {%- when "ar" -%}Stay ahead of price changes
+    {%- when "zh-cn" -%}Stay ahead of price changes
+    {%- when "zh-tw" -%}Stay ahead of price changes
+    {%- when "zh-hk" -%}Stay ahead of price changes
+    {%- when "hr" -%}Stay ahead of price changes
+    {%- when "cs" -%}Stay ahead of price changes
+    {%- when "da" -%}Stay ahead of price changes
+    {%- when "nl" -%}Stay ahead of price changes
+    {%- when "en-gb" -%}Stay ahead of price changes
+    {%- when "fil" -%}Stay ahead of price changes
+    {%- when "fi" -%}Stay ahead of price changes
+    {%- when "fr" -%}Stay ahead of price changes
+    {%- when "fr-ca" -%}Stay ahead of price changes
+    {%- when "de" -%}Stay ahead of price changes
+    {%- when "el" -%}Stay ahead of price changes
+    {%- when "he" -%}Stay ahead of price changes
+    {%- when "hu" -%}Stay ahead of price changes
+    {%- when "id" -%}Stay ahead of price changes
+    {%- when "it" -%}Stay ahead of price changes
+    {%- when "ja" -%}Stay ahead of price changes
+    {%- when "ko" -%}Stay ahead of price changes
+    {%- when "ms" -%}Stay ahead of price changes
+    {%- when "no" -%}Stay ahead of price changes
+    {%- when "pl" -%}Stay ahead of price changes
+    {%- when "pt" -%}Stay ahead of price changes
+    {%- when "pt-br" -%}Stay ahead of price changes
+    {%- when "ro" -%}Stay ahead of price changes
+    {%- when "ru" -%}Stay ahead of price changes
+    {%- when "es" -%}Stay ahead of price changes
+    {%- when "es-419" -%}Stay ahead of price changes
+    {%- when "sv" -%}Stay ahead of price changes
+    {%- when "th" -%}Stay ahead of price changes
+    {%- when "tr" -%}Stay ahead of price changes
+    {%- when "uk" -%}Stay ahead of price changes
+    {%- when "vi" -%}Stay ahead of price changes
+    {%- else -%}Stay ahead of price changes
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_body_3_copy -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}We track prices so you don't have to keep checking.
+    {%- when "ar" -%}We track prices so you don't have to keep checking.
+    {%- when "zh-cn" -%}We track prices so you don't have to keep checking.
+    {%- when "zh-tw" -%}We track prices so you don't have to keep checking.
+    {%- when "zh-hk" -%}We track prices so you don't have to keep checking.
+    {%- when "hr" -%}We track prices so you don't have to keep checking.
+    {%- when "cs" -%}We track prices so you don't have to keep checking.
+    {%- when "da" -%}We track prices so you don't have to keep checking.
+    {%- when "nl" -%}We track prices so you don't have to keep checking.
+    {%- when "en-gb" -%}We track prices so you don't have to keep checking.
+    {%- when "fil" -%}We track prices so you don't have to keep checking.
+    {%- when "fi" -%}We track prices so you don't have to keep checking.
+    {%- when "fr" -%}We track prices so you don't have to keep checking.
+    {%- when "fr-ca" -%}We track prices so you don't have to keep checking.
+    {%- when "de" -%}We track prices so you don't have to keep checking.
+    {%- when "el" -%}We track prices so you don't have to keep checking.
+    {%- when "he" -%}We track prices so you don't have to keep checking.
+    {%- when "hu" -%}We track prices so you don't have to keep checking.
+    {%- when "id" -%}We track prices so you don't have to keep checking.
+    {%- when "it" -%}We track prices so you don't have to keep checking.
+    {%- when "ja" -%}We track prices so you don't have to keep checking.
+    {%- when "ko" -%}We track prices so you don't have to keep checking.
+    {%- when "ms" -%}We track prices so you don't have to keep checking.
+    {%- when "no" -%}We track prices so you don't have to keep checking.
+    {%- when "pl" -%}We track prices so you don't have to keep checking.
+    {%- when "pt" -%}We track prices so you don't have to keep checking.
+    {%- when "pt-br" -%}We track prices so you don't have to keep checking.
+    {%- when "ro" -%}We track prices so you don't have to keep checking.
+    {%- when "ru" -%}We track prices so you don't have to keep checking.
+    {%- when "es" -%}We track prices so you don't have to keep checking.
+    {%- when "es-419" -%}We track prices so you don't have to keep checking.
+    {%- when "sv" -%}We track prices so you don't have to keep checking.
+    {%- when "th" -%}We track prices so you don't have to keep checking.
+    {%- when "tr" -%}We track prices so you don't have to keep checking.
+    {%- when "uk" -%}We track prices so you don't have to keep checking.
+    {%- when "vi" -%}We track prices so you don't have to keep checking.
+    {%- else -%}We track prices so you don't have to keep checking.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_body_4_h2 -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Freeze deals for free
+    {%- when "ar" -%}Freeze deals for free
+    {%- when "zh-cn" -%}Freeze deals for free
+    {%- when "zh-tw" -%}Freeze deals for free
+    {%- when "zh-hk" -%}Freeze deals for free
+    {%- when "hr" -%}Freeze deals for free
+    {%- when "cs" -%}Freeze deals for free
+    {%- when "da" -%}Freeze deals for free
+    {%- when "nl" -%}Freeze deals for free
+    {%- when "en-gb" -%}Freeze deals for free
+    {%- when "fil" -%}Freeze deals for free
+    {%- when "fi" -%}Freeze deals for free
+    {%- when "fr" -%}Freeze deals for free
+    {%- when "fr-ca" -%}Freeze deals for free
+    {%- when "de" -%}Freeze deals for free
+    {%- when "el" -%}Freeze deals for free
+    {%- when "he" -%}Freeze deals for free
+    {%- when "hu" -%}Freeze deals for free
+    {%- when "id" -%}Freeze deals for free
+    {%- when "it" -%}Freeze deals for free
+    {%- when "ja" -%}Freeze deals for free
+    {%- when "ko" -%}Freeze deals for free
+    {%- when "ms" -%}Freeze deals for free
+    {%- when "no" -%}Freeze deals for free
+    {%- when "pl" -%}Freeze deals for free
+    {%- when "pt" -%}Freeze deals for free
+    {%- when "pt-br" -%}Freeze deals for free
+    {%- when "ro" -%}Freeze deals for free
+    {%- when "ru" -%}Freeze deals for free
+    {%- when "es" -%}Freeze deals for free
+    {%- when "es-419" -%}Freeze deals for free
+    {%- when "sv" -%}Freeze deals for free
+    {%- when "th" -%}Freeze deals for free
+    {%- when "tr" -%}Freeze deals for free
+    {%- when "uk" -%}Freeze deals for free
+    {%- when "vi" -%}Freeze deals for free
+    {%- else -%}Freeze deals for free
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_body_4_copy -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "ar" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "zh-cn" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "zh-tw" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "zh-hk" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "hr" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "cs" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "da" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "nl" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "en-gb" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "fil" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "fi" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "fr" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "fr-ca" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "de" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "el" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "he" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "hu" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "id" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "it" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "ja" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "ko" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "ms" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "no" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "pl" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "pt" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "pt-br" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "ro" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "ru" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "es" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "es-419" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "sv" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "th" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "tr" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "uk" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- when "vi" -%}Need more time to decide? Lock in today's price while you decide.
+    {%- else -%}Need more time to decide? Lock in today's price while you decide.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture hero_two_col_cta_text -%}
+  {%- case locale_key -%}
+    {%- when "en" -%}Freeze a deal
+    {%- when "ar" -%}Freeze a deal
+    {%- when "zh-cn" -%}Freeze a deal
+    {%- when "zh-tw" -%}Freeze a deal
+    {%- when "zh-hk" -%}Freeze a deal
+    {%- when "hr" -%}Freeze a deal
+    {%- when "cs" -%}Freeze a deal
+    {%- when "da" -%}Freeze a deal
+    {%- when "nl" -%}Freeze a deal
+    {%- when "en-gb" -%}Freeze a deal
+    {%- when "fil" -%}Freeze a deal
+    {%- when "fi" -%}Freeze a deal
+    {%- when "fr" -%}Freeze a deal
+    {%- when "fr-ca" -%}Freeze a deal
+    {%- when "de" -%}Freeze a deal
+    {%- when "el" -%}Freeze a deal
+    {%- when "he" -%}Freeze a deal
+    {%- when "hu" -%}Freeze a deal
+    {%- when "id" -%}Freeze a deal
+    {%- when "it" -%}Freeze a deal
+    {%- when "ja" -%}Freeze a deal
+    {%- when "ko" -%}Freeze a deal
+    {%- when "ms" -%}Freeze a deal
+    {%- when "no" -%}Freeze a deal
+    {%- when "pl" -%}Freeze a deal
+    {%- when "pt" -%}Freeze a deal
+    {%- when "pt-br" -%}Freeze a deal
+    {%- when "ro" -%}Freeze a deal
+    {%- when "ru" -%}Freeze a deal
+    {%- when "es" -%}Freeze a deal
+    {%- when "es-419" -%}Freeze a deal
+    {%- when "sv" -%}Freeze a deal
+    {%- when "th" -%}Freeze a deal
+    {%- when "tr" -%}Freeze a deal
+    {%- when "uk" -%}Freeze a deal
+    {%- when "vi" -%}Freeze a deal
+    {%- else -%}Freeze a deal
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- capture footer_app_line -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}احجز كأهل البلد. حمّل التطبيق.
+    {%- when "zh-cn" -%}订房有一套。 下载应用。
+    {%- when "zh-tw" -%}懂玩的人，都這樣訂房 下載應用程式
+    {%- when "zh-hk" -%}訂得安心。 下載應用程式。
+    {%- when "hr" -%}Rezervirajte pametnije. Preuzmite aplikaciju.
+    {%- when "cs" -%}Rezervujte levou zadní. Stáhněte si aplikaci.
+    {%- when "da" -%}Book med overblik. Download appen.
+    {%- when "nl" -%}Boeken zonder poespas. Download de app.
+    {%- when "en-gb" -%}Book like an insider. Download the app.
+    {%- when "en" -%}Book like an insider. Download the app.
+    {%- when "fil" -%}Mag-book nang may kumpyansa. I-download ang app.
+    {%- when "fi" -%}Varaa fiksusti. Lataa sovellus.
+    {%- when "fr" -%}Réserver sans se tromper. Télécharger l'application.
+    {%- when "fr-ca" -%}Réservez en toute confiance. Télécharger l'application.
+    {%- when "de" -%}Buchen mit klarem Blick. App herunterladen.
+    {%- when "el" -%}Κάνε τώρα τις πιο έξυπνες κρατήσεις. Κατεβάστε την εφαρμογή.
+    {%- when "he" -%}להזמין חכם זה פשוט. הורידו את האפליקציה.
+    {%- when "hu" -%}Foglaljon magabiztosan. Töltse le az alkalmazást.
+    {%- when "id" -%}Pesan tanpa cemas. Unduh aplikasi.
+    {%- when "it" -%}Prenotare senza pensieri. Scarica l'app.
+    {%- when "ja" -%}納得して予約する。アプリをダウンロード。
+    {%- when "ko" -%}예약에 확신을 더하다. 앱을 다운로드하세요.
+    {%- when "ms" -%}Kejelasan diutamakan. Tempah tanpa ragu. Muat turun aplikasi.
+    {%- when "no" -%}Book som en insider. Last ned appen.
+    {%- when "pl" -%}Rezerwuj jak zawodowiec. Pobierz aplikację.
+    {%- when "pt" -%}Reserve com confiança. Descarregue a app.
+    {%- when "pt-br" -%}Reserve sem erro. Baixe o app.
+    {%- when "ro" -%}Rezervă cu toată încrederea. Descarcă aplicația.
+    {%- when "ru" -%}Бронируйте с умом. Скачайте приложение.
+    {%- when "es" -%}Reservar sin equivocarse. Descarga la app.
+    {%- when "es-419" -%}Reservar sin equivocarse. Descarga la aplicación.
+    {%- when "sv" -%}Boka som en insider. Ladda ner appen.
+    {%- when "th" -%}จองคุ้มว่า ราคาแบบคนวงใน ดาวน์โหลดแอป
+    {%- when "tr" -%}Daha akıllıca rezervasyon yap. Uygulamayı indirin.
+    {%- when "uk" -%}Бронюй як місцевий. Завантажте застосунок.
+    {%- when "vi" -%}Đặt chỗ thông minh hơn. Tải ứng dụng.
+    {%- else -%}Book like an insider. Download the app.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture footer_address -%}FindHotel B.V. Nieuwe Looiersdwarsstraat 17, 1017 TZ, Amsterdam, The Netherlands.{%- endcapture -%}
+{%- capture footer_prefs_text -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}قم بتحديث <emailPreferences>تفضيلات بريدك الإلكتروني</emailPreferences> لاختيار رسائل البريد الإلكتروني التي تتلقاها أو <unsubscribe>إلغاء الاشتراك</unsubscribe> من كل رسائل البريد الإلكتروني.
+    {%- when "zh-cn" -%}更新 <emailPreferences>电子邮件偏好设置</emailPreferences>，选择接收哪些邮件或 <unsubscribe>退订</unsubscribe>所有邮件。
+    {%- when "zh-tw" -%}更新 <emailPreferences>電子郵件偏好</emailPreferences>，選擇要收到哪些電子郵件，或是 <unsubscribe>取消訂閱</unsubscribe>所有電子郵件。
+    {%- when "zh-hk" -%}更新 <emailPreferences>電郵偏好設定</emailPreferences>以選擇接收哪些電郵或 <unsubscribe>取消訂閱</unsubscribe>所有電郵。
+    {%- when "hr" -%}Ažurirajte svoje <emailPreferences>postavke za e-mail</emailPreferences> kako biste odabrali koje e-poruke želite primati ili se u potpunosti <unsubscribe>odjavite</unsubscribe>.
+    {%- when "cs" -%}Upravte si <emailPreferences>předvolby e-mailů</emailPreferences> a vyberte sdělení, která chcete dostávat. Můžete si také <unsubscribe>odhlásit odběr</unsubscribe> veškerých e-mailů.
+    {%- when "da" -%}Opdater <emailPreferences>indstillinger for e-mail</emailPreferences> for at vælge, hvilke e-mails du får, eller <unsubscribe>afmeld</unsubscribe> alle e-mails.
+    {%- when "nl" -%}Werk je <emailPreferences>e-mailvoorkeuren</emailPreferences> bij om te kiezen welke e-mails je wilt ontvangen of om je <unsubscribe>af te melden</unsubscribe> voor alle e-mails.
+    {%- when "en-gb" -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+    {%- when "en" -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+    {%- when "fil" -%}I-update ang <emailPreferences>mga preference mo sa email</emailPreferences> para piliin kung anong mga email ang matatanggap mo o <unsubscribe>mag-unsubscribe</unsubscribe> sa lahat ng email.
+    {%- when "fi" -%}Päivitä <emailPreferences>sähköpostiasetukset</emailPreferences> ja valitse saamasi sähköpostiviestit tai <unsubscribe>peruuta</unsubscribe> kaikkien sähköpostiviestien tilaus.
+    {%- when "fr" -%}Mettez à jour vos <emailPreferences>préférences en matière d'e-mails</emailPreferences> pour choisir ce que vous souhaitez recevoir ou pour vous <unsubscribe>désabonner</unsubscribe> de tous les e-mails.
+    {%- when "fr-ca" -%}Mettez à jour vos <emailPreferences>préférences de courriel</emailPreferences> pour choisir les courriels que vous recevez ou vous <unsubscribe>désabonner</unsubscribe> de tous les courriels.
+    {%- when "de" -%}Aktualisieren Sie Ihre <emailPreferences>E-Mail-Einstellungen</emailPreferences>, um auszuwählen, welche E-Mails Sie erhalten möchten, oder um sich von allen E-Mails <unsubscribe>abzumelden</unsubscribe>.
+    {%- when "el" -%}Ενημερώστε τις <emailPreferences>προτιμήσεις email</emailPreferences> σας για να επιλέξετε ποια email θα λαμβάνετε ή να <unsubscribe>καταργήσετε την εγγραφή σας</unsubscribe> από όλα τα email.
+    {%- when "he" -%}יש לעדכן את <emailPreferences>העדפות האימייל</emailPreferences> שלכם כדי לבחור אילו אימיילים לקבל, או <unsubscribe>לבטל את המינוי</unsubscribe> על כל האימיילים.
+    {%- when "hu" -%}Frissítse <emailPreferences>e-mail-beállításait</emailPreferences>, hogy kiválaszthassa, mely e-maileket szeretné megkapni, vagy <unsubscribe>leiratkozhat</unsubscribe> az összes e-mailről.
+    {%- when "id" -%}Perbarui <emailPreferences>preferensi email</emailPreferences> Anda untuk memilih email mana yang Anda dapatkan atau <unsubscribe>berhenti berlangganan</unsubscribe> dari semua email.
+    {%- when "it" -%}Aggiorna le <emailPreferences>preferenze delle email</emailPreferences> per scegliere quali email ricevere o per <unsubscribe>cancellare l'iscrizione</unsubscribe> a tutte le email.
+    {%- when "ja" -%}<emailPreferences>メール設定</emailPreferences>を更新して、受信するメールを選択したり、すべてのメールの<unsubscribe>登録を解除</unsubscribe>したりできます。
+    {%- when "ko" -%}<emailPreferences>이메일 환경 설정</emailPreferences>을 업데이트하여 받을 이메일을 선택하거나 모든 이메일을 <unsubscribe>구독 해제</unsubscribe>할 수 있어요.
+    {%- when "ms" -%}Kemas kini <emailPreferences>keutamaan e-mel</emailPreferences> anda untuk memilih e-mel yang anda terima atau <unsubscribe>nyahlanggan</unsubscribe> semua e-mel.
+    {%- when "no" -%}Oppdater <emailPreferences>e-postpreferansene</emailPreferences> dine for å velge hvilke e-poster du får, eller <unsubscribe>avslutt abonnementet</unsubscribe> på alle e-poster.
+    {%- when "pl" -%}Aktualizacja <emailPreferences>preferencji dotyczących e-maili</emailPreferences> pozwala wybrać, które wiadomości chcesz otrzymywać, lub <unsubscribe>zrezygnować</unsubscribe> ze wszystkich wiadomości.
+    {%- when "pt" -%}Atualize as suas <emailPreferences>preferências de e-mail</emailPreferences> para escolher os e-mails que recebe ou <unsubscribe>cancele a subscrição</unsubscribe> de todos os e-mails.
+    {%- when "pt-br" -%}Atualize suas <emailPreferences>preferências de e-mail</emailPreferences> para escolher quais e-mails você deseja receber ou <unsubscribe>cancele a inscrição</unsubscribe> de todos os e-mails.
+    {%- when "ro" -%}Actualizează-ți <emailPreferences>preferințele de e-mail</emailPreferences> pentru a alege ce e-mailuri primești sau pentru a te <unsubscribe>dezabona</unsubscribe> de la toate e-mailurile.
+    {%- when "ru" -%}Обновите <emailPreferences>настройки электронной почты</emailPreferences>, чтобы выбрать, какие письма получать, или <unsubscribe>отмените подписку</unsubscribe> на все рассылки.
+    {%- when "es" -%}Actualiza tus <emailPreferences>preferencias de correo electrónico</emailPreferences> para elegir qué correos electrónicos deseas recibir o para <unsubscribe>cancelar la suscripción</unsubscribe> a todos los correos electrónicos.
+    {%- when "es-419" -%}Actualiza tus <emailPreferences>preferencias de correo electrónico</emailPreferences> para elegir qué mensajes quieres recibir o <unsubscribe>cancelar tu suscripción</unsubscribe> de todos los correos.
+    {%- when "sv" -%}Uppdatera dina <emailPreferences>e-postinställningar</emailPreferences> för att välja vilka e-postmeddelanden du får eller <unsubscribe>avsluta</unsubscribe> alla prenumerationer.
+    {%- when "th" -%}อัปเดต <emailPreferences>การตั้งค่าอีเมล</emailPreferences>เพื่อเลือกอีเมลที่คุณต้องการรับหรือ <unsubscribe>ยกเลิกการสมัคร</unsubscribe>รับอีเมลทั้งหมด
+    {%- when "tr" -%}<emailPreferences>E-posta tercihlerinizi</emailPreferences> güncelleyerek hangi e-postaları alacağınızı belirleyebilir ya da tüm e-posta <unsubscribe>aboneliklerinden çıkabilirsiniz</unsubscribe>.
+    {%- when "uk" -%}Оновіть <emailPreferences>налаштування електронних листів</emailPreferences>, щоб вибрати, які електронні листи отримувати, або <unsubscribe>відмовитися від підписки</unsubscribe> на всі електронні листи.
+    {%- when "vi" -%}Cập nhật <emailPreferences>tùy chọn email</emailPreferences> của bạn để chọn email bạn nhận được hoặc <unsubscribe>hủy đăng ký</unsubscribe> khỏi tất cả email.
+    {%- else -%}Update your <emailPreferences>email preferences</emailPreferences> to choose which emails you get or <unsubscribe>unsubscribe</unsubscribe> from all emails.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture email_prefs_open -%}<a href="{{snippets.vio_notification_preferences}}" style="color:inherit;text-decoration:underline !important" target="_blank">{%- endcapture -%}
+{%- capture email_prefs_close -%}</a>{%- endcapture -%}
+{%- capture unsub_open -%}<a href="{{snippets.vio_notification_preferences_unsubscribe}}" class="untracked" style="color:inherit;text-decoration:underline !important" target="_blank">{%- endcapture -%}
+{%- capture unsub_close -%}</a>{%- endcapture -%}
+{%- assign footer_prefs_html = footer_prefs_text | replace: "<emailPreferences>", email_prefs_open | replace: "</emailPreferences>", email_prefs_close | replace: "<unsubscribe>", unsub_open | replace: "</unsubscribe>", unsub_close -%}
+{%- capture terms_title -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}الشروط وسياسة الخصوصية
+    {%- when "zh-cn" -%}条款和隐私政策
+    {%- when "zh-tw" -%}條款和私隱政策
+    {%- when "zh-hk" -%}條款及私隱政策
+    {%- when "hr" -%}Uvjeti i politika privatnosti
+    {%- when "cs" -%}Podmínky a zásady ochrany osobních údajů
+    {%- when "da" -%}Vilkår og Privatlivspolitik
+    {%- when "nl" -%}Algemene voorwaarden en privacybeleid
+    {%- when "en-gb" -%}Terms and Privacy Policy
+    {%- when "en" -%}Terms and Privacy Policy
+    {%- when "fil" -%}Mga Tuntunin at Patakaran sa Privacy
+    {%- when "fi" -%}Ehdot ja tietosuojakäytäntö
+    {%- when "fr" -%}Conditions générales et Politique de confidentialité
+    {%- when "fr-ca" -%}Conditions et politique de confidentialité
+    {%- when "de" -%}Bedingungen und Richtlinien
+    {%- when "el" -%}Όρους και Πολιτική απορρήτου
+    {%- when "he" -%}התנאים ומדיניות הפרטיות
+    {%- when "hu" -%}Felhasználási feltételek és adatvédelmi szabályzat
+    {%- when "id" -%}Ketentuan dan Kebijakan Privasi
+    {%- when "it" -%}Termini e Policy
+    {%- when "ja" -%}規約とプライバシーポリシー
+    {%- when "ko" -%}이용 약관 및 개인정보 보호정책
+    {%- when "ms" -%}Terma dan Dasar Privasi
+    {%- when "no" -%}Vilkår og personvernpolicy
+    {%- when "pl" -%}Warunki i Polityka prywatności
+    {%- when "pt" -%}Termos e Política de Privacidade
+    {%- when "pt-br" -%}Termos e Política de Privacidade
+    {%- when "ro" -%}Termeni și politica de confidențialitate
+    {%- when "ru" -%}Условия и политика конфиденциальности
+    {%- when "es" -%}Términos y política de privacidad
+    {%- when "es-419" -%}Términos y Política de privacidad
+    {%- when "sv" -%}Villkor och Integritetspolicy
+    {%- when "th" -%}ข้อกำหนดและนโยบายความเป็นส่วนตัว
+    {%- when "tr" -%}Koşullar ve Gizlilik Politikası
+    {%- when "uk" -%}Умови та політика конфіденційності
+    {%- when "vi" -%}Điều khoản và Chính sách bảo mật
+    {%- else -%}Terms and Privacy Policy
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture terms_label -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}الشروط
+    {%- when "zh-cn" -%}条款
+    {%- when "zh-tw" -%}條款
+    {%- when "zh-hk" -%}條款
+    {%- when "hr" -%}Uvjeti
+    {%- when "cs" -%}Podmínky
+    {%- when "da" -%}Vilkår
+    {%- when "nl" -%}voorwaarden
+    {%- when "en-gb" -%}Terms
+    {%- when "en" -%}Terms
+    {%- when "fil" -%}Mga Tuntunin
+    {%- when "fi" -%}Ehdot
+    {%- when "fr" -%}Conditions
+    {%- when "fr-ca" -%}Conditions
+    {%- when "de" -%}Bedingungen
+    {%- when "el" -%}Όρους
+    {%- when "he" -%}התנאים
+    {%- when "hu" -%}Feltételek
+    {%- when "id" -%}Ketentuan
+    {%- when "it" -%}Termini
+    {%- when "ja" -%}規約
+    {%- when "ko" -%}이용 약관
+    {%- when "ms" -%}Terma
+    {%- when "no" -%}Vilkår
+    {%- when "pl" -%}Warunki
+    {%- when "pt" -%}Termos
+    {%- when "pt-br" -%}Termos
+    {%- when "ro" -%}Termeni
+    {%- when "ru" -%}Условия
+    {%- when "es" -%}Términos
+    {%- when "es-419" -%}Términos
+    {%- when "sv" -%}Villkor
+    {%- when "th" -%}ข้อกำหนด
+    {%- when "tr" -%}Koşullar
+    {%- when "uk" -%}Умови
+    {%- when "vi" -%}Điều khoản
+    {%- else -%}Terms
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture privacy_label -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}سياسة الخصوصية
+    {%- when "zh-cn" -%}隐私政策
+    {%- when "zh-tw" -%}私隱政策
+    {%- when "zh-hk" -%}私隱政策
+    {%- when "hr" -%}politika privatnosti
+    {%- when "cs" -%}zásady ochrany osobních údajů
+    {%- when "da" -%}Privatlivspolitik
+    {%- when "nl" -%}privacybeleid
+    {%- when "en-gb" -%}Privacy Policy
+    {%- when "en" -%}Privacy Policy
+    {%- when "fil" -%}Patakaran sa Privacy
+    {%- when "fi" -%}tietosuojakäytäntö
+    {%- when "fr" -%}Politique de confidentialité
+    {%- when "fr-ca" -%}politique de confidentialité
+    {%- when "de" -%}Datenschutzrichtlinie
+    {%- when "el" -%}Πολιτική απορρήτου
+    {%- when "he" -%}מדיניות הפרטיות
+    {%- when "hu" -%}adatvédelmi szabályzat
+    {%- when "id" -%}Kebijakan Privasi
+    {%- when "it" -%}Informativa sulla privacy
+    {%- when "ja" -%}プライバシーポリシー
+    {%- when "ko" -%}개인정보 보호정책
+    {%- when "ms" -%}Dasar Privasi
+    {%- when "no" -%}personvernpolicy
+    {%- when "pl" -%}Polityka prywatności
+    {%- when "pt" -%}Política de Privacidade
+    {%- when "pt-br" -%}Política de Privacidade
+    {%- when "ro" -%}politica de confidențialitate
+    {%- when "ru" -%}политика конфиденциальности
+    {%- when "es" -%}política de privacidad
+    {%- when "es-419" -%}Política de privacidad
+    {%- when "sv" -%}Integritetspolicy
+    {%- when "th" -%}นโยบายความเป็นส่วนตัว
+    {%- when "tr" -%}Gizlilik Politikası
+    {%- when "uk" -%}політика конфіденційності
+    {%- when "vi" -%}Chính sách bảo mật
+    {%- else -%}Privacy Policy
+  {%- endcase -%}
+{%- endcapture -%}
+{%- capture terms_link -%}<a href="https://www.vio.com/terms-of-use" target="_blank" style="color:{{ token_text_muted }};text-decoration:underline !important">{{ terms_label | strip }}</a>{%- endcapture -%}
+{%- capture privacy_link -%}<a href="https://www.vio.com/privacy-policy" target="_blank" style="color:{{ token_text_muted }};text-decoration:underline !important">{{ privacy_label | strip }}</a>{%- endcapture -%}
+{%- capture terms_desc_text -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}يعالج Vio.com حجزك ويساعدك فيه. يخضع هذا الحجز لـ {terms} و {privacyPolicy} الخاصة بنا.
+    {%- when "zh-cn" -%}Vio.com 会处理预订并协助您完成。此预订适用我们的{terms}和{privacyPolicy}。
+    {%- when "zh-tw" -%}Vio.com 處理並協助您完成預訂。我們的 {terms} 和 {privacyPolicy} 承保此預訂。
+    {%- when "zh-hk" -%}Vio.com 處理並協助您完成預訂。此預訂由我們的 {terms} 和 {privacyPolicy} 承保。
+    {%- when "hr" -%}Vio.com obrađuje i pomaže s vašom rezervacijom. Ova rezervacija pokrivena je našim {terms} i {privacyPolicy}.
+    {%- when "cs" -%}Vio.com zpracovává a vyřizuje vaši rezervaci, na kterou se vztahují naše {terms} a {privacyPolicy}.
+    {%- when "da" -%}Vio.com behandler og hjælper med din booking. Denne booking er dækket af vores {terms} og {privacyPolicy}.
+    {%- when "nl" -%}Vio.com verwerkt je boeking en helpt je daarbij. Onze {terms} en ons {privacyPolicy} zijn van toepassing op deze boeking.
+    {%- when "en-gb" -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
+    {%- when "en" -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
+    {%- when "fil" -%}Pinoproseso at tinutulungan ka ng Vio.com sa pagbu-book mo. Saklaw ng aming {terms} at {privacyPolicy} ang booking na ito.
+    {%- when "fi" -%}Vio.com käsittelee varauksesi ja auttaa sen kanssa. {terms} ja {privacyPolicy} koskevat tätä varausta.
+    {%- when "fr" -%}Vio.com traite et facilite votre réservation. Cette réservation est soumise à nos {terms} et à notre {privacyPolicy}.
+    {%- when "fr-ca" -%}Vio.com traite votre réservation et vous assiste dans le processus. Cette réservation est couverte par nos {terms} et notre {privacyPolicy}.
+    {%- when "de" -%}Vio.com bearbeitet Ihre Buchung und unterstützt Sie dabei. Diese Buchung unterliegt unseren {terms} und unserer {privacyPolicy} .
+    {%- when "el" -%}Το Vio.com επεξεργάζεται και βοηθά με την κράτησή σας. Αυτή η κράτηση καλύπτεται από τους {terms} και την {privacyPolicy} μας.
+    {%- when "he" -%}Vio.com מעבדת את ההזמנה שלך ועוזרת לבצע אותה. הזמנה זו כפופה ל{terms} ול{privacyPolicy} שלנו.
+    {%- when "hu" -%}A Vio.com feldolgozza és segíti az Ön foglalását. Erre a foglalásra a {terms} és a {privacyPolicy} érvényes.
+    {%- when "id" -%}Vio.com memproses dan membantu pemesanan Anda. Pemesanan ini dilindungi oleh {terms} dan {privacyPolicy} kami.
+    {%- when "it" -%}Vio.com elabora e fornisce assistenza per la tua prenotazione. Questa prenotazione è coperta dai {terms} e dalla {privacyPolicy} di Vio.
+    {%- when "ja" -%}Vio.comが予約の処理とサポートを行います。この予約には当社の{terms}と{privacyPolicy}が適用されます。
+    {%- when "ko" -%}본 예약은 Vio.com에서 처리하고 지원하며, 당사의 {terms} 및 {privacyPolicy}이 적용됩니다.
+    {%- when "ms" -%}Vio.com memproses dan membantu dengan tempahan anda. Tempahan ini dilindungi oleh {terms} dan {privacyPolicy} kami.
+    {%- when "no" -%}Vio.com behandler og hjelper deg med bestillingen din. Denne bestillingen dekkes av vår {terms} og {privacyPolicy}
+    {%- when "pl" -%}Vio.com pomaga w dokonaniu rezerwacji i przetwarza ją. Ta rezerwacja jest objęta naszymi zasadami, których szczegóły zawierają {terms} i {privacyPolicy}.
+    {%- when "pt" -%}A Vio.com gere e presta-lhe assistência na reserva. Esta reserva está coberta pelos nossos {terms} e a {privacyPolicy}.
+    {%- when "pt-br" -%}Vio.com gerencia e ajuda com sua reserva. Esta reserva é coberta por nossos {terms} e {privacyPolicy}.
+    {%- when "ro" -%}Vio.com procesează și te ajută cu rezervarea ta. Această rezervare este acoperită de {terms} și {privacyPolicy}.
+    {%- when "ru" -%}Vio.com обрабатывает ваше бронирование и обеспечивает поддержку. На это бронирование распространяются наши {terms} и {privacyPolicy}.
+    {%- when "es" -%}Vio.com procesa tu reserva y te ayuda con ella. Esta reserva está cubierta por nuestras {terms} y {privacyPolicy}.
+    {%- when "es-419" -%}Vio.com procesa tu reserva y te brinda asistencia con ella. Esta reserva está cubierta por nuestros {terms} y nuestra {privacyPolicy}.
+    {%- when "sv" -%}Vio.com behandlar och assisterar med din bokning. Denna bokning täcks av våra {terms} och {privacyPolicy} .
+    {%- when "th" -%}Vio.com เป็นผู้ดำเนินการและให้ความช่วยเหลือในการจองของคุณ การจองนี้อยู่ภายใต้{terms} และ{privacyPolicy}ของเรา
+    {%- when "tr" -%}Vio.com rezervasyonunuzu işleme alır ve size yardımcı olur. Bu rezervasyon {terms} ve {privacyPolicy} esaslarımız kapsamındadır.
+    {%- when "uk" -%}Vio.com обробляє ваше бронювання та допомагає вам у ньому. На це бронювання поширюються наші {terms} та {privacyPolicy}.
+    {%- when "vi" -%}Vio.com xử lý và hỗ trợ đặt phòng của bạn. Đặt phòng này được bảo vệ bởi {terms} và {privacyPolicy} của chúng tôi.
+    {%- else -%}Vio.com processes and assists with your booking. This booking is covered by our {terms} and {privacyPolicy}.
+  {%- endcase -%}
+{%- endcapture -%}
+{%- assign terms_desc_html = terms_desc_text | replace: "{terms}", terms_link | replace: "{privacyPolicy}", privacy_link -%}
+
+<!doctype html>
+<html lang="{{ locale_key }}" dir="{{ dir }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>{{ subject_line | strip | default: "Email" }}</title>
+    <style type="text/css">
+      .email-img-desktop { display: block !important; }
+      .email-img-mobile { display: none !important; }
+      @media only screen and (max-width: 600px) {
+        .email-app-card { width: 100% !important; max-width: 100% !important; padding: 16px 20px !important; }
+        .email-app-stores .email-app-store-cell { display: block !important; width: 100% !important; padding-right: 0 !important; padding-bottom: 16px !important; }
+        .email-app-stores .email-app-store-cell:last-child { padding-bottom: 0 !important; }
+        .email-img-desktop { display: none !important; }
+        .email-img-mobile { display: block !important; }
+        .email-outer-pad { padding: 16px 10px !important; }
+        .email-card { width: 100% !important; max-width: 100% !important; border-radius: 12px !important; }
+        .email-content-above { padding: 20px 20px 0 20px !important; }
+        .email-content-below { padding: 0 20px 24px 20px !important; }
+        .email-inner-content { width: 100% !important; max-width: 100% !important; }
+        .email-footer-pad { padding: 0 20px !important; }
+        .email-app-module-outer td { padding-left: 20px !important; padding-right: 20px !important; }
+        .email-feature-col { display: block !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .email-feature-row { display: block !important; }
+        .email-feature-row td { display: block !important; width: 100% !important; padding: 0 0 24px 0 !important; }
+        .email-feature-row td:first-child { padding-bottom: 16px !important; }
+        .email-hero-two-col-headline-box { width: 100% !important; max-width: 100% !important; }
+        .email-hero-two-col-cta-wrap { width: 100% !important; }
+        .email-hero-two-col-cta-cell { width: 100% !important; }
+        .email-hero-two-col-cta { width: 100% !important; }
+        .email-header-pad { padding: 16px 0 8px !important; }
+        .email-terms-outer { padding: 0 10px 20px !important; }
+        .email-terms-inner { padding-left: 16px !important; padding-right: 16px !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0;background:{{ token_bg_page }};">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;visibility:hidden;mso-hide:all;">{{ preheader | strip }}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="{{ token_bg_page }}" style="width:100%;background:{{ token_bg_page }};">
+      <tr>
+        <td align="center" class="email-outer-pad" style="padding:{{ token_space_800 }} {{ token_space_300 }};">
+          <table role="presentation" width="{{ token_width_page }}" cellpadding="0" cellspacing="0" border="0" class="email-card" style="width:{{ token_width_page }}px;max-width:{{ token_width_page }}px;background:{{ token_bg_card }};border-radius:{{ token_radius_card }};">
+            <tr>
+              <td class="email-content-above" style="padding:{{ token_space_900 }} {{ token_space_1200 }} 0 {{ token_space_1200 }};">
+                <table role="presentation" width="{{ token_width_content }}" cellpadding="0" cellspacing="0" border="0" class="email-inner-content" style="width:{{ token_width_content }}px;max-width:{{ token_width_content }}px;margin:0 auto;border-collapse:collapse;">
+                  <tbody>
+                    {%- assign _show_header_logo_raw = show_header_logo | default: "TRUE" | downcase | strip -%}
+                    {%- assign _show_header_logo = true -%}
+                    {%- if _show_header_logo_raw == "false" or _show_header_logo_raw == "0" or _show_header_logo_raw == "" -%}{%- assign _show_header_logo = false -%}{%- endif -%}
+                    {%- if _show_header_logo -%}
+                    <tr>
+                      <td align="center" class="email-header-pad" style="padding: {{ token_space_600 }} 0 {{ token_space_500 }};">
+                        <img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1769680583679_Hero_Logo_Vector_4x_01KG4JXF25SSBE0QK36X2MEAXM.png" width="89" height="30" alt="Vio" style="width:89px;height:30px;display:block;margin:0 auto;" />
+                      </td>
+                    </tr>
+                    {%- endif -%}
+<tr>
+  <td style="padding:{{ token_space_300 }} 0 {{ token_space_500 }};text-align:center;direction:{{ dir }};">
+    <p style="margin:0;font-family:{{ token_font_stack }};font-weight:700;font-size:30px;line-height:120%;letter-spacing:0;color:{{ token_neutral_c900 }};direction:{{ dir }};unicode-bidi:plaintext;">{{ secondary_headline | strip }}</p>
+    <table role="presentation" width="498" cellpadding="0" cellspacing="0" border="0" align="center" class="email-hero-two-col-headline-box" style="margin:{{ token_space_300 }} auto 0 auto;width:498px;max-width:100%;height:116px;border-collapse:collapse;"><tr><td align="center" valign="middle" style="padding:0;vertical-align:middle;height:116px;">
+      <h1 style="margin:0;font-family:{{ token_font_stack }};font-weight:700;font-size:48px;line-height:120%;letter-spacing:0;color:{{ token_accent }};text-align:center;direction:{{ dir }};unicode-bidi:plaintext;">{{ headline | strip }}</h1>
+    </td></tr></table>
+  </td>
+</tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0;line-height:0;font-size:0;">
+<a href="https://app.vio.com/v0HW" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1771342193836_WelcomeToVio_Hero_EN_01KHP3HS77NFA5WT99477W3VX7.jpg" width="728" alt="" style="display:block;width:100%;max-width:728px;height:auto;border:0;outline:none;text-decoration:none;" /></a>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-content-below" style="padding:0 {{ token_space_1200 }} {{ token_space_900 }} {{ token_space_1200 }};">
+                <table role="presentation" width="{{ token_width_content }}" cellpadding="0" cellspacing="0" border="0" class="email-inner-content" style="width:{{ token_width_content }}px;max-width:{{ token_width_content }}px;margin:0 auto;border-collapse:collapse;">
+                  <tbody>
+
+{%- if hero_two_col_body_1_h2 != blank -%}
+<tr><td style="padding:0;vertical-align:top;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-feature-module-outer" style="width:100%;margin-top:{{ token_space_900 }}">
+  <tbody>
+    <tr>
+      <td>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+          <tr class="email-feature-row">
+            <td width="50%" valign="middle" class="email-feature-col" style="padding:0 20px 32px 0;vertical-align:middle;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td>
+                  <h2 style="margin:0 0 12px 0;font-family:{{ token_font_stack }};font-weight:700;font-size:16px;line-height:24px;letter-spacing:0.01em;color:{{ token_text_primary }};text-align:{{ align }};direction:{{ dir }};unicode-bidi:plaintext;">{{ hero_two_col_body_1_h2 | strip }}</h2>
+                  <p style="margin:0;font-family:{{ token_font_stack }};font-weight:400;font-size:16px;line-height:24px;letter-spacing:0.01em;color:{{ token_text_primary }};text-align:{{ align }};direction:{{ dir }};unicode-bidi:plaintext;">{{ hero_two_col_body_1_copy | strip }}</p>
+                </td></tr>
+              </table>
+            </td>
+            <td width="50%" valign="middle" class="email-feature-col" style="padding:0 0 32px 20px;vertical-align:middle;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td align="center">
+                  <img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1771340729327_WelcomeToVio_PriceComparison_EN_01KHP2531FB2KY1SB3C7G6DFTP.jpg" alt="{{ hero_two_col_body_1_h2 | strip }}" width="260" height="180" style="display:block;max-width:100%;height:auto;" />
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr class="email-feature-row">
+            <td width="50%" valign="middle" class="email-feature-col" style="padding:0 20px 32px 0;vertical-align:middle;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td align="center">
+                  <img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1771340730041_WelcomeToVio_PriceInsights_EN_01KHP253QTNKZ7HNJYSNAAHB5M.jpg" alt="{{ hero_two_col_body_2_h2 | strip }}" width="260" height="180" style="display:block;max-width:100%;height:auto;" />
+                </td></tr>
+              </table>
+            </td>
+            <td width="50%" valign="middle" class="email-feature-col" style="padding:0 0 32px 20px;vertical-align:middle;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td>
+                  <h2 style="margin:0 0 12px 0;font-family:{{ token_font_stack }};font-weight:700;font-size:16px;line-height:24px;letter-spacing:0.01em;color:{{ token_text_primary }};text-align:{{ align }};direction:{{ dir }};unicode-bidi:plaintext;">{{ hero_two_col_body_2_h2 | strip }}</h2>
+                  <p style="margin:0;font-family:{{ token_font_stack }};font-weight:400;font-size:16px;line-height:24px;letter-spacing:0.01em;color:{{ token_text_primary }};text-align:{{ align }};direction:{{ dir }};unicode-bidi:plaintext;">{{ hero_two_col_body_2_copy | strip }}</p>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr class="email-feature-row">
+            <td width="50%" valign="middle" class="email-feature-col" style="padding:0 20px 32px 0;vertical-align:middle;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td>
+                  <h2 style="margin:0 0 12px 0;font-family:{{ token_font_stack }};font-weight:700;font-size:16px;line-height:24px;letter-spacing:0.01em;color:{{ token_text_primary }};text-align:{{ align }};direction:{{ dir }};unicode-bidi:plaintext;">{{ hero_two_col_body_3_h2 | strip }}</h2>
+                  <p style="margin:0;font-family:{{ token_font_stack }};font-weight:400;font-size:16px;line-height:24px;letter-spacing:0.01em;color:{{ token_text_primary }};text-align:{{ align }};direction:{{ dir }};unicode-bidi:plaintext;">{{ hero_two_col_body_3_copy | strip }}</p>
+                </td></tr>
+              </table>
+            </td>
+            <td width="50%" valign="middle" class="email-feature-col" style="padding:0 0 32px 20px;vertical-align:middle;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td align="center">
+                  <img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1771340730742_WelcomeToVio_PriceAlerts_EN_01KHP254DNX2S3JAH8FEFRNJFN.jpg" alt="{{ hero_two_col_body_3_h2 | strip }}" width="260" height="180" style="display:block;max-width:100%;height:auto;" />
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr class="email-feature-row">
+            <td width="50%" valign="middle" class="email-feature-col" style="padding:0 20px 0 0;vertical-align:middle;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td align="center">
+                  <img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1771340728327_WelcomeToVio_DealFreeze_EN_01KHP25268MRHG2ETRNQKX97EE.jpg" alt="{{ hero_two_col_body_4_h2 | strip }}" width="260" height="180" style="display:block;max-width:100%;height:auto;" />
+                </td></tr>
+              </table>
+            </td>
+            <td width="50%" valign="middle" class="email-feature-col" style="padding:0 0 0 20px;vertical-align:middle;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td>
+                  <h2 style="margin:0 0 12px 0;font-family:{{ token_font_stack }};font-weight:700;font-size:16px;line-height:24px;letter-spacing:0.01em;color:{{ token_text_primary }};text-align:{{ align }};direction:{{ dir }};unicode-bidi:plaintext;">{{ hero_two_col_body_4_h2 | strip }}</h2>
+                  <p style="margin:0;font-family:{{ token_font_stack }};font-weight:400;font-size:16px;line-height:24px;letter-spacing:0.01em;color:{{ token_text_primary }};text-align:{{ align }};direction:{{ dir }};unicode-bidi:plaintext;">{{ hero_two_col_body_4_copy | strip }}</p>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="email-hero-two-col-cta-wrap" style="width:600px;max-width:100%;margin-top:{{ token_space_900 }};">
+          <tr>
+            <td class="email-hero-two-col-cta-cell" style="padding:{{ token_space_600 }} 0 0 0;width:600px;">
+              <a href="https://app.vio.com/v0HW" target="_blank" data-cio-tag="hero-cta" class="email-hero-two-col-cta" style="display:block;width:600px;max-width:100%;min-height:52px;box-sizing:border-box;background:{{ token_cta_bg }};color:{{ token_text_on_brand }};text-align:center;font-weight:600;font-size:16px;line-height:20px;padding:{{ token_space_400 }} 0;border-radius:8px;border-top:1.5px solid #000000;font-family:{{ token_font_stack }};text-decoration:none;">{{ hero_two_col_cta_text | strip }}</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</td></tr>
+{%- endif -%}
+{%- if app_download_title != blank -%}
+<tr><td style="padding:0;vertical-align:top;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-app-module-outer" style="width:100%;margin-top:{{ token_space_600 }};">
+  <tbody>
+    <tr>
+      <td align="center" style="padding:0;">
+        <table align="center" width="588" border="0" cellpadding="0" cellspacing="0" role="presentation" class="email-app-card" style="width:588px;max-width:100%;background-color:{{ app_download_colour }};padding:{{ token_space_600 }} {{ token_space_900 }};color:{{ app_download_text_colour }};border-radius:{{ token_radius_module }};margin:0 auto {{ token_space_600 }} auto;text-align:left;box-sizing:border-box">
+          <tbody>
+            <tr>
+              <td style="font-family:Campton, Circular, Helvetica, Arial, sans-serif;">
+                <a href="{{ app_deeplink_url }}" data-cio-tag="AppBanner-emailPriceAlertBannerTitle" style="text-decoration:none;color:{{ app_download_text_colour }}">
+                  <p style="font-size:20px;line-height:28px;font-weight:600;letter-spacing:normal;font-family:{{ token_font_stack }};text-align:left;margin:0;color:{{ app_download_text_colour }};padding-top:0;padding-bottom:{{ token_space_400 }};padding-right:0;padding-left:0;direction:{{ dir }};unicode-bidi:plaintext;">
+                    {{ app_download_title | strip }}
+                  </p>
+                </a>
+                <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" class="email-app-stores" style="border-collapse:collapse;width:100%">
+                  <tr>
+                    <td valign="middle" class="email-app-store-cell" style="width:50%;padding:0;padding-right:20px;vertical-align:middle">
+                      <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+                        <tr>
+                          <td valign="middle" style="padding:0;vertical-align:middle">
+                            <a href="{{ app_deeplink_url }}" data-cio-tag="AppBanner-apple-store-img" style="display:inline-block;text-decoration:none">
+                              <img alt="Download on App Store" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/apple-store/en.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
+                            </a>
+                          </td>
+                          <td valign="middle" style="padding-left:12px;vertical-align:middle">
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+                              <tr><td style="padding:0"><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/></td></tr>
+                              <tr><td style="padding:2px 0 0 0;font-size:12px;line-height:16px;font-weight:450;font-family:{{ token_font_stack }};color:{{ app_download_text_colour }};letter-spacing:normal;direction:{{ dir }};unicode-bidi:plaintext;">4.9/5 · 8,000+ reviews</td></tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td valign="middle" class="email-app-store-cell" style="width:50%;padding:0;vertical-align:middle">
+                      <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+                        <tr>
+                          <td valign="middle" style="padding:0;vertical-align:middle">
+                            <a href="{{ app_deeplink_url }}" data-cio-tag="AppBanner-google-store-img" style="display:inline-block;text-decoration:none">
+                              <img alt="Get it on Google Play" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/google-play/en.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
+                            </a>
+                          </td>
+                          <td valign="middle" style="padding-left:12px;vertical-align:middle">
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+                              <tr><td style="padding:0"><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/><img alt="★" height="12" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/></td></tr>
+                              <tr><td style="padding:2px 0 0 0;font-size:12px;line-height:16px;font-weight:450;font-family:{{ token_font_stack }};color:{{ app_download_text_colour }};letter-spacing:normal;direction:{{ dir }};unicode-bidi:plaintext;">4.6/5 · 11,000+ reviews</td></tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</td></tr>
+{%- endif -%}
+                  </tbody>
+                </table>
+                {%- if show_footer == "TRUE" -%}
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                  <tbody>
+                    <tr><td class="email-footer-pad" style="padding:0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:{{ token_space_900 }} 0;"><tr><td style="height:1px;background-color:{{ token_border }};font-size:1px;line-height:1px">&nbsp;</td></tr></table></td></tr>
+                    <tr>
+                      <td class="email-footer-pad" style="padding:0;text-align:center;">
+                        <img alt="Vio.com" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1770377276677_Vector_HighDef_01KGSBAVCB07TGMTGYZBMPCWD9.png" style="display:block;outline:none;border:none;text-decoration:none;margin:0 auto;" width="90" />
+                        <p style="font-size:20px;line-height:28px;font-weight:600;font-family:{{ token_font_stack }};text-align:center;margin:0;color:{{ token_accent }};padding-top:{{ token_space_300 }};padding-bottom:0;direction:{{ dir }};unicode-bidi:plaintext;">
+                          {%- assign footer_app_line_html = footer_app_line | replace: ". ", "<br />" | replace: ".", "" -%}
+                          {{ footer_app_line_html | strip }}
+                        </p>
+                        <div style="height:14px;line-height:14px;font-size:1px;">&nbsp;</div>
+                        <a href="{{ app_deeplink_url }}" style="padding-right:6px;display:inline-block;text-decoration:none;">
+                          <img alt="Download on App Store" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1756808278001_Appstore_Button_01K44YXW18QJ1S6H2NN0EKBNR2.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40">
+                        </a>
+                        <a href="{{ app_deeplink_url }}" style="padding-left:6px;display:inline-block;text-decoration:none;">
+                          <img alt="Get it on Google Play" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1756808171416_GooglePlaystore_Button_01K44YTKYFR6XPYK6S73Q4WZ44.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40">
+                        </a>
+                        <p style="font-size:12px;line-height:16px;font-weight:450;font-family:{{ token_font_stack }};text-align:center;margin:0;color:{{ token_text_muted }};padding-top:{{ token_space_600 }};padding-bottom:{{ token_space_300 }};direction:{{ dir }};unicode-bidi:plaintext;">{{ footer_address | strip }}</p>
+                        <p style="font-size:12px;line-height:16px;font-weight:450;font-family:{{ token_font_stack }};text-align:center;margin:0;color:{{ token_text_muted }};padding-top:0;padding-bottom:0;direction:{{ dir }};unicode-bidi:plaintext;">{{ footer_prefs_html }}</p>
+                        <div style="height:40px;line-height:40px;font-size:1px;">&nbsp;</div>
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto;">
+                          <tr>
+                            <td style="padding:0 6px;"><a href="https://www.instagram.com/vio.com.travel" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="Instagram" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-instagram.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
+                            <td style="padding:0 6px;"><a href="https://www.facebook.com/viodotcom" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="Facebook" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-facebook.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
+                            <td style="padding:0 6px;"><a href="https://www.linkedin.com/company/viodotcom/" target="_blank" style="text-decoration:none;border:none;outline:none;display:inline-block"><img alt="LinkedIn" src="https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/c59fe658/images/vio/vio-linkedin.png" style="display:block;outline:none;border:none;text-decoration:none" width="32"></a></td>
+                          </tr>
+                        </table>
+                        <div style="height:40px;line-height:40px;font-size:1px;">&nbsp;</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                {%- endif -%}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    {%- if show_terms == "TRUE" -%}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="{{ token_bg_page }}" style="width:100%;background:{{ token_bg_page }};">
+      <tr>
+        <td align="center" class="email-terms-outer" style="padding:0 12px 28px;">
+          <table align="center" width="{{ token_width_page }}" border="0" cellpadding="0" cellspacing="0" role="presentation" class="email-terms-inner" style="max-width:{{ token_width_page }}px;width:100%;padding-left:{{ token_space_500 }};padding-right:{{ token_space_500 }};">
+            <tr>
+              <td>
+                <p style="font-size:12px;line-height:16px;font-weight:500;font-family:{{ token_font_stack }};text-align:center;margin:0;color:{{ token_text_muted }};padding-top:{{ token_space_800 }};padding-bottom:0;direction:{{ dir }};unicode-bidi:plaintext;">{{ terms_title | strip }}</p>
+                <p style="font-size:12px;line-height:16px;font-weight:450;font-family:{{ token_font_stack }};text-align:center;margin:0;color:{{ token_text_muted }};padding-top:0;padding-bottom:{{ token_space_800 }};padding-left:{{ token_space_100 }};direction:{{ dir }};unicode-bidi:plaintext;">{{ terms_desc_html }}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    {%- endif -%}
+  </body>
+</html>
