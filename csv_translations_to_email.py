@@ -548,8 +548,6 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
     app_rating = (structure.get("app_store_rating") or "4.9/5 · 8,000+ reviews").strip()
     google_rating = (structure.get("google_play_rating") or "4.6/5 · 11,000+ reviews").strip()
     star_url = "https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/images/star-yellow.png"
-    apple_btn = "https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/apple-store/en.png"
-    google_btn = "https://price-watch-email-images-explicit-prod-master.s3.eu-west-1.amazonaws.com/199cd19b/google-play/en.png"
     star_row = f'''<img alt="★" height="12" src="{star_url}" style="display:inline-block;outline:none;border:none;text-decoration:none;padding-right:2px" width="12"/>''' * 5
     return f'''{{%- if app_download_title != blank -%}}
 <tr><td style="padding:0;vertical-align:top;">
@@ -573,7 +571,7 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
                         <tr>
                           <td valign="middle" style="padding:0;vertical-align:middle">
                             <a href="{{{{ app_deeplink_url }}}}" data-cio-tag="AppBanner-apple-store-img" style="display:inline-block;text-decoration:none">
-                              <img alt="Download on App Store" src="{apple_btn}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
+                              <img alt="Download on App Store" src="{{ app_store_badge_url }}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
                             </a>
                           </td>
                           <td valign="middle" style="padding-left:12px;vertical-align:middle">
@@ -590,7 +588,7 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
                         <tr>
                           <td valign="middle" style="padding:0;vertical-align:middle">
                             <a href="{{{{ app_deeplink_url }}}}" data-cio-tag="AppBanner-google-store-img" style="display:inline-block;text-decoration:none">
-                              <img alt="Get it on Google Play" src="{google_btn}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
+                              <img alt="Get it on Google Play" src="{{ google_play_badge_url }}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
                             </a>
                           </td>
                           <td valign="middle" style="padding-left:12px;vertical-align:middle">
@@ -1245,6 +1243,88 @@ FULL EMAIL HTML (multi-locale from translations CSV)
     {%- else -%}Book like an insider. Download the app.
   {%- endcase -%}
 {%- endcapture -%}
+{%- capture google_play_badge_url -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236962918_GetItOnGooglePlay_Badge_Web_color_Arabic-Saudi-Arabia_01KHJZ6CN2JBA5CF1HGYEBR0ZB.png
+    {%- when "zh-cn" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236931782_GetItOnGooglePlay_Badge_Web_color_Chinese-China_01KHJZ5E80BKM74N929XGVH73W.png
+    {%- when "zh-tw" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236963430_GetItOnGooglePlay_Badge_Web_color_Chinese-Taiwan_01KHJZ6D52KGDWFZ3EJ7J4TDJN.png
+    {%- when "zh-hk" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236963430_GetItOnGooglePlay_Badge_Web_color_Chinese-Taiwan_01KHJZ6D52KGDWFZ3EJ7J4TDJN.png
+    {%- when "hr" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236932327_GetItOnGooglePlay_Badge_Web_color_Croatian_01KHJZ5ES2WZRCQFG9ZT55XRMA.png
+    {%- when "cs" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236932827_GetItOnGooglePlay_Badge_Web_color_Czech_01KHJZ5F8P40FN1391523NZBTQ.png
+    {%- when "da" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236933422_GetItOnGooglePlay_Badge_Web_color_Danish_01KHJZ5FV9HWT6ER9P2ZEH9NZY.png
+    {%- when "nl" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236964032_GetItOnGooglePlay_Badge_Web_color_Dutch_01KHJZ6DQV8BRNCRR44WVV9JYS.png
+    {%- when "en-gb" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236964477_GetItOnGooglePlay_Badge_Web_color_English_01KHJZ6E5TKNXTSE65NBZACEG9.png
+    {%- when "fil" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236934541_GetItOnGooglePlay_Badge_Web_color_Filipino_01KHJZ5GY847JWJVR418R4WK1T.png
+    {%- when "fi" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236935210_GetItOnGooglePlay_Badge_Web_color_Finnish_01KHJZ5HK62QMPTTZNBTC8EHCH.png
+    {%- when "fr" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236936588_GetItOnGooglePlay_Badge_Web_color_French_01KHJZ5JYMQHPQA5VVP2ZCN0FA.png
+    {%- when "fr-ca" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236936009_GetItOnGooglePlay_Badge_Web_color_French-CA_01KHJZ5JC4KYCZ34HD5KJFVZ3H.png
+    {%- when "de" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236938791_GetItOnGooglePlay_Badge_Web_color_German_01KHJZ5N3480FF9T2GTERH7534.png
+    {%- when "el" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236939293_GetItOnGooglePlay_Badge_Web_color_Greek_01KHJZ5NJR3KV5ZC3AF5SARHXW.png
+    {%- when "he" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236940388_GetItOnGooglePlay_Badge_Web_color_Hebrew_01KHJZ5PMZF104ACAMQJ5Z8396.png
+    {%- when "hu" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236964964_GetItOnGooglePlay_Badge_Web_color_Hungarian_01KHJZ6EMYMAG43FESGKQASR44.png
+    {%- when "id" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236942023_GetItOnGooglePlay_Badge_Web_color_Indonesian_01KHJZ5R8PD23W9WMQ8ABBF8QC.png
+    {%- when "it" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236962404_GetItOnGooglePlay_Badge_Web_color_Italian_01KHJZ6C4YX4G22A9BRHN69B2F.png
+    {%- when "ja" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236965469_GetItOnGooglePlay_Badge_Web_color_Japanese_01KHJZ6F4VNH8AR4QXVZSS90BW.png
+    {%- when "ko" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236944212_GetItOnGooglePlay_Badge_Web_color_Korean_01KHJZ5TCF1X80Z85634GAFP61.png
+    {%- when "ms" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236965960_GetItOnGooglePlay_Badge_Web_color_Malaysian_01KHJZ6FM6RA8F0JNY949JBBXY.png
+    {%- when "no" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236949497_GetItOnGooglePlay_Badge_Web_color_Norwegian_01KHJZ5ZHP2XN0RGJEFMFEFNTK.png
+    {%- when "pl" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236950533_GetItOnGooglePlay_Badge_Web_color_Polish_01KHJZ60J36RPY7WBGC5NNW11P.png
+    {%- when "pt-br" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236951142_GetItOnGooglePlay_Badge_Web_color_Portuguese-Brazil_01KHJZ6153VXSST3S40SBWX090.png
+    {%- when "pt" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236951743_GetItOnGooglePlay_Badge_Web_color_Portuguese-Portugal_01KHJZ61QVYB2YKSSMX5R287F6.png
+    {%- when "ro" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236952981_GetItOnGooglePlay_Badge_Web_color_Romanian_01KHJZ62YK9KCWXZEFH95TV1R2.png
+    {%- when "ru" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236953514_GetItOnGooglePlay_Badge_Web_color_Russian_01KHJZ63F49G1EJ7WS0W7EX5HM.png
+    {%- when "es" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236956142_GetItOnGooglePlay_Badge_Web_color_Spanish_01KHJZ6619WRKFWSFZXYRTKB0N.png
+    {%- when "es-419" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236955633_GetItOnGooglePlay_Badge_Web_color_Spanish-LATAM_01KHJZ65HBRWHVJCBWQGJPV593.png
+    {%- when "sv" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236957489_GetItOnGooglePlay_Badge_Web_color_Swedish_01KHJZ67BFDYGZGRH618PGKNJT.png
+    {%- when "th" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236959210_GetItOnGooglePlay_Badge_Web_color_Thai_01KHJZ6915Q1KWZ8CDE54VYKKM.png
+    {%- when "tr" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236959859_GetItOnGooglePlay_Badge_Web_color_Turkish_01KHJZ69NEWQKTAMK75AZSTBRQ.png
+    {%- when "uk" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236960351_GetItOnGooglePlay_Badge_Web_color_Ukranian_01KHJZ6A4VF3Y47BT01A234Z4C.png
+    {%- when "vi" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236961907_GetItOnGooglePlay_Badge_Web_color_Vietnamese_01KHJZ6BNENBQ0X5YT386JYYSX.png
+    {%- else -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236964477_GetItOnGooglePlay_Badge_Web_color_English_01KHJZ6E5TKNXTSE65NBZACEG9.png
+  {%- endcase -%}
+{%- endcapture -%}
+{%- assign google_play_badge_url = google_play_badge_url | strip -%}
+{%- capture app_store_badge_url -%}
+  {%- case locale_key -%}
+    {%- when "ar" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861173599_ar_01KJ5JFSJE01ZPHHNDPS8HB6DF.png
+    {%- when "zh-cn" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861197369_zh-CN_01KJ5JGGKHGKGQ72R8Z3Q06S41.png
+    {%- when "zh-tw" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861197949_zh-TW_01KJ5JGH5PCMBQMYPB5P67TAWE.png
+    {%- when "zh-hk" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861198507_zh_01KJ5JGHQ68EB3R6W6DCX8CEN0.png
+    {%- when "hr" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861184696_hr_01KJ5JG47GKS3NZV378J31D0HZ.png
+    {%- when "cs" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861175533_cs_01KJ5JFV95YKZVN00V47EVNJDH.png
+    {%- when "da" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861176073_da_01KJ5JFVT5Q47NXQEAXNDKB61J.png
+    {%- when "en" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861742970_en_01KJ5K15DG7W6K6VRFV8G3ZN6D.png
+    {%- when "en-gb" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861741874_en-GB_01KJ5K14BHNDBZ9FARS47Y8KBA.png
+    {%- when "nl" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861188893_nl_01KJ5JG8APQZX5JHFCEXNWSSBM.png
+    {%- when "fil" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861180586_fil_01KJ5JG0742DQ6XW1SG4DHAZFB.png
+    {%- when "fi" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861180045_fi_01KJ5JFZP7DEECV2FBN1Z8MY84.png
+    {%- when "fr" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861182728_fr_01KJ5JG2A17F4C9CV4S9BBDY9M.png
+    {%- when "fr-ca" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861181505_fr-CA_01KJ5JG17KPVR3GTZN4GNX787W.png
+    {%- when "de" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861176692_de_01KJ5JFWDD70S544M1MM3TTVHJ.png
+    {%- when "el" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861177220_el_01KJ5JFWXWFRTPE6Y0KSQPW0CZ.png
+    {%- when "he" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861183342_he_01KJ5JG2XDMXP7A0T255541GP1.png
+    {%- when "hu" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861185226_hu_01KJ5JG4R4Z9VCY2ZWW80PTTSG.png
+    {%- when "id" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861185770_id_01KJ5JG59573P3PYV8653PGM5A.png
+    {%- when "it" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861684618_it_01KJ5JZCE7MR6PN0Y523KY3FAF.png
+    {%- when "ja" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861633879_ja_01KJ5JXTWTSPV5TKTB7QGXFYWN.png
+    {%- when "ko" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861193949_ko_01KJ5JGD8NY8TRT8H5A8GNQPHD.png
+    {%- when "ms" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861187851_ms_01KJ5JG7A5ZZ7PPWYPYXTHHDFN.png
+    {%- when "no" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861189491_no_01KJ5JG8XDBAQNJ6FAMEVRDR8M.png
+    {%- when "pl" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861190048_pl_01KJ5JG9EVMH4GB6EC5RE7GGA5.png
+    {%- when "pt-br" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861190611_pt-BR_01KJ5JGA0DM860HS0K3HA29APX.png
+    {%- when "pt" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861191742_pt_01KJ5JGB3Q1Y1X03FMWV77CDPE.png
+    {%- when "ro" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861192285_ro_01KJ5JGBMPFTAWXA32Z8HZQSXJ.png
+    {%- when "ru" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861192867_ru_01KJ5JGC6XKWKFQ0CWA5AJJDTF.png
+    {%- when "es" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861178931_es_01KJ5JFYKBRTEQKCRKZ867FSZZ.png
+    {%- when "es-419" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861177816_es-419_01KJ5JFXGHCETGJ6NMJ1E24XS6.png
+    {%- when "sv" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861195074_sv_01KJ5JGEBVABEJG2P1KEBEMG3Z.png
+    {%- when "th" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861195630_th_01KJ5JGEX74T830TFMVKHQVHVR.png
+    {%- when "tr" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861196165_tr_01KJ5JGFDY7AB5EFAJQZJ8E2G9.png
+    {%- when "vi" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861196752_vi_01KJ5JGG0ATCDFKBEMQKRTGZW1.png
+    {%- else -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861742970_en_01KJ5K15DG7W6K6VRFV8G3ZN6D.png
+  {%- endcase -%}
+{%- endcapture -%}
+{%- assign app_store_badge_url = app_store_badge_url | strip -%}
 {%- capture footer_address -%}FindHotel B.V. Nieuwe Looiersdwarsstraat 17, 1017 TZ, Amsterdam, The Netherlands.{%- endcapture -%}
 {%- capture footer_prefs_text -%}
   {%- case locale_key -%}
@@ -1617,6 +1697,8 @@ def liquid_to_preview_html(
     replacements["{{ locale_key }}"] = "en"
     replacements["{{ app_deeplink_url }}"] = structure.get("image_deeplink") or DEFAULT_LINKS["app_download_page"]
     replacements["{{ app_download_colour }}"] = tokens.get("token_neutral_c050", "#fcf7f5")
+    replacements["{{ google_play_badge_url }}"] = "https://userimg-assets.customeriomail.com/images/client-env-124967/1771236964477_GetItOnGooglePlay_Badge_Web_color_English_01KHJZ6E5TKNXTSE65NBZACEG9.png"
+    replacements["{{ app_store_badge_url }}"] = "https://userimg-assets.customeriomail.com/images/client-env-124967/1771861742970_en_01KJ5K15DG7W6K6VRFV8G3ZN6D.png"
     # Link variables (from standard_links)
     for key, url in DEFAULT_LINKS.items():
         var = "link_" + key.replace(".", "_").replace("-", "_")
