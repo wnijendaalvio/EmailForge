@@ -76,18 +76,20 @@ with st.sidebar:
         locale_preset,
         custom_locales if locale_preset == "custom" else None,
     )
+    st.divider()
+    st.caption("See **Documentation** tab for user guide and technical docs.")
 
 # Convert to the format expected by generate_template
 show_header_logo_str = "TRUE" if show_header_logo else "FALSE"
 show_footer_str = "TRUE" if show_footer else "FALSE"
 show_terms_str = "TRUE" if show_terms else "FALSE"
 
-tab_generate, tab_template = st.tabs(["Generate from CSV", "Standard input template"])
+tab_generate, tab_template, tab_docs = st.tabs(["Generate from CSV", "Standard input template", "📚 Documentation"])
 
 with tab_generate:
     st.markdown(
         "Upload a translations CSV (Key, Module, module_index, en, ...) to generate "
-        "a multi-locale Customer.io email template. See [SHEET_STRUCTURE_TRANSLATIONS.md](SHEET_STRUCTURE_TRANSLATIONS.md) for the expected format."
+        "a multi-locale Customer.io email template."
     )
     uploaded_file = st.file_uploader(
         "Upload translations CSV or TSV",
@@ -252,3 +254,20 @@ with tab_template:
             mime="application/json",
             key="dl_links",
         )
+
+with tab_docs:
+    st.subheader("Documentation")
+    doc_user = Path(__file__).parent / "USER_DOCUMENTATION.md"
+    doc_tech = Path(__file__).parent / "TECHNICAL_DOCUMENTATION.md"
+
+    doc_tab_user, doc_tab_tech = st.tabs(["User Guide", "Technical Docs"])
+    with doc_tab_user:
+        if doc_user.exists():
+            st.markdown(doc_user.read_text(encoding="utf-8"))
+        else:
+            st.warning(f"User documentation not found: {doc_user}")
+    with doc_tab_tech:
+        if doc_tech.exists():
+            st.markdown(doc_tech.read_text(encoding="utf-8"))
+        else:
+            st.warning(f"Technical documentation not found: {doc_tech}")
