@@ -56,6 +56,8 @@ TRANSLATABLE_KEYS = [
     "usp_3_heading", "usp_3_copy",
     "usp_feature_title", "usp_feature_1_heading", "usp_feature_1_copy",
     "usp_feature_2_heading", "usp_feature_2_copy", "usp_feature_3_heading", "usp_feature_3_copy",
+    "usp_ui_title", "usp_ui_1_heading", "usp_ui_1_copy",
+    "usp_ui_2_heading", "usp_ui_2_copy", "usp_ui_3_heading", "usp_ui_3_copy",
 ]
 STRUCTURE_KEYS = [
     "image_url", "image_url_mobile", "image_deeplink", "cta_link", "cta_alias",
@@ -63,6 +65,7 @@ STRUCTURE_KEYS = [
     "hero_two_col_image_1_url", "hero_two_col_image_2_url", "hero_two_col_image_3_url", "hero_two_col_image_4_url",
     "usp_1_icon_url", "usp_2_icon_url", "usp_3_icon_url",
     "usp_feature_1_image_url", "usp_feature_2_image_url", "usp_feature_3_image_url",
+    "usp_ui_1_image_url", "usp_ui_2_image_url", "usp_ui_3_image_url",
 ]
 
 # Map (module, key) -> internal key for new CSV format with Module + module_index columns
@@ -110,26 +113,36 @@ MODULE_KEY_MAP = {
     ("disclaimer_module", "terms_desc_text"): "terms_desc_text",
     ("disclaimer_module", "terms_label"): "terms_label",
     ("disclaimer_module", "privacy_label"): "privacy_label",
-    ("usp_module", "title"): "usp_title",
-    ("usp_module", "usp_1_heading"): "usp_1_heading",
-    ("usp_module", "usp_1_copy"): "usp_1_copy",
-    ("usp_module", "usp_1_icon_url"): "usp_1_icon_url",
-    ("usp_module", "usp_2_heading"): "usp_2_heading",
-    ("usp_module", "usp_2_copy"): "usp_2_copy",
-    ("usp_module", "usp_2_icon_url"): "usp_2_icon_url",
-    ("usp_module", "usp_3_heading"): "usp_3_heading",
-    ("usp_module", "usp_3_copy"): "usp_3_copy",
-    ("usp_module", "usp_3_icon_url"): "usp_3_icon_url",
-    ("usp_feature_module", "title"): "usp_feature_title",
-    ("usp_feature_module", "usp_feature_1_heading"): "usp_feature_1_heading",
-    ("usp_feature_module", "usp_feature_1_copy"): "usp_feature_1_copy",
-    ("usp_feature_module", "usp_feature_1_image_url"): "usp_feature_1_image_url",
-    ("usp_feature_module", "usp_feature_2_heading"): "usp_feature_2_heading",
-    ("usp_feature_module", "usp_feature_2_copy"): "usp_feature_2_copy",
-    ("usp_feature_module", "usp_feature_2_image_url"): "usp_feature_2_image_url",
-    ("usp_feature_module", "usp_feature_3_heading"): "usp_feature_3_heading",
-    ("usp_feature_module", "usp_feature_3_copy"): "usp_feature_3_copy",
-    ("usp_feature_module", "usp_feature_3_image_url"): "usp_feature_3_image_url",
+    ("icon_left_text_right_module", "title"): "usp_title",
+    ("icon_left_text_right_module", "usp_1_heading"): "usp_1_heading",
+    ("icon_left_text_right_module", "usp_1_copy"): "usp_1_copy",
+    ("icon_left_text_right_module", "usp_1_icon_url"): "usp_1_icon_url",
+    ("icon_left_text_right_module", "usp_2_heading"): "usp_2_heading",
+    ("icon_left_text_right_module", "usp_2_copy"): "usp_2_copy",
+    ("icon_left_text_right_module", "usp_2_icon_url"): "usp_2_icon_url",
+    ("icon_left_text_right_module", "usp_3_heading"): "usp_3_heading",
+    ("icon_left_text_right_module", "usp_3_copy"): "usp_3_copy",
+    ("icon_left_text_right_module", "usp_3_icon_url"): "usp_3_icon_url",
+    ("text_left_image_right_module", "title"): "usp_feature_title",
+    ("text_left_image_right_module", "usp_feature_1_heading"): "usp_feature_1_heading",
+    ("text_left_image_right_module", "usp_feature_1_copy"): "usp_feature_1_copy",
+    ("text_left_image_right_module", "usp_feature_1_image_url"): "usp_feature_1_image_url",
+    ("text_left_image_right_module", "usp_feature_2_heading"): "usp_feature_2_heading",
+    ("text_left_image_right_module", "usp_feature_2_copy"): "usp_feature_2_copy",
+    ("text_left_image_right_module", "usp_feature_2_image_url"): "usp_feature_2_image_url",
+    ("text_left_image_right_module", "usp_feature_3_heading"): "usp_feature_3_heading",
+    ("text_left_image_right_module", "usp_feature_3_copy"): "usp_feature_3_copy",
+    ("text_left_image_right_module", "usp_feature_3_image_url"): "usp_feature_3_image_url",
+    ("alternating_text_image_module", "title"): "usp_ui_title",
+    ("alternating_text_image_module", "usp_ui_1_heading"): "usp_ui_1_heading",
+    ("alternating_text_image_module", "usp_ui_1_copy"): "usp_ui_1_copy",
+    ("alternating_text_image_module", "usp_ui_1_image_url"): "usp_ui_1_image_url",
+    ("alternating_text_image_module", "usp_ui_2_heading"): "usp_ui_2_heading",
+    ("alternating_text_image_module", "usp_ui_2_copy"): "usp_ui_2_copy",
+    ("alternating_text_image_module", "usp_ui_2_image_url"): "usp_ui_2_image_url",
+    ("alternating_text_image_module", "usp_ui_3_heading"): "usp_ui_3_heading",
+    ("alternating_text_image_module", "usp_ui_3_copy"): "usp_ui_3_copy",
+    ("alternating_text_image_module", "usp_ui_3_image_url"): "usp_ui_3_image_url",
 }
 
 PLACEHOLDER_DESIGN_TOKENS = "{{ DESIGN_TOKENS }}"
@@ -140,8 +153,9 @@ PLACEHOLDER_IMAGE_ROW = "{{ IMAGE_ROW }}"
 PLACEHOLDER_ROWS_BELOW_IMAGE = "{{ ROWS_BELOW_IMAGE }}"
 PLACEHOLDER_HERO_TWO_COLUMN_MODULE = "{{ HERO_TWO_COLUMN_MODULE }}"
 PLACEHOLDER_APP_DOWNLOAD_MODULE = "{{ APP_DOWNLOAD_MODULE }}"
-PLACEHOLDER_USP_MODULE = "{{ USP_MODULE }}"
-PLACEHOLDER_USP_FEATURE_MODULE = "{{ USP_FEATURE_MODULE }}"
+PLACEHOLDER_ICON_LEFT_TEXT_RIGHT_MODULE = "{{ ICON_LEFT_TEXT_RIGHT_MODULE }}"
+PLACEHOLDER_TEXT_LEFT_IMAGE_RIGHT_MODULE = "{{ TEXT_LEFT_IMAGE_RIGHT_MODULE }}"
+PLACEHOLDER_ALTERNATING_TEXT_IMAGE_MODULE = "{{ ALTERNATING_TEXT_IMAGE_MODULE }}"
 PLACEHOLDER_CONFIG = "{{ CONFIG_BLOCK }}"
 PLACEHOLDER_LINKS = "{{ LINKS_BLOCK }}"
 PLACEHOLDER_TERMS_DEFAULTS = "{{ TERMS_DEFAULTS_BLOCK }}"
@@ -198,7 +212,7 @@ MODULE_TEMPLATE_ROWS = {
         ("terms_label", ""),
         ("privacy_label", ""),
     ],
-    "usp_module": [
+    "icon_left_text_right_module": [
         ("title", "How Vio helps you book like an insider"),
         ("usp_1_heading", "Compare prices across 100+ sites"),
         ("usp_1_copy", "See the full picture upfront. No guessing, no bouncing between tabs."),
@@ -210,7 +224,7 @@ MODULE_TEMPLATE_ROWS = {
         ("usp_3_copy", "We track prices so you don't have to keep checking."),
         ("usp_3_icon_url", ""),
     ],
-    "usp_feature_module": [
+    "text_left_image_right_module": [
         ("title", "How Vio helps you book like an insider"),
         ("usp_feature_1_heading", "Compare prices across 100+ sites"),
         ("usp_feature_1_copy", "See the full picture upfront. No guessing, no bouncing between tabs."),
@@ -221,6 +235,18 @@ MODULE_TEMPLATE_ROWS = {
         ("usp_feature_3_heading", "Stay ahead of price changes"),
         ("usp_feature_3_copy", "We track prices so you don't have to keep checking."),
         ("usp_feature_3_image_url", ""),
+    ],
+    "alternating_text_image_module": [
+        ("title", "How Vio helps you book like an insider"),
+        ("usp_ui_1_heading", "Compare prices across 100+ sites"),
+        ("usp_ui_1_copy", "See the full picture upfront. No guessing, no bouncing between tabs."),
+        ("usp_ui_1_image_url", ""),
+        ("usp_ui_2_heading", "Know exactly when to book"),
+        ("usp_ui_2_copy", "Price insights show you the right moment to secure your deal."),
+        ("usp_ui_2_image_url", ""),
+        ("usp_ui_3_heading", "Stay ahead of price changes"),
+        ("usp_ui_3_copy", "We track prices so you don't have to keep checking."),
+        ("usp_ui_3_image_url", ""),
     ],
 }
 
@@ -775,6 +801,57 @@ def build_usp_feature_module(translations: dict[str, dict[str, str]], structure:
 {{%- endif -%}}'''
 
 
+def build_usp_ui_module(translations: dict[str, dict[str, str]], structure: dict[str, str]) -> str:
+    """USP alternating module: header + 3 rows with alternating layout. Row 1: text left, image right. Row 2: image left, text right. Row 3: text left, image right.
+    Images are displayed as-is (no outer container; design is in the image)."""
+    if "usp_ui_title" not in translations:
+        return ""
+    img1 = _normalise_url(structure.get("usp_ui_1_image_url") or "")
+    img2 = _normalise_url(structure.get("usp_ui_2_image_url") or "")
+    img3 = _normalise_url(structure.get("usp_ui_3_image_url") or "")
+    placeholder = "https://placehold.co/280x200/fcf7f5/615a56?text=Image"
+    img1 = img1 or placeholder
+    img2 = img2 or placeholder
+    img3 = img3 or placeholder
+
+    def _ui_row(img_url: str, heading_var: str, copy_var: str, image_first: bool) -> str:
+        img_cell = f'<td width="50%" valign="middle" style="padding:0 0 32px 20px;vertical-align:middle;"><img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;" /></td>'
+        text_cell = f'''<td width="50%" valign="middle" style="padding:0 20px 32px 0;vertical-align:middle;">
+              <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_primary }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {heading_var} | strip }}}}</p>
+              <p style="margin:8px 0 0 0;font-family:{{{{ token_font_stack }}}};font-weight:400;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_body }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {copy_var} | strip }}}}</p>
+            </td>'''
+        if image_first:
+            return f'''          <tr class="email-usp-ui-row">
+            <td width="50%" valign="middle" style="padding:0 20px 32px 0;vertical-align:middle;">
+              <img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;" />
+            </td>
+            {text_cell}
+          </tr>'''
+        return f'''          <tr class="email-usp-ui-row">
+            {text_cell}
+            <td width="50%" valign="middle" style="padding:0 0 32px 20px;vertical-align:middle;">
+              <img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;" />
+            </td>
+          </tr>'''
+
+    return f'''{{%- if usp_ui_title != blank -%}}
+<tr><td style="padding:0;vertical-align:top;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="email-alternating-text-image-module" style="width:600px;max-width:100%;margin-top:{{{{ token_space_600 }}}};box-sizing:border-box;">
+  <tbody>
+    <tr>
+      <td align="center" colspan="2" style="padding:0 0 {{{{ token_space_600 }}}} 0;">
+        <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:24px;line-height:32px;letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_accent }}}};text-align:center;direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ usp_ui_title | strip }}}}</p>
+      </td>
+    </tr>
+{_ui_row(img1, "usp_ui_1_heading", "usp_ui_1_copy", False)}
+{_ui_row(img2, "usp_ui_2_heading", "usp_ui_2_copy", True)}
+{_ui_row(img3, "usp_ui_3_heading", "usp_ui_3_copy", False)}
+  </tbody>
+</table>
+</td></tr>
+{{%- endif -%}}'''
+
+
 def build_config_block(
     show_header_logo: str = "TRUE",
     show_footer: str = "TRUE",
@@ -928,7 +1005,7 @@ _PREVIEW_PLACEHOLDERS = {
         "terms_label": "Terms",
         "privacy_label": "Privacy Policy",
     },
-    "usp_module": {
+    "icon_left_text_right_module": {
         "title": "How Vio helps you book like an insider",
         "usp_1_heading": "Compare prices across 100+ sites",
         "usp_1_copy": "See the full picture upfront. No guessing, no bouncing between tabs.",
@@ -940,7 +1017,7 @@ _PREVIEW_PLACEHOLDERS = {
         "usp_3_copy": "We track prices so you don't have to keep checking.",
         "usp_3_icon_url": "https://placehold.co/80/f2e5ff/7130c9?text=3",
     },
-    "usp_feature_module": {
+    "text_left_image_right_module": {
         "title": "How Vio helps you book like an insider",
         "usp_feature_1_heading": "Compare prices across 100+ sites",
         "usp_feature_1_copy": "See the full picture upfront. No guessing, no bouncing between tabs.",
@@ -951,6 +1028,18 @@ _PREVIEW_PLACEHOLDERS = {
         "usp_feature_3_heading": "Stay ahead of price changes",
         "usp_feature_3_copy": "We track prices so you don't have to keep checking.",
         "usp_feature_3_image_url": "https://placehold.co/280x200/fcf7f5/615a56?text=Track",
+    },
+    "alternating_text_image_module": {
+        "title": "How Vio helps you book like an insider",
+        "usp_ui_1_heading": "Compare prices across 100+ sites",
+        "usp_ui_1_copy": "See the full picture upfront. No guessing, no bouncing between tabs.",
+        "usp_ui_1_image_url": "https://placehold.co/280x200/e1ceff/7130c9?text=Compare",
+        "usp_ui_2_heading": "Know exactly when to book",
+        "usp_ui_2_copy": "Price insights show you the right moment to secure your deal.",
+        "usp_ui_2_image_url": "https://placehold.co/280x200/e1ceff/7130c9?text=When",
+        "usp_ui_3_heading": "Stay ahead of price changes",
+        "usp_ui_3_copy": "We track prices so you don't have to keep checking.",
+        "usp_ui_3_image_url": "https://placehold.co/280x200/e1ceff/7130c9?text=Track",
     },
 }
 
@@ -1222,6 +1311,8 @@ FULL EMAIL HTML (multi-locale from translations CSV)
         .email-feature-row td:first-child { padding-bottom: 16px !important; }
         .email-usp-feature-row td { display: block !important; width: 100% !important; padding: 0 0 24px 0 !important; }
         .email-usp-feature-row td:first-child { padding-bottom: 16px !important; }
+        .email-usp-ui-row td { display: block !important; width: 100% !important; padding: 0 0 24px 0 !important; }
+        .email-usp-ui-row td:first-child { padding-bottom: 16px !important; }
         .email-hero-two-col-headline-box { width: 100% !important; max-width: 100% !important; }
         .email-hero-two-col-cta-wrap { width: 100% !important; }
         .email-hero-two-col-cta-cell { width: 100% !important; }
@@ -1268,8 +1359,9 @@ FULL EMAIL HTML (multi-locale from translations CSV)
                   <tbody>
 ''' + PLACEHOLDER_ROWS_BELOW_IMAGE + '''
 ''' + PLACEHOLDER_HERO_TWO_COLUMN_MODULE + '''
-''' + PLACEHOLDER_USP_MODULE + '''
-''' + PLACEHOLDER_USP_FEATURE_MODULE + '''
+''' + PLACEHOLDER_ICON_LEFT_TEXT_RIGHT_MODULE + '''
+''' + PLACEHOLDER_TEXT_LEFT_IMAGE_RIGHT_MODULE + '''
+''' + PLACEHOLDER_ALTERNATING_TEXT_IMAGE_MODULE + '''
 ''' + PLACEHOLDER_APP_DOWNLOAD_MODULE + '''
                   </tbody>
                 </table>
@@ -1358,8 +1450,9 @@ def generate_template(
     image_row = build_image_row(structure)
     rows_below = build_rows_below_image(translations, structure)
     hero_two_col = build_hero_two_column_module(translations, structure)
-    usp_module = build_usp_module(translations, structure)
-    usp_feature_module = build_usp_feature_module(translations, structure)
+    icon_left_text_right_module = build_usp_module(translations, structure)
+    text_left_image_right_module = build_usp_feature_module(translations, structure)
+    alternating_text_image_module = build_usp_ui_module(translations, structure)
     app_download = build_app_download_module(translations, structure)
     config = build_config_block(
         show_header_logo,
@@ -1379,8 +1472,9 @@ def generate_template(
         .replace(PLACEHOLDER_IMAGE_ROW, image_row)
         .replace(PLACEHOLDER_ROWS_BELOW_IMAGE, rows_below)
         .replace(PLACEHOLDER_HERO_TWO_COLUMN_MODULE, hero_two_col)
-        .replace(PLACEHOLDER_USP_MODULE, usp_module)
-        .replace(PLACEHOLDER_USP_FEATURE_MODULE, usp_feature_module)
+        .replace(PLACEHOLDER_ICON_LEFT_TEXT_RIGHT_MODULE, icon_left_text_right_module)
+        .replace(PLACEHOLDER_TEXT_LEFT_IMAGE_RIGHT_MODULE, text_left_image_right_module)
+        .replace(PLACEHOLDER_ALTERNATING_TEXT_IMAGE_MODULE, alternating_text_image_module)
         .replace(PLACEHOLDER_APP_DOWNLOAD_MODULE, app_download)
         .replace(PLACEHOLDER_TERMS_DEFAULTS, build_terms_defaults_block())
         .replace(PLACEHOLDER_CONFIG, config)
@@ -1478,8 +1572,10 @@ def liquid_to_preview_html(
         "terms_title", "terms_desc_text", "terms_label", "privacy_label",
         "usp_title", "usp_1_heading", "usp_1_copy", "usp_2_heading", "usp_2_copy",
         "usp_3_heading", "usp_3_copy",
-        "usp_feature_title", "usp_feature_1_heading", "usp_feature_1_copy",
+        "usp_feature_title",         "usp_feature_1_heading", "usp_feature_1_copy",
         "usp_feature_2_heading", "usp_feature_2_copy", "usp_feature_3_heading", "usp_feature_3_copy",
+        "usp_ui_title", "usp_ui_1_heading", "usp_ui_1_copy",
+        "usp_ui_2_heading", "usp_ui_2_copy", "usp_ui_3_heading", "usp_ui_3_copy",
     ]
     replacements: dict[str, str] = {}
     for k in content_vars:
@@ -1537,6 +1633,7 @@ def liquid_to_preview_html(
     _replace_conditional("hero_two_col_body_1_h2 != blank", "hero_two_col_body_1_h2" in translations)
     _replace_conditional("usp_title != blank", "usp_title" in translations)
     _replace_conditional("usp_feature_title != blank", "usp_feature_title" in translations)
+    _replace_conditional("usp_ui_title != blank", "usp_ui_title" in translations)
 
     # Remove remaining Liquid: comments, assigns, captures, case/when, for
     html = re.sub(r"{%-?\s*comment\s+-?%}.*?{%-?\s*endcomment\s+-?%}", "", html, flags=re.DOTALL)

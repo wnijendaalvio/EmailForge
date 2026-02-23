@@ -186,16 +186,21 @@ with tab_template:
         horizontal=True,
     )
     include_app_download = st.checkbox("Include app download module", value=True)
-    include_usp = st.checkbox("Include USP module", value=False, help="Unique selling propositions: title + 3 feature rows with icons")
-    include_usp_feature = st.checkbox("Include USP feature module", value=False, help="Same content with text left, illustrative images right (two-column layout)")
+    with st.expander("USP modules (How Vio helps you book like an insider)", expanded=True):
+        st.caption("Choose one or more. All use the same copy; differ by layout.")
+        include_icon_left = st.checkbox("Icon left, text right", value=False, key="usp_icons", help="Small icon on left, heading + copy on right")
+        include_text_left = st.checkbox("Text left, image right", value=False, key="usp_feature", help="All three rows: text left, image right")
+        include_alternating = st.checkbox("Alternating text and image", value=True, key="usp_ui", help="Row 1: text left. Row 2: image left. Row 3: text left.")
     include_disclaimer = st.checkbox("Include disclaimer/terms module", value=False)
     modules = [hero_type]
     if include_app_download:
         modules.append("app_download_module")
-    if include_usp:
-        modules.append("usp_module")
-    if include_usp_feature:
-        modules.append("usp_feature_module")
+    if include_icon_left:
+        modules.append("icon_left_text_right_module")
+    if include_text_left:
+        modules.append("text_left_image_right_module")
+    if include_alternating:
+        modules.append("alternating_text_image_module")
     if include_disclaimer:
         modules.append("disclaimer_module")
 
