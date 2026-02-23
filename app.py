@@ -20,6 +20,7 @@ from csv_translations_to_email import (
     DEFAULT_LINKS,
     LOCALE_COLUMNS,
     resolve_include_locales,
+    DESIGN_TOKENS_BRANDS,
 )
 
 st.set_page_config(
@@ -41,6 +42,13 @@ with st.sidebar:
         options=["LIGHT", "DARK"],
         index=0,
         help="LIGHT = cream (#fcf7f5), DARK = purple (#7130c9)",
+    )
+    design_tokens_brand = st.selectbox(
+        "Colour scheme / brand",
+        options=list(DESIGN_TOKENS_BRANDS),
+        format_func=lambda x: {"vio": "Vio (purple)", "holiday_pirates": "Holiday Pirates (plum)", "kiwi": "KIWI (teal)"}[x],
+        index=0,
+        help="Toggle design tokens (colours, spacing) for different brands.",
     )
     st.divider()
     st.subheader("Target languages")
@@ -105,6 +113,7 @@ with tab_generate:
                     show_footer=show_footer_str,
                     show_terms=show_terms_str,
                     app_download_colour_preset=app_download_colour_preset,
+                    design_tokens_brand=design_tokens_brand,
                     include_locales=include_locales,
                 )
 
@@ -131,6 +140,7 @@ with tab_generate:
                     show_header_logo=show_header_logo,
                     show_footer=show_footer,
                     show_terms=show_terms,
+                    design_tokens_brand=design_tokens_brand,
                 )
                 st.caption("Preview (English locale) — layout may differ slightly in email clients.")
                 components.html(preview_html, height=800, scrolling=True)
@@ -160,6 +170,7 @@ with tab_generate:
                         show_footer=show_footer_str,
                         show_terms=show_terms_str,
                         app_download_colour_preset=app_download_colour_preset,
+                        design_tokens_brand=design_tokens_brand,
                         include_locales=include_locales,
                     )
                 st.success("Template generated!")
@@ -206,7 +217,11 @@ with tab_template:
 
     st.subheader("2. Preview")
     st.caption("This is how your selected modules will look with placeholder content.")
-    preview_html = get_module_preview_html(modules, app_download_colour_preset=app_download_colour_preset)
+    preview_html = get_module_preview_html(
+        modules,
+        app_download_colour_preset=app_download_colour_preset,
+        design_tokens_brand=design_tokens_brand,
+    )
     components.html(preview_html, height=500, scrolling=True)
 
     st.subheader("3. Download your input template")

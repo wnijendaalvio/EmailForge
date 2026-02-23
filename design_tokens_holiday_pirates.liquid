@@ -1,0 +1,134 @@
+{%- comment -%}
+  DESIGN TOKENS - Holiday Pirates email design system
+  Include this at the top of any email template to use standardized tokens.
+  Usage: style="color:{{ token_brand_c600 }}; padding:{{ token_space_600 }} 0;"
+{%- endcomment -%}
+
+{%- comment -%} COLOURS {%- endcomment -%}
+{%- comment -%} neutral {%- endcomment -%}
+{%- assign token_neutral_c000 = "#FFFFFF" -%}
+{%- assign token_neutral_c050 = "#F0F0F0" -%}
+{%- assign token_neutral_c100 = "#F0F0F0" -%}
+{%- assign token_neutral_c200 = "#B5B5B5" -%}
+{%- assign token_neutral_c300 = "#B5B5B5" -%}
+{%- assign token_neutral_c400 = "#B5B5B5" -%}
+{%- assign token_neutral_c500 = "#7A7A7A" -%}
+{%- assign token_neutral_c600 = "#7A7A7A" -%}
+{%- assign token_neutral_c700 = "#373737" -%}
+{%- assign token_neutral_c800 = "#373737" -%}
+{%- assign token_neutral_c900 = "#1C1C1C" -%}
+{%- assign token_neutral_c950 = "#1C1C1C" -%}
+{%- assign token_neutral_c999 = "#000000" -%}
+{%- comment -%} brand {%- endcomment -%}
+{%- assign token_brand_c050 = "#FFE8D9" -%}
+{%- assign token_brand_c100 = "#E1D6DF" -%}
+{%- assign token_brand_c200 = "#A685A0" -%}
+{%- assign token_brand_c300 = "#A685A0" -%}
+{%- assign token_brand_c400 = "#6A3460" -%}
+{%- assign token_brand_c500 = "#6A3460" -%}
+{%- assign token_brand_c600 = "#6A3460" -%}
+{%- assign token_brand_c700 = "#502748" -%}
+{%- assign token_brand_c800 = "#502748" -%}
+{%- assign token_brand_c900 = "#2A1526" -%}
+{%- assign token_brand_c950 = "#2A1526" -%}
+{%- comment -%} interactive (same as brand for email) {%- endcomment -%}
+{%- assign token_interactive_c050 = "#E1D6DF" -%}
+{%- assign token_interactive_c100 = "#E1D6DF" -%}
+{%- assign token_interactive_c200 = "#A685A0" -%}
+{%- assign token_interactive_c300 = "#A685A0" -%}
+{%- assign token_interactive_c400 = "#6A3460" -%}
+{%- assign token_interactive_c500 = "#6A3460" -%}
+{%- assign token_interactive_c600 = "#6A3460" -%}
+{%- assign token_interactive_c700 = "#502748" -%}
+{%- assign token_interactive_c800 = "#502748" -%}
+{%- assign token_interactive_c900 = "#2A1526" -%}
+{%- assign token_interactive_c950 = "#2A1526" -%}
+{%- comment -%} success {%- endcomment -%}
+{%- assign token_success_c050 = "#E7F0DA" -%}
+{%- assign token_success_c100 = "#E7F0DA" -%}
+{%- assign token_success_c200 = "#E7F0DA" -%}
+{%- assign token_success_c300 = "#E7F0DA" -%}
+{%- assign token_success_c400 = "#C6E2AB" -%}
+{%- assign token_success_c500 = "#14544C" -%}
+{%- assign token_success_c600 = "#14544C" -%}
+{%- assign token_success_c700 = "#14544C" -%}
+{%- assign token_success_c800 = "#14544C" -%}
+{%- assign token_success_c900 = "#14544C" -%}
+{%- assign token_success_c950 = "#14544C" -%}
+{%- comment -%} warning {%- endcomment -%}
+{%- assign token_warning_c050 = "#FFE8D9" -%}
+{%- assign token_warning_c100 = "#FFE8D9" -%}
+{%- assign token_warning_c200 = "#FFE8D9" -%}
+{%- assign token_warning_c300 = "#FFE8D9" -%}
+{%- assign token_warning_c400 = "#FBCC60" -%}
+{%- assign token_warning_c500 = "#FBCC60" -%}
+{%- assign token_warning_c600 = "#FBCC60" -%}
+{%- assign token_warning_c700 = "#FBCC60" -%}
+{%- assign token_warning_c800 = "#FE8D40" -%}
+{%- assign token_warning_c900 = "#FE8D40" -%}
+{%- assign token_warning_c950 = "#FE8D40" -%}
+{%- comment -%} danger {%- endcomment -%}
+{%- assign token_danger_c050 = "#FFE7E7" -%}
+{%- assign token_danger_c100 = "#FFE7E7" -%}
+{%- assign token_danger_c200 = "#FFE7E7" -%}
+{%- assign token_danger_c300 = "#FFE7E7" -%}
+{%- assign token_danger_c400 = "#D92D20" -%}
+{%- assign token_danger_c500 = "#D92D20" -%}
+{%- assign token_danger_c600 = "#D92D20" -%}
+{%- assign token_danger_c700 = "#D92D20" -%}
+{%- assign token_danger_c800 = "#B10038" -%}
+{%- assign token_danger_c900 = "#B10038" -%}
+{%- assign token_danger_c950 = "#B10038" -%}
+{%- comment -%} accent {%- endcomment -%}
+{%- assign token_accent_c050 = "#FFE7E7" -%}
+{%- assign token_accent_c100 = "#FFE7E7" -%}
+{%- assign token_accent_c200 = "#FFE7E7" -%}
+{%- assign token_accent_c300 = "#FFE7E7" -%}
+{%- assign token_accent_c400 = "#D92D20" -%}
+{%- assign token_accent_c500 = "#D92D20" -%}
+{%- assign token_accent_c600 = "#D92D20" -%}
+{%- assign token_accent_c700 = "#D92D20" -%}
+{%- assign token_accent_c800 = "#B10038" -%}
+{%- assign token_accent_c900 = "#B10038" -%}
+{%- assign token_accent_c950 = "#B10038" -%}
+
+{%- comment -%} Semantic aliases (map to tokens) {%- endcomment -%}
+{%- assign token_bg_page = token_neutral_c050 -%}
+{%- assign token_bg_card = token_neutral_c000 -%}
+{%- assign token_bg_brand = token_brand_c600 -%}
+{%- assign token_text_primary = token_neutral_c950 -%}
+{%- comment -%} Body text - slightly softer than primary {%- endcomment -%}
+{%- assign token_text_body = "#111111" -%}
+{%- assign token_text_muted = token_neutral_c600 -%}
+{%- assign token_text_on_brand = token_neutral_c000 -%}
+{%- assign token_accent = token_brand_c600 -%}
+{%- assign token_border = token_neutral_c200 -%}
+{%- assign token_cta_bg = token_brand_c600 -%}
+
+{%- comment -%} SPACING (px) - layout.spacing scale {%- endcomment -%}
+{%- assign token_space_100 = "4px" -%}
+{%- assign token_space_200 = "8px" -%}
+{%- assign token_space_300 = "12px" -%}
+{%- assign token_space_400 = "16px" -%}
+{%- assign token_space_500 = "16px" -%}
+{%- assign token_space_600 = "24px" -%}
+{%- assign token_space_700 = "32px" -%}
+{%- assign token_space_800 = "32px" -%}
+{%- assign token_space_900 = "40px" -%}
+{%- assign token_space_1000 = "48px" -%}
+{%- assign token_space_1200 = "64px" -%}
+
+{%- comment -%} LAYOUT {%- endcomment -%}
+{%- assign token_width_page = "728" -%}
+{%- assign token_width_content = "600" -%}
+{%- assign token_radius_card = "16px" -%}
+{%- assign token_radius_button = "8px" -%}
+{%- assign token_radius_module = "16px" -%}
+{%- assign token_font_stack = "Campton, Circular, Helvetica, Arial, sans-serif" -%}
+{%- assign token_font_size_md = "16px" -%}
+{%- assign token_line_height_lg = "24px" -%}
+{%- assign token_letter_spacing_md = "0.01em" -%}
+
+{%- comment -%} Header logo {%- endcomment -%}
+{%- assign token_header_logo_url = "https://userimg-assets.customeriomail.com/images/client-env-124967/1771856072842_logo-holidaypiratesde_01KJ5DM4A98ZM2RQP69WDDYTER.png" -%}
+{%- assign token_header_logo_alt = "Holiday Pirates" -%}

@@ -251,9 +251,22 @@ MODULE_TEMPLATE_ROWS = {
 }
 
 
-def _load_design_tokens() -> str:
-    """Load design tokens from design_tokens.liquid to inject into template."""
-    tokens_path = Path(__file__).parent / "design_tokens.liquid"
+DESIGN_TOKENS_BRANDS = ("vio", "holiday_pirates", "kiwi")
+
+
+def _get_design_tokens_path(brand: str) -> Path:
+    """Return path to design tokens file for the given brand."""
+    base = Path(__file__).parent
+    if brand == "holiday_pirates":
+        return base / "design_tokens_holiday_pirates.liquid"
+    if brand == "kiwi":
+        return base / "design_tokens_kiwi.liquid"
+    return base / "design_tokens.liquid"
+
+
+def _load_design_tokens(brand: str = "vio") -> str:
+    """Load design tokens from brand-specific file to inject into template."""
+    tokens_path = _get_design_tokens_path(brand)
     if tokens_path.exists():
         return tokens_path.read_text(encoding="utf-8").strip()
     return ""
@@ -1048,6 +1061,7 @@ def get_module_preview_html(
     modules: list[str],
     *,
     app_download_colour_preset: str = "LIGHT",
+    design_tokens_brand: str = "vio",
 ) -> str:
     """
     Generate HTML preview of selected modules with placeholder content.
@@ -1085,6 +1099,7 @@ def get_module_preview_html(
             show_footer="FALSE",
             show_terms="TRUE" if show_terms else "FALSE",
             app_download_colour_preset=app_download_colour_preset,
+            design_tokens_brand=design_tokens_brand,
         )
         translations, structure = load_translations(tmp_path)
         html = liquid_to_preview_html(
@@ -1339,7 +1354,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
                     {%- if _show_header_logo -%}
                     <tr>
                       <td align="center" class="email-header-pad" style="width:520px;height:32px;max-width:100%;padding:1px 0;opacity:1;line-height:0;">
-                        <img src="https://userimg-assets.customeriomail.com/images/client-env-124967/1769680583679_Hero_Logo_Vector_4x_01KG4JXF25SSBE0QK36X2MEAXM.png" width="89" height="30" alt="Vio" style="width:89px;height:30px;max-width:520px;max-height:32px;display:block;margin:0 auto;object-fit:contain;" />
+                        <img src="{{ token_header_logo_url }}" width="89" height="30" alt="{{ token_header_logo_alt }}" style="width:89px;height:30px;max-width:520px;max-height:32px;display:block;margin:0 auto;object-fit:contain;" />
                       </td>
                     </tr>
                     {%- endif -%}
@@ -1433,6 +1448,7 @@ def generate_template(
     show_footer: str = "TRUE",
     show_terms: str = "TRUE",
     app_download_colour_preset: str = "LIGHT",
+    design_tokens_brand: str = "vio",
     links_config: dict[str, str] | None = None,
     include_locales: list[str] | None = None,
 ) -> str:
@@ -1460,7 +1476,7 @@ def generate_template(
         show_terms,
         app_download_colour_preset,
     )
-    design_tokens = _load_design_tokens()
+    design_tokens = _load_design_tokens(brand=design_tokens_brand)
     app_settings = build_app_download_settings(structure)
     links_block = build_links_block(links_config)
     result = (
@@ -1495,6 +1511,13 @@ def main():
         help='App download banner colour preset: LIGHT (#fcf7f5) or DARK (#7130c9). Override per campaign via app_download_colour_preset merge field.',
     )
     parser.add_argument(
+        "--design-tokens-brand",
+        dest="design_tokens_brand",
+        choices=DESIGN_TOKENS_BRANDS,
+        default="vio",
+        help="Design token set: vio (default) or holiday_pirates.",
+    )
+    parser.add_argument(
         "--locale-preset",
         dest="locale_preset",
         choices=["en_only", "top_5", "global"],
@@ -1522,15 +1545,16 @@ def main():
         show_footer=args.show_footer,
         show_terms=args.show_terms,
         app_download_colour_preset=args.app_download_colour_preset,
+        design_tokens_brand=args.design_tokens_brand,
         include_locales=include_locales,
     )
     sys.stdout.write(result)
 
 
-def _parse_design_tokens() -> dict[str, str]:
-    """Parse design_tokens.liquid and return token_name -> value map."""
+def _parse_design_tokens(brand: str = "vio") -> dict[str, str]:
+    """Parse design tokens for the given brand and return token_name -> value map."""
     import re
-    tokens_path = Path(__file__).parent / "design_tokens.liquid"
+    tokens_path = _get_design_tokens_path(brand)
     if not tokens_path.exists():
         return {}
     text = tokens_path.read_text(encoding="utf-8")
@@ -1553,13 +1577,14 @@ def liquid_to_preview_html(
     show_header_logo: bool = True,
     show_footer: bool = True,
     show_terms: bool = True,
+    design_tokens_brand: str = "vio",
 ) -> str:
     """
     Convert Liquid template to static HTML for preview (English locale).
     Does regex substitution of tokens and content; strips Liquid control flow.
     """
     import re
-    tokens = _parse_design_tokens()
+    tokens = _parse_design_tokens(brand=design_tokens_brand)
     en = "en"
     # Content replacements from translations (en locale)
     content_vars = [

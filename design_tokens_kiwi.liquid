@@ -1,0 +1,134 @@
+{%- comment -%}
+  DESIGN TOKENS - KIWI email design system
+  Include this at the top of any email template to use standardized tokens.
+  Usage: style="color:{{ token_brand_c600 }}; padding:{{ token_space_600 }} 0;"
+{%- endcomment -%}
+
+{%- comment -%} COLOURS {%- endcomment -%}
+{%- comment -%} neutral {%- endcomment -%}
+{%- assign token_neutral_c000 = "#FFFFFF" -%}
+{%- assign token_neutral_c050 = "#F5F7F9" -%}
+{%- assign token_neutral_c100 = "#E8EDF1" -%}
+{%- assign token_neutral_c200 = "#BAC7D5" -%}
+{%- assign token_neutral_c300 = "#94A8BE" -%}
+{%- assign token_neutral_c400 = "#657890" -%}
+{%- assign token_neutral_c500 = "#5D738E" -%}
+{%- assign token_neutral_c600 = "#4F5E71" -%}
+{%- assign token_neutral_c700 = "#3E4E63" -%}
+{%- assign token_neutral_c800 = "#283545" -%}
+{%- assign token_neutral_c900 = "#30353B" -%}
+{%- assign token_neutral_c950 = "#252A31" -%}
+{%- assign token_neutral_c999 = "#000000" -%}
+{%- comment -%} brand {%- endcomment -%}
+{%- assign token_brand_c050 = "#ECF8F7" -%}
+{%- assign token_brand_c100 = "#E1F4F3" -%}
+{%- assign token_brand_c200 = "#BFE8E2" -%}
+{%- assign token_brand_c300 = "#99DBD2" -%}
+{%- assign token_brand_c400 = "#4DC0B0" -%}
+{%- assign token_brand_c500 = "#00A58E" -%}
+{%- assign token_brand_c600 = "#008F7B" -%}
+{%- assign token_brand_c700 = "#007061" -%}
+{%- assign token_brand_c800 = "#005c4e" -%}
+{%- assign token_brand_c900 = "#025046" -%}
+{%- assign token_brand_c950 = "#003D35" -%}
+{%- comment -%} interactive (same as brand for email) {%- endcomment -%}
+{%- assign token_interactive_c050 = "#ECF8F7" -%}
+{%- assign token_interactive_c100 = "#E1F4F3" -%}
+{%- assign token_interactive_c200 = "#BFE8E2" -%}
+{%- assign token_interactive_c300 = "#99DBD2" -%}
+{%- assign token_interactive_c400 = "#4DC0B0" -%}
+{%- assign token_interactive_c500 = "#00A58E" -%}
+{%- assign token_interactive_c600 = "#008F7B" -%}
+{%- assign token_interactive_c700 = "#007061" -%}
+{%- assign token_interactive_c800 = "#005c4e" -%}
+{%- assign token_interactive_c900 = "#025046" -%}
+{%- assign token_interactive_c950 = "#003D35" -%}
+{%- comment -%} success {%- endcomment -%}
+{%- assign token_success_c050 = "#F2F8F2" -%}
+{%- assign token_success_c100 = "#E1EFE2" -%}
+{%- assign token_success_c200 = "#CDE4CF" -%}
+{%- assign token_success_c300 = "#94D09C" -%}
+{%- assign token_success_c400 = "#69BD74" -%}
+{%- assign token_success_c500 = "#28A138" -%}
+{%- assign token_success_c600 = "#238B31" -%}
+{%- assign token_success_c700 = "#1D7228" -%}
+{%- assign token_success_c800 = "#2D7738" -%}
+{%- assign token_success_c900 = "#1F5126" -%}
+{%- assign token_success_c950 = "#235C2B" -%}
+{%- comment -%} warning {%- endcomment -%}
+{%- assign token_warning_c050 = "#FFFAF2" -%}
+{%- assign token_warning_c100 = "#FFF4E4" -%}
+{%- assign token_warning_c200 = "#FFE9C6" -%}
+{%- assign token_warning_c300 = "#FFDDA1" -%}
+{%- assign token_warning_c400 = "#FFD172" -%}
+{%- assign token_warning_c500 = "#FFC400" -%}
+{%- assign token_warning_c600 = "#E4AB00" -%}
+{%- assign token_warning_c700 = "#C69100" -%}
+{%- assign token_warning_c800 = "#A17300" -%}
+{%- assign token_warning_c900 = "#875E00" -%}
+{%- assign token_warning_c950 = "#513700" -%}
+{%- comment -%} danger {%- endcomment -%}
+{%- assign token_danger_c050 = "#FCF3F3" -%}
+{%- assign token_danger_c100 = "#F8E2E2" -%}
+{%- assign token_danger_c200 = "#F3CECE" -%}
+{%- assign token_danger_c300 = "#EDA4A4" -%}
+{%- assign token_danger_c400 = "#E06060" -%}
+{%- assign token_danger_c500 = "#D21C1C" -%}
+{%- assign token_danger_c600 = "#B91919" -%}
+{%- assign token_danger_c700 = "#9D1515" -%}
+{%- assign token_danger_c800 = "#970D0D" -%}
+{%- assign token_danger_c900 = "#6D0909" -%}
+{%- assign token_danger_c950 = "#760909" -%}
+{%- comment -%} accent {%- endcomment -%}
+{%- assign token_accent_c050 = "#F1F8FE" -%}
+{%- assign token_accent_c100 = "#DEF0FC" -%}
+{%- assign token_accent_c200 = "#C7E4FA" -%}
+{%- assign token_accent_c300 = "#80B9E5" -%}
+{%- assign token_accent_c400 = "#348ED5" -%}
+{%- assign token_accent_c500 = "#0172CB" -%}
+{%- assign token_accent_c600 = "#0161AC" -%}
+{%- assign token_accent_c700 = "#01508E" -%}
+{%- assign token_accent_c800 = "#004F8F" -%}
+{%- assign token_accent_c900 = "#004680" -%}
+{%- assign token_accent_c950 = "#003E70" -%}
+
+{%- comment -%} Semantic aliases (map to tokens) {%- endcomment -%}
+{%- assign token_bg_page = token_neutral_c050 -%}
+{%- assign token_bg_card = token_neutral_c000 -%}
+{%- assign token_bg_brand = token_brand_c600 -%}
+{%- assign token_text_primary = token_neutral_c950 -%}
+{%- comment -%} Body text - slightly softer than primary {%- endcomment -%}
+{%- assign token_text_body = "#111111" -%}
+{%- assign token_text_muted = token_neutral_c600 -%}
+{%- assign token_text_on_brand = token_neutral_c000 -%}
+{%- assign token_accent = token_brand_c600 -%}
+{%- assign token_border = token_neutral_c200 -%}
+{%- assign token_cta_bg = token_brand_c600 -%}
+
+{%- comment -%} SPACING (px) - layout.spacing scale {%- endcomment -%}
+{%- assign token_space_100 = "4px" -%}
+{%- assign token_space_200 = "8px" -%}
+{%- assign token_space_300 = "12px" -%}
+{%- assign token_space_400 = "16px" -%}
+{%- assign token_space_500 = "16px" -%}
+{%- assign token_space_600 = "24px" -%}
+{%- assign token_space_700 = "32px" -%}
+{%- assign token_space_800 = "32px" -%}
+{%- assign token_space_900 = "40px" -%}
+{%- assign token_space_1000 = "48px" -%}
+{%- assign token_space_1200 = "64px" -%}
+
+{%- comment -%} LAYOUT {%- endcomment -%}
+{%- assign token_width_page = "728" -%}
+{%- assign token_width_content = "600" -%}
+{%- assign token_radius_card = "16px" -%}
+{%- assign token_radius_button = "8px" -%}
+{%- assign token_radius_module = "16px" -%}
+{%- assign token_font_stack = "Campton, Circular, Helvetica, Arial, sans-serif" -%}
+{%- assign token_font_size_md = "16px" -%}
+{%- assign token_line_height_lg = "24px" -%}
+{%- assign token_letter_spacing_md = "0.01em" -%}
+
+{%- comment -%} Header logo (replace with your KIWI logo URL when available) {%- endcomment -%}
+{%- assign token_header_logo_url = "https://placehold.co/89x30/008F7B/FFFFFF?text=KIWI" -%}
+{%- assign token_header_logo_alt = "KIWI" -%}
