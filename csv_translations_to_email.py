@@ -477,23 +477,30 @@ def build_rows_above_image(translations: dict[str, dict[str, str]]) -> str:
     return "\n".join(parts)
 
 
+def _image_link(structure: dict[str, str]) -> str:
+    """Link for hero/USP images. Customizable via image_deeplink or cta_link in CSV; else fallback.
+    Treats empty or '#' as no link (use fallback)."""
+    raw = (structure.get("image_deeplink") or structure.get("cta_link") or "").strip()
+    if not raw or raw == "#":
+        return FALLBACK_IMAGE_LINK
+    return _normalise_url(raw)
+
+
 def build_image_row(structure: dict[str, str]) -> str:
-    """Hero image row; optional mobile image from structure. Falls back to regular image if no mobile URL."""
+    """Hero image row; optional mobile image from structure. Falls back to regular image if no mobile URL. Always clickable."""
     img_url = (structure.get("image_url") or "").strip()
     if not img_url:
         return ""
     img_mobile = (structure.get("image_url_mobile") or "").strip() or img_url
-    img_link = _normalise_url(structure.get("image_deeplink") or "")
+    img_link = _image_link(structure)
     img_attrs = 'width="728" alt="" style="display:block;width:100%;max-width:728px;height:auto;border:0;outline:none;text-decoration:none;"'
-    wrap_a = lambda url: ('<a href="' + _html_escape(img_link) + '" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;">' if img_link else "") + '<img src="' + _html_escape(url) + '" ' + img_attrs + ' />' + ("</a>" if img_link else "")
+    wrap_a = lambda url: '<a href="' + _html_escape(img_link) + '" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="' + _html_escape(url) + '" ' + img_attrs + ' /></a>'
     if img_mobile != img_url:
         return (
             '<span class="email-img-desktop">' + wrap_a(img_url) + '</span>'
             '<span class="email-img-mobile">' + wrap_a(img_mobile) + '</span>'
         )
-    if img_link:
-        return '<a href="' + _html_escape(img_link) + '" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="' + _html_escape(img_url) + '" ' + img_attrs + ' /></a>'
-    return '<img src="' + _html_escape(img_url) + '" ' + img_attrs + ' />'
+    return wrap_a(img_url)
 
 
 def build_rows_below_image(translations: dict[str, dict[str, str]], structure: dict[str, str]) -> str:
@@ -571,7 +578,7 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
                         <tr>
                           <td valign="middle" style="padding:0;vertical-align:middle">
                             <a href="{{{{ app_deeplink_url }}}}" data-cio-tag="AppBanner-apple-store-img" style="display:inline-block;text-decoration:none">
-                              <img alt="Download on App Store" src="{{ app_store_badge_url }}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
+                              <img alt="Download on App Store" src="{{{{ app_store_badge_url }}}}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
                             </a>
                           </td>
                           <td valign="middle" style="padding-left:12px;vertical-align:middle">
@@ -588,7 +595,7 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
                         <tr>
                           <td valign="middle" style="padding:0;vertical-align:middle">
                             <a href="{{{{ app_deeplink_url }}}}" data-cio-tag="AppBanner-google-store-img" style="display:inline-block;text-decoration:none">
-                              <img alt="Get it on Google Play" src="{{ google_play_badge_url }}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
+                              <img alt="Get it on Google Play" src="{{{{ google_play_badge_url }}}}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40"/>
                             </a>
                           </td>
                           <td valign="middle" style="padding-left:12px;vertical-align:middle">
@@ -616,13 +623,15 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
 
 def build_hero_two_column_module(translations: dict[str, dict[str, str]], structure: dict[str, str]) -> str:
     """Optional two-column feature module: 4 alternating text/image blocks + CTA.
-    Rendered only when hero_two_col_body_1_h2 exists. Uses design tokens for styling."""
+    Rendered only when hero_two_col_body_1_h2 exists. Uses design tokens for styling.
+    All feature images are clickable (image_deeplink, cta_link, or fallback)."""
     if "hero_two_col_body_1_h2" not in translations:
         return ""
     img1 = _normalise_url(structure.get("hero_two_col_image_1_url") or "")
     img2 = _normalise_url(structure.get("hero_two_col_image_2_url") or "")
     img3 = _normalise_url(structure.get("hero_two_col_image_3_url") or "")
     img4 = _normalise_url(structure.get("hero_two_col_image_4_url") or "")
+    img_link = _image_link(structure)
     cta_link = _normalise_url(structure.get("cta_link") or "")
     cta_alias = (structure.get("cta_alias") or "hero-two-col-cta").strip()
     # Typography: Campton, 16px, line-height 24px, letter-spacing 0.01em, #0F0E0F; horizontal align (left/right for RTL), vertically centred via valign
@@ -649,7 +658,7 @@ def build_hero_two_column_module(translations: dict[str, dict[str, str]], struct
             <td width="50%" valign="middle" class="email-feature-col" style="padding:0 0 32px 20px;vertical-align:middle;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr><td align="center">
-                  <img src="{_html_escape(img1)}" alt="{{{{ hero_two_col_body_1_h2 | strip }}}}" width="260" height="180" style="display:block;max-width:100%;height:auto;" />
+                  <a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="{_html_escape(img1)}" alt="{{{{ hero_two_col_body_1_h2 | strip }}}}" width="260" height="180" style="display:block;max-width:100%;height:auto;" /></a>
                 </td></tr>
               </table>
             </td>
@@ -658,7 +667,7 @@ def build_hero_two_column_module(translations: dict[str, dict[str, str]], struct
             <td width="50%" valign="middle" class="email-feature-col" style="padding:0 20px 32px 0;vertical-align:middle;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr><td align="center">
-                  <img src="{_html_escape(img2)}" alt="{{{{ hero_two_col_body_2_h2 | strip }}}}" width="260" height="180" style="display:block;max-width:100%;height:auto;" />
+                  <a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="{_html_escape(img2)}" alt="{{{{ hero_two_col_body_2_h2 | strip }}}}" width="260" height="180" style="display:block;max-width:100%;height:auto;" /></a>
                 </td></tr>
               </table>
             </td>
@@ -683,7 +692,7 @@ def build_hero_two_column_module(translations: dict[str, dict[str, str]], struct
             <td width="50%" valign="middle" class="email-feature-col" style="padding:0 0 32px 20px;vertical-align:middle;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr><td align="center">
-                  <img src="{_html_escape(img3)}" alt="{{{{ hero_two_col_body_3_h2 | strip }}}}" width="260" height="180" style="display:block;max-width:100%;height:auto;" />
+                  <a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="{_html_escape(img3)}" alt="{{{{ hero_two_col_body_3_h2 | strip }}}}" width="260" height="180" style="display:block;max-width:100%;height:auto;" /></a>
                 </td></tr>
               </table>
             </td>
@@ -692,7 +701,7 @@ def build_hero_two_column_module(translations: dict[str, dict[str, str]], struct
             <td width="50%" valign="middle" class="email-feature-col" style="padding:0 20px 0 0;vertical-align:middle;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr><td align="center">
-                  <img src="{_html_escape(img4)}" alt="{{{{ hero_two_col_body_4_h2 | strip }}}}" width="260" height="180" style="display:block;max-width:100%;height:auto;" />
+                  <a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="{_html_escape(img4)}" alt="{{{{ hero_two_col_body_4_h2 | strip }}}}" width="260" height="180" style="display:block;max-width:100%;height:auto;" /></a>
                 </td></tr>
               </table>
             </td>
@@ -722,12 +731,14 @@ def build_hero_two_column_module(translations: dict[str, dict[str, str]], struct
 
 
 def build_usp_module(translations: dict[str, dict[str, str]], structure: dict[str, str]) -> str:
-    """USP module: title + 3 feature rows (icon, heading, copy). width 600, padding s800, gap 24, border-radius lg."""
+    """USP module: title + 3 feature rows (icon, heading, copy). width 600, padding s800, gap 24, border-radius lg.
+    Icons are clickable (image_deeplink, cta_link, or fallback)."""
     if "usp_title" not in translations:
         return ""
     icon1 = _normalise_url(structure.get("usp_1_icon_url") or "")
     icon2 = _normalise_url(structure.get("usp_2_icon_url") or "")
     icon3 = _normalise_url(structure.get("usp_3_icon_url") or "")
+    img_link = _image_link(structure)
     # Placeholder icons when none provided (80x80 frame, light purple bg)
     placeholder = "https://placehold.co/80/f2e5ff/7130c9?text=•"
     icon1 = icon1 or placeholder
@@ -737,7 +748,7 @@ def build_usp_module(translations: dict[str, dict[str, str]], structure: dict[st
     def _usp_row(icon_url: str, heading_var: str, copy_var: str) -> str:
         return f'''            <tr>
               <td valign="top" style="padding:0 {{{{ token_space_600 }}}} {{{{ token_space_600 }}}} 0;vertical-align:top;width:80px;">
-                <img src="{_html_escape(icon_url)}" alt="" width="80" height="80" style="display:block;max-width:80px;max-height:80px;object-fit:contain;" />
+                <a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="{_html_escape(icon_url)}" alt="" width="80" height="80" style="display:block;max-width:80px;max-height:80px;object-fit:contain;" /></a>
               </td>
               <td valign="top" style="padding:0 0 {{{{ token_space_600 }}}} 0;vertical-align:top;">
                 <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_primary }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {heading_var} | strip }}}}</p>
@@ -772,12 +783,14 @@ def build_usp_module(translations: dict[str, dict[str, str]], structure: dict[st
 
 
 def build_usp_feature_module(translations: dict[str, dict[str, str]], structure: dict[str, str]) -> str:
-    """USP feature module: header + 3 two-column rows (text left, image right). Same content as USP but with larger illustrative images."""
+    """USP feature module: header + 3 two-column rows (text left, image right). Same content as USP but with larger illustrative images.
+    Images are clickable (image_deeplink, cta_link, or fallback)."""
     if "usp_feature_title" not in translations:
         return ""
     img1 = _normalise_url(structure.get("usp_feature_1_image_url") or "")
     img2 = _normalise_url(structure.get("usp_feature_2_image_url") or "")
     img3 = _normalise_url(structure.get("usp_feature_3_image_url") or "")
+    img_link = _image_link(structure)
     placeholder = "https://placehold.co/280x200/fcf7f5/615a56?text=Feature"
     img1 = img1 or placeholder
     img2 = img2 or placeholder
@@ -790,7 +803,7 @@ def build_usp_feature_module(translations: dict[str, dict[str, str]], structure:
               <p style="margin:8px 0 0 0;font-family:{{{{ token_font_stack }}}};font-weight:400;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_body }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {copy_var} | strip }}}}</p>
             </td>
             <td width="50%" valign="middle" style="padding:0 0 32px 20px;vertical-align:middle;">
-              <img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;border-radius:{{{{ token_radius_module }}}};" />
+              <a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;border-radius:{{{{ token_radius_module }}}};" /></a>
             </td>
           </tr>'''
 
@@ -814,35 +827,34 @@ def build_usp_feature_module(translations: dict[str, dict[str, str]], structure:
 
 def build_usp_ui_module(translations: dict[str, dict[str, str]], structure: dict[str, str]) -> str:
     """USP alternating module: header + 3 rows with alternating layout. Row 1: text left, image right. Row 2: image left, text right. Row 3: text left, image right.
-    Images are displayed as-is (no outer container; design is in the image)."""
+    Images are displayed as-is and are clickable (image_deeplink, cta_link, or fallback)."""
     if "usp_ui_title" not in translations:
         return ""
     img1 = _normalise_url(structure.get("usp_ui_1_image_url") or "")
     img2 = _normalise_url(structure.get("usp_ui_2_image_url") or "")
     img3 = _normalise_url(structure.get("usp_ui_3_image_url") or "")
+    img_link = _image_link(structure)
     placeholder = "https://placehold.co/280x200/fcf7f5/615a56?text=Image"
     img1 = img1 or placeholder
     img2 = img2 or placeholder
     img3 = img3 or placeholder
 
     def _ui_row(img_url: str, heading_var: str, copy_var: str, image_first: bool) -> str:
-        img_cell = f'<td width="50%" valign="middle" style="padding:0 0 32px 20px;vertical-align:middle;"><img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;" /></td>'
+        img_wrapped = f'<a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;" /></a>'
+        img_cell = f'<td width="50%" valign="middle" style="padding:0 0 32px 20px;vertical-align:middle;">{img_wrapped}</td>'
+        img_cell_left = f'<td width="50%" valign="middle" style="padding:0 20px 32px 0;vertical-align:middle;">{img_wrapped}</td>'
         text_cell = f'''<td width="50%" valign="middle" style="padding:0 20px 32px 0;vertical-align:middle;">
               <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_primary }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {heading_var} | strip }}}}</p>
               <p style="margin:8px 0 0 0;font-family:{{{{ token_font_stack }}}};font-weight:400;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_body }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {copy_var} | strip }}}}</p>
             </td>'''
         if image_first:
             return f'''          <tr class="email-usp-ui-row">
-            <td width="50%" valign="middle" style="padding:0 20px 32px 0;vertical-align:middle;">
-              <img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;" />
-            </td>
+            {img_cell_left}
             {text_cell}
           </tr>'''
         return f'''          <tr class="email-usp-ui-row">
             {text_cell}
-            <td width="50%" valign="middle" style="padding:0 0 32px 20px;vertical-align:middle;">
-              <img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;" />
-            </td>
+            {img_cell}
           </tr>'''
 
     return f'''{{%- if usp_ui_title != blank -%}}
@@ -885,8 +897,12 @@ def build_config_block(
 {{%- assign app_download_colour_preset = app_download_colour_preset | default: app_download_colour_toggle | upcase | strip -%}}'''
 
 
+# Fallback when no image_deeplink or cta_link is provided. Users customize via CSV (image_deeplink, cta_link).
+FALLBACK_IMAGE_LINK = "https://app.vio.com/4Zaj"
+
 DEFAULT_LINKS = {
     "app_download_page": "https://app.vio.com/v0HW",
+    "default_image_link": FALLBACK_IMAGE_LINK,
     "homepage": "https://www.vio.com",
     "terms_of_use": "https://www.vio.com/terms-of-use",
     "privacy_policy": "https://www.vio.com/privacy-policy",
@@ -1283,7 +1299,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
     {%- else -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771236964477_GetItOnGooglePlay_Badge_Web_color_English_01KHJZ6E5TKNXTSE65NBZACEG9.png
   {%- endcase -%}
 {%- endcapture -%}
-{%- assign google_play_badge_url = google_play_badge_url | strip -%}
+{%- assign google_play_badge_url = google_play_badge_url | strip | default: "https://userimg-assets.customeriomail.com/images/client-env-124967/1771236964477_GetItOnGooglePlay_Badge_Web_color_English_01KHJZ6E5TKNXTSE65NBZACEG9.png" -%}
 {%- capture app_store_badge_url -%}
   {%- case locale_key -%}
     {%- when "ar" -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861173599_ar_01KJ5JFSJE01ZPHHNDPS8HB6DF.png
@@ -1324,7 +1340,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
     {%- else -%}https://userimg-assets.customeriomail.com/images/client-env-124967/1771861742970_en_01KJ5K15DG7W6K6VRFV8G3ZN6D.png
   {%- endcase -%}
 {%- endcapture -%}
-{%- assign app_store_badge_url = app_store_badge_url | strip -%}
+{%- assign app_store_badge_url = app_store_badge_url | strip | default: "https://userimg-assets.customeriomail.com/images/client-env-124967/1771861742970_en_01KJ5K15DG7W6K6VRFV8G3ZN6D.png" -%}
 {%- capture footer_address -%}FindHotel B.V. Nieuwe Looiersdwarsstraat 17, 1017 TZ, Amsterdam, The Netherlands.{%- endcapture -%}
 {%- capture footer_prefs_text -%}
   {%- case locale_key -%}
@@ -1473,10 +1489,10 @@ FULL EMAIL HTML (multi-locale from translations CSV)
                         </p>
                         <div style="height:14px;line-height:14px;font-size:1px;">&nbsp;</div>
                         <a href="{{ app_deeplink_url }}" style="padding-right:6px;display:inline-block;text-decoration:none;">
-                          <img alt="Download on App Store" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1756808278001_Appstore_Button_01K44YXW18QJ1S6H2NN0EKBNR2.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40">
+                          <img alt="Download on App Store" src="{{ app_store_badge_url }}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40">
                         </a>
                         <a href="{{ app_deeplink_url }}" style="padding-left:6px;display:inline-block;text-decoration:none;">
-                          <img alt="Get it on Google Play" src="https://userimg-assets.customeriomail.com/images/client-env-124967/1756808171416_GooglePlaystore_Button_01K44YTKYFR6XPYK6S73Q4WZ44.png" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40">
+                          <img alt="Get it on Google Play" src="{{ google_play_badge_url }}" style="display:block;outline:none;border:none;text-decoration:none;max-height:40px" height="40">
                         </a>
                         <p style="font-size:12px;line-height:16px;font-weight:450;font-family:{{ token_font_stack }};text-align:center;margin:0;color:{{ token_text_muted }};padding-top:{{ token_space_600 }};padding-bottom:{{ token_space_300 }};direction:{{ dir }};unicode-bidi:plaintext;">{{ footer_address | strip }}</p>
                         <p style="font-size:12px;line-height:16px;font-weight:450;font-family:{{ token_font_stack }};text-align:center;margin:0;color:{{ token_text_muted }};padding-top:0;padding-bottom:0;direction:{{ dir }};unicode-bidi:plaintext;">{{ footer_prefs_html }}</p>

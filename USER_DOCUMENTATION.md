@@ -26,7 +26,10 @@ The **Email Template Generator** turns a translations spreadsheet (CSV) into a r
    streamlit run app.py
    ```
 3. Your browser opens at `http://localhost:8501`.  
-4. Use the app to upload CSVs, preview templates, and download.
+4. **Log in** with the credentials from `config.yaml` (username and password).  
+5. Use the app to upload CSVs, preview templates, and download.
+
+**Password setup:** The app uses `config.yaml` for login. If the file is missing, you’ll see an error. Create `config.yaml` with hashed credentials (see the project README or ask your admin). `config.yaml` is in `.gitignore` and is not committed.
 
 ### Option 2: Command line
 
@@ -121,7 +124,8 @@ Full list: en, ar, zh-cn, zh-tw, zh-hk, hr, cs, da, nl, en-gb, fil, fi, fr, fr-c
 |-----|-------------|
 | image_url | Hero image URL |
 | image_url_mobile | Optional different mobile hero image |
-| cta_link | CTA button URL |
+| image_deeplink | Link for hero image and all feature/USP images (optional; falls back to cta_link or app link) |
+| cta_link | CTA button URL; also used as fallback for image links when image_deeplink is empty |
 | cta_alias | Tracking alias for the CTA |
 
 ### Tips
@@ -168,6 +172,7 @@ The template selects the right translation based on `customer.language` and, whe
 | Missing translations | Empty cells fall back to English; fill en first, then other locales. |
 | CSV not loading | Ensure UTF-8 encoding and valid CSV (commas in quotes). |
 | App won’t start | Install dependencies: `pip install -r requirements.txt` |
+| **App Store / Google Play buttons not visible** | 1. **App banner**: Include a row for `headline` under `app_download_module` in your CSV. 2. **Footer buttons**: Turn **Show footer** ON in the sidebar. 3. Try the sample file to confirm. 4. Some email clients block images by default. |
 
 ---
 

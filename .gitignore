@@ -22,3 +22,6 @@ Thumbs.db
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Auth (contains hashed passwords)
+config.yaml

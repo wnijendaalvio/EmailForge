@@ -1,13 +1,16 @@
 """
 Streamlit app for the Email Template Generator.
 Upload a translations CSV, configure options, and download the generated Liquid template.
+Protected by password authentication (streamlit-authenticator).
 """
 import json
 import tempfile
+import yaml
 from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
+import streamlit_authenticator as stauth
 
 # Import from the local module (same directory)
 from csv_translations_to_email import (
@@ -29,10 +32,41 @@ st.set_page_config(
     layout="centered",
 )
 
+# --- Authentication ---
+config_path = Path(__file__).parent / "config.yaml"
+if not config_path.exists():
+    st.error(
+        "config.yaml not found. Create it with your credentials to enable login. "
+        "See USER_DOCUMENTATION.md for setup. Run: python3 -c \"from streamlit_authenticator.utilities.hasher import Hasher; print(Hasher.hash('your_password'))\" to generate a hash."
+    )
+    st.stop()
+
+with open(config_path, encoding="utf-8") as f:
+    config = yaml.safe_load(f)
+
+authenticator = stauth.Authenticate(
+    config["credentials"],
+    config["cookie"]["name"],
+    config["cookie"]["key"],
+    config["cookie"]["expiry_days"],
+)
+
+# login() returns None when location="main" (renders form); use session_state for auth status
+authenticator.login(location="main")
+name = st.session_state.get("name")
+authentication_status = st.session_state.get("authentication_status")
+username = st.session_state.get("username")
+
+if not authentication_status:
+    st.stop()
+
+# --- Main app (authenticated) ---
 st.title("✉️ Email Template Generator")
 
 # Sidebar: options (shared)
 with st.sidebar:
+    authenticator.logout("Logout", "sidebar")
+    st.divider()
     st.header("Options")
     show_header_logo = st.toggle("Show header logo", value=True)
     show_footer = st.toggle("Show footer", value=True)
