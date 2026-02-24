@@ -33,16 +33,40 @@ st.set_page_config(
 )
 
 # --- Authentication ---
-config_path = Path(__file__).parent / "config.yaml"
-if not config_path.exists():
+def _to_dict(obj):
+    """Convert st.secrets-like object to plain dict (for nested structures)."""
+    if hasattr(obj, "keys"):
+        return {k: _to_dict(obj[k]) for k in obj.keys()}
+    return obj
+
+def _load_auth_config():
+    """Load auth config from config.yaml (local) or Streamlit secrets (Cloud deployment)."""
+    config_path = Path(__file__).parent / "config.yaml"
+    if config_path.exists():
+        with open(config_path, encoding="utf-8") as f:
+            return yaml.safe_load(f)
+    # Streamlit Cloud: use Secrets (add via app Settings → Secrets)
+    try:
+        creds = st.secrets.get("credentials", {}) if hasattr(st.secrets, "get") else getattr(st.secrets, "credentials", None)
+        cookie = st.secrets.get("cookie", {}) if hasattr(st.secrets, "get") else getattr(st.secrets, "cookie", None)
+        if creds and cookie:
+            return {"credentials": _to_dict(creds), "cookie": _to_dict(cookie)}
+    except Exception as e:
+        st.warning(f"Secrets load failed: {e}")
+    return None
+
+config = _load_auth_config()
+if not config:
     st.error(
-        "config.yaml not found. Create it with your credentials to enable login. "
-        "See USER_DOCUMENTATION.md for setup. Run: python3 -c \"from streamlit_authenticator.utilities.hasher import Hasher; print(Hasher.hash('your_password'))\" to generate a hash."
+        "Authentication config not found.\n\n"
+        "**Local:** Create `config.yaml` in the project folder (see USER_DOCUMENTATION.md).\n\n"
+        "**Streamlit Cloud:** Add to Secrets (use explicit nested format):\n\n"
+        "[credentials]\n[credentials.usernames]\n[credentials.usernames.admin]\n"
+        "email = \"admin@example.com\"\nname = \"Admin\"\npassword = \"$2b$12$YourHash\"\n\n"
+        "[cookie]\nexpiry_days = 7\nkey = \"any_random_string\"\nname = \"email_template_cookie\"\n\n"
+        "**Fallback:** Remove config.yaml from .gitignore and commit it (hash is one-way safe)."
     )
     st.stop()
-
-with open(config_path, encoding="utf-8") as f:
-    config = yaml.safe_load(f)
 
 authenticator = stauth.Authenticate(
     config["credentials"],
