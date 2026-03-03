@@ -67,7 +67,7 @@ STRUCTURE_KEYS = [
     "usp_1_icon_url", "usp_2_icon_url", "usp_3_icon_url",
     "usp_feature_1_image_url", "usp_feature_2_image_url", "usp_feature_3_image_url",
     "usp_ui_1_image_url", "usp_ui_2_image_url", "usp_ui_3_image_url",
-    "hotel_reco_headline", "hotel_reco_type",
+    "hotel_reco_headline", "hotel_reco_type", "hotel_reco_cta_text", "hotel_reco_cta_url",
 ]
 
 # Map (module, key) -> internal key for new CSV format with Module + module_index columns
@@ -147,6 +147,8 @@ MODULE_KEY_MAP = {
     ("alternating_text_image_module", "usp_ui_3_image_url"): "usp_ui_3_image_url",
     ("hotel_reco_grid_4", "hotel_reco_headline"): "hotel_reco_headline",
     ("hotel_reco_grid_4", "hotel_reco_type"): "hotel_reco_type",
+    ("hotel_reco_grid_4", "hotel_reco_cta_text"): "hotel_reco_cta_text",
+    ("hotel_reco_grid_4", "hotel_reco_cta_url"): "hotel_reco_cta_url",
 }
 
 PLACEHOLDER_DESIGN_TOKENS = "{{ DESIGN_TOKENS }}"
@@ -256,6 +258,8 @@ MODULE_TEMPLATE_ROWS = {
     "hotel_reco_grid_4": [
         ("hotel_reco_headline", "Recently viewed hotels in {city}"),
         ("hotel_reco_type", "last_browsed"),
+        ("hotel_reco_cta_text", ""),
+        ("hotel_reco_cta_url", ""),
     ],
 }
 
@@ -723,80 +727,184 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
 {{%- endif -%}}'''
 
 
-def _build_hotel_reco_preview_html() -> str:
-    """Static HTML for hotel_reco_grid_4 preview (4 sample cards). Uses inline styles matching the module."""
-    return '''<tr><td style="padding:0;vertical-align:top;">
+_PLACEHOLDER_HOTEL_IMAGE = "https://userimg-assets.customeriomail.com/images/client-env-124967/1746098547647_hotel_card_3_01JT5SAV0XEHV7NKYWXWKKM4RB.png"
+
+
+def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> str:
+    """Static HTML for hotel_reco_grid_4 preview (4 sample cards).
+    Both variants: no per-card CTA buttons (cards clickable via image/name).
+    similar_to_last_viewed: booking details in header, no city/dates per card, single "See more deals" button.
+    last_browsed: city and dates per card.
+    Optional extra CTA below when hotel_reco_cta_text is set."""
+    structure = structure or {}
+    reco_type = (structure.get("hotel_reco_type") or "last_browsed").strip().lower()
+    is_similar = reco_type in ("similar_to_last_viewed", "similar")
+    headline = (structure.get("hotel_reco_headline") or "Recently viewed hotels in {city}").strip()
+    parts = headline.split("{city}")
+    before_city = parts[0] if parts else ""
+    after_city = parts[1] if len(parts) > 1 else ""
+    city = "Barcelona"
+    cta_text = (structure.get("hotel_reco_cta_text") or "").strip()
+    cta_url = (structure.get("hotel_reco_cta_url") or "").strip() or "#"
+    extra_cta = ""
+    if cta_text:
+        extra_cta = f'''
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:728px;border-collapse:collapse;">
+              <tr>
+                <td align="center" style="padding:16px 0 0 0;">
+                  <a href="{_html_escape(cta_url)}" target="_blank" style="display:inline-block;padding:12px 32px;font-size:16px;line-height:20px;font-weight:600;color:#0F0E0F;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#ffffff;border:1px solid #d1d5db;border-radius:8px;">{_html_escape(cta_text)}</a>
+                </td>
+              </tr>
+            </table>'''
+
+    if is_similar:
+        return f'''<tr><td style="padding:0;vertical-align:top;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#ffffff;">
   <tr>
     <td align="center" style="padding:24px 16px 16px 16px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:728px;border-collapse:collapse;">
         <tr>
-          <td style="padding:0 0 20px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:24px;line-height:32px;font-weight:700;color:#000000;">Recently viewed hotels in <span style="color:#7130c9;">Barcelona</span></td>
+          <td style="padding:0 0 8px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:0.2px;color:#0F0E0F;">{before_city}<span style="color:#7130c9;">{city}</span>{after_city}</td>
+        </tr>
+        <tr>
+          <td style="padding:0 0 16px 0;font-size:14px;line-height:22px;color:#0F0E0F;letter-spacing:0.14px;"><span style="color:#0F0E0F;">&#128197;</span> Nov 4 - Nov 7 (3 nights)&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#0F0E0F;">&#128100;</span> 2 Guests, 1 room</td>
         </tr>
         <tr>
           <td>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
               <tr>
                 <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
-                    <tr><td><img src="https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+1" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
-                    <tr><td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">★★★★★</p>
-                      <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">ibis Styles Barcelona</p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">Barcelona</p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><span style="color:#1A9C4B;font-weight:600;">9.2</span> <span style="color:#000000;font-weight:600;">Superb</span> <span style="color:#000000;">(2,011)</span></p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">Dec 11 - Nov 13 (2 nights)</p>
-                      <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">$127 <span style="font-size:14px;font-weight:400;">/ night</span></p>
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color:#7130c9;border-radius:8px;"><a href="#" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;">View price</a></td></tr></table>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Hotel Ramblas International</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
+                      <p style="margin:0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$112 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
                     </td></tr>
                   </table>
                 </td>
                 <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
-                    <tr><td><img src="https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+2" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
-                    <tr><td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">★★★★★</p>
-                      <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">Vince beach</p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">Barcelona</p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><span style="color:#1A9C4B;font-weight:600;">8.8</span> <span style="color:#000000;font-weight:600;">Fabulous</span> <span style="color:#000000;">(342)</span></p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">Nov 18 - Nov 19 (1 night)</p>
-                      <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">$95 <span style="font-size:14px;font-weight:400;">/ night</span></p>
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color:#7130c9;border-radius:8px;"><a href="#" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;">View price</a></td></tr></table>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Moko Hotel</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
+                      <p style="margin:0 0 0 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$79 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
                     </td></tr>
                   </table>
                 </td>
               </tr>
               <tr>
                 <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
-                    <tr><td><img src="https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+3" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
-                    <tr><td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">★★★★☆</p>
-                      <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">Le Haus Barcelona</p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">Barcelona</p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><span style="color:#1A9C4B;font-weight:600;">8.5</span> <span style="color:#000000;font-weight:600;">Very good</span> <span style="color:#000000;">(891)</span></p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">Jan 5 - Jan 7 (2 nights)</p>
-                      <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">$142 <span style="font-size:14px;font-weight:400;">/ night</span></p>
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color:#7130c9;border-radius:8px;"><a href="#" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;">View price</a></td></tr></table>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">May Ramblas Hotel</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
+                      <p style="margin:0 0 0 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$135 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
                     </td></tr>
                   </table>
                 </td>
                 <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
-                    <tr><td><img src="https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+4" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
-                    <tr><td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">★★★★☆</p>
-                      <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">Moko Hotel</p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">Barcelona</p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><span style="color:#1A9C4B;font-weight:600;">9.0</span> <span style="color:#000000;font-weight:600;">Wonderful</span> <span style="color:#000000;">(523)</span></p>
-                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">Feb 10 - Feb 12 (2 nights)</p>
-                      <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">$98 <span style="font-size:14px;font-weight:400;">/ night</span></p>
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color:#7130c9;border-radius:8px;"><a href="#" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;">View price</a></td></tr></table>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9734;</p>
+                      <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Leonardo Royal Hotel</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
+                      <p style="margin:0 0 0 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$132 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
                     </td></tr>
                   </table>
                 </td>
               </tr>
             </table>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:728px;border-collapse:collapse;">
+              <tr>
+                <td align="center" style="padding:24px 0 0 0;">
+                  <a href="#" target="_blank" style="display:inline-block;padding:12px 32px;font-size:16px;line-height:20px;font-weight:600;color:#0F0E0F;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#ffffff;border:1px solid #d1d5db;border-radius:8px;">See more deals</a>
+                </td>
+              </tr>
+            </table>{extra_cta}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</td></tr>'''
+
+    # last_browsed variant (city, dates per card; no per-card CTA)
+    return f'''<tr><td style="padding:0;vertical-align:top;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#ffffff;">
+  <tr>
+    <td align="center" style="padding:24px 16px 16px 16px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:728px;border-collapse:collapse;">
+        <tr>
+          <td style="padding:0 0 24px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:0.2px;color:#0F0E0F;">{before_city}<span style="color:#7130c9;">{city}</span>{after_city}</td>
+        </tr>
+        <tr>
+          <td>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+              <tr>
+                <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">ibis Styles Barcelona</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#696663;">Barcelona</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#0F0E0F;">Dec 11 - Nov 13 (2 nights)</p>
+                      <p style="margin:0 0 12px 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$127 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
+                    </td></tr>
+                  </table>
+                </td>
+                <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Vince beach</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#696663;">Venice</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">8.8</span> <span style="color:#0F0E0F;font-weight:500;">Fabulous</span> <span style="color:#6C6770;font-weight:450;">(342)</span></p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#0F0E0F;">Nov 18 - Nov 19 (1 night)</p>
+                      <p style="margin:0 0 12px 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$120 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9734;</p>
+                      <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Le Haus Barcelona</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#696663;">Barcelona</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">8.5</span> <span style="color:#0F0E0F;font-weight:500;">Very good</span> <span style="color:#6C6770;font-weight:450;">(891)</span></p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#0F0E0F;">Nov 2 - Nov 3 (1 night)</p>
+                      <p style="margin:0 0 12px 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$172 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
+                    </td></tr>
+                  </table>
+                </td>
+                <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9734;</p>
+                      <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Moko Hotel</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#696663;">Dublin</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.0</span> <span style="color:#0F0E0F;font-weight:500;">Wonderful</span> <span style="color:#6C6770;font-weight:450;">(523)</span></p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#0F0E0F;">Jan 6 - Jan 10 (4 nights)</p>
+                      <p style="margin:0 0 12px 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$145 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>{extra_cta}
           </td>
         </tr>
       </table>
@@ -1104,13 +1212,19 @@ def build_config_block(
 
 
 def _build_hotel_reco_assigns_block(structure: dict[str, str]) -> str:
-    """Build Liquid assigns for hotel_reco_headline and hotel_reco_type from CSV structure."""
+    """Build Liquid assigns for hotel_reco from CSV structure."""
     headline = (structure.get("hotel_reco_headline") or "Recently viewed hotels in {city}").strip()
     reco_type = (structure.get("hotel_reco_type") or "last_browsed").strip()
+    cta_text = (structure.get("hotel_reco_cta_text") or "").strip()
+    cta_url = (structure.get("hotel_reco_cta_url") or "").strip()
     headline_escaped = headline.replace("\\", "\\\\").replace('"', '\\"')
     reco_type_escaped = reco_type.replace("\\", "\\\\").replace('"', '\\"')
+    cta_text_escaped = cta_text.replace("\\", "\\\\").replace('"', '\\"')
+    cta_url_escaped = cta_url.replace("\\", "\\\\").replace('"', '\\"')
     return f'''{{%- assign hotel_reco_headline = hotel_reco_headline | default: "{headline_escaped}" -%}}
-{{%- assign hotel_reco_type = hotel_reco_type | default: "{reco_type_escaped}" -%}}'''
+{{%- assign hotel_reco_type = hotel_reco_type | default: "{reco_type_escaped}" -%}}
+{{%- assign hotel_reco_cta_text = hotel_reco_cta_text | default: "{cta_text_escaped}" -%}}
+{{%- assign hotel_reco_cta_url = hotel_reco_cta_url | default: "{cta_url_escaped}" -%}}'''
 
 
 # Fallback when no image_deeplink or cta_link is provided. Users customize via CSV (image_deeplink, cta_link).
@@ -1248,6 +1362,12 @@ _PREVIEW_PLACEHOLDERS = {
         "terms_label": "Terms",
         "privacy_label": "Privacy Policy",
     },
+    "hotel_reco_grid_4": {
+        "hotel_reco_headline": "Great alternatives in {city}",
+        "hotel_reco_type": "similar_to_last_viewed",
+        "hotel_reco_cta_text": "",
+        "hotel_reco_cta_url": "",
+    },
     "icon_left_text_right_module": {
         "title": "How Vio helps you book like an insider",
         "usp_1_heading": "Compare prices across 100+ sites",
@@ -1300,10 +1420,13 @@ def get_module_preview_html(
     """
     if not modules:
         return "<p style='padding:20px;color:#615a56;'>Select modules to see a preview.</p>"
+    mods = list(modules)
+    if include_hotel_reco and "hotel_reco_grid_4" not in mods:
+        mods.append("hotel_reco_grid_4")
     # Build CSV with placeholder content for selected modules
     rows: list[tuple[str, str, int, str]] = []  # (Key, Module, module_index, en)
     module_indices: dict[str, int] = {}
-    for mod in modules:
+    for mod in mods:
         if mod not in MODULE_TEMPLATE_ROWS or mod not in _PREVIEW_PLACEHOLDERS:
             continue
         idx = module_indices.get(mod, len(module_indices) + 1)
@@ -1950,7 +2073,7 @@ def liquid_to_preview_html(
                 row_end = html.find("</td></tr>", end_idx)
                 if row_end != -1:
                     row_end += len("</td></tr>")
-                    html = html[:row_start] + _build_hotel_reco_preview_html() + html[row_end:]
+                    html = html[:row_start] + _build_hotel_reco_preview_html(structure) + html[row_end:]
     tokens = _parse_design_tokens(brand=design_tokens_brand)
     en = "en"
     # Content replacements from translations (en locale)

@@ -372,17 +372,23 @@ with tab_template:
 **hotel_reco_headline** — Headline text. Use `{city}` as placeholder for the city (e.g. *"Recently viewed hotels in {city}"*).
 
 **hotel_reco_type** — Recommender type (for API). Use one of:
-- `last_browsed` — Last browsed hotels
-- `similar_to_last_viewed` — Similar to last viewed hotels  
+- `last_browsed` — Last browsed hotels (city and dates per card; cards clickable, no per-card CTA button)
+- `similar_to_last_viewed` — Similar to last viewed (booking details in header, no city/dates per card, single "See more deals" button)
 - `top_in_destination` — Top hotels in last browsed destination
+
+**hotel_reco_cta_text**, **hotel_reco_cta_url** — Optional extra CTA below the hotel cards. If `hotel_reco_cta_text` is empty, the CTA is not rendered.
             """)
-    st.download_button(
-        label="📥 Download input template (CSV)",
-        data=csv_content,
-        file_name="email_translations_template.csv",
-        mime="text/csv",
-        key="dl_csv_template",
-    )
+    col_dl_csv, col_copy_csv, _ = st.columns([1, 1, 2])
+    with col_dl_csv:
+        st.download_button(
+            label="📥 Download input template (CSV)",
+            data=csv_content,
+            file_name="email_translations_template.csv",
+            mime="text/csv",
+            key="dl_csv_template",
+        )
+    with col_copy_csv:
+        _render_copy_button(csv_content, "csv_template")
 
     with st.expander("Optional: Standard links config"):
         st.caption("Customize URLs (terms, privacy, social icons, app download) before generating. Save as standard_links.json in your project folder.")
