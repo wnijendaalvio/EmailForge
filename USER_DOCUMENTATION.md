@@ -29,7 +29,21 @@ The **Email Template Generator** turns a translations spreadsheet (CSV) into a r
 4. **Log in** with the credentials from `config.yaml` (username and password).  
 5. Use the app to upload CSVs, preview templates, and download.
 
-**Password setup:** The app uses `config.yaml` for login. If the file is missing, you’ll see an error. Create `config.yaml` with hashed credentials (see the project README or ask your admin). `config.yaml` is in `.gitignore` and is not committed.
+**Password setup:**
+- **Local:** Create `config.yaml` with hashed credentials. `config.yaml` is in `.gitignore` and is not committed.
+- **Streamlit Cloud:** In your app → **Settings → Secrets**, paste (replace the password hash with your own):
+  ```toml
+  [credentials.usernames.admin]
+  email = "admin@example.com"
+  name = "Admin"
+  password = "$2b$12$YourHashedPasswordHere"
+
+  [cookie]
+  expiry_days = 7
+  key = "any_random_string_for_signing"
+  name = "email_template_cookie"
+  ```
+  Generate hash: `python3 -c "from streamlit_authenticator.utilities.hasher import Hasher; print(Hasher.hash('your_password'))"`
 
 ### Option 2: Command line
 

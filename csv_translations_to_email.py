@@ -10,6 +10,7 @@ import csv
 import re
 import sys
 import tempfile
+from io import StringIO
 from pathlib import Path
 
 # Locale columns in sheet order (Key is column 0). Must match Liquid locale_key.
@@ -66,6 +67,7 @@ STRUCTURE_KEYS = [
     "usp_1_icon_url", "usp_2_icon_url", "usp_3_icon_url",
     "usp_feature_1_image_url", "usp_feature_2_image_url", "usp_feature_3_image_url",
     "usp_ui_1_image_url", "usp_ui_2_image_url", "usp_ui_3_image_url",
+    "hotel_reco_headline", "hotel_reco_type",
 ]
 
 # Map (module, key) -> internal key for new CSV format with Module + module_index columns
@@ -143,6 +145,8 @@ MODULE_KEY_MAP = {
     ("alternating_text_image_module", "usp_ui_3_heading"): "usp_ui_3_heading",
     ("alternating_text_image_module", "usp_ui_3_copy"): "usp_ui_3_copy",
     ("alternating_text_image_module", "usp_ui_3_image_url"): "usp_ui_3_image_url",
+    ("hotel_reco_grid_4", "hotel_reco_headline"): "hotel_reco_headline",
+    ("hotel_reco_grid_4", "hotel_reco_type"): "hotel_reco_type",
 }
 
 PLACEHOLDER_DESIGN_TOKENS = "{{ DESIGN_TOKENS }}"
@@ -156,6 +160,7 @@ PLACEHOLDER_APP_DOWNLOAD_MODULE = "{{ APP_DOWNLOAD_MODULE }}"
 PLACEHOLDER_ICON_LEFT_TEXT_RIGHT_MODULE = "{{ ICON_LEFT_TEXT_RIGHT_MODULE }}"
 PLACEHOLDER_TEXT_LEFT_IMAGE_RIGHT_MODULE = "{{ TEXT_LEFT_IMAGE_RIGHT_MODULE }}"
 PLACEHOLDER_ALTERNATING_TEXT_IMAGE_MODULE = "{{ ALTERNATING_TEXT_IMAGE_MODULE }}"
+PLACEHOLDER_HOTEL_RECO_GRID_4 = "{{ HOTEL_RECO_GRID_4 }}"
 PLACEHOLDER_CONFIG = "{{ CONFIG_BLOCK }}"
 PLACEHOLDER_LINKS = "{{ LINKS_BLOCK }}"
 PLACEHOLDER_TERMS_DEFAULTS = "{{ TERMS_DEFAULTS_BLOCK }}"
@@ -248,6 +253,10 @@ MODULE_TEMPLATE_ROWS = {
         ("usp_ui_3_copy", "We track prices so you don't have to keep checking."),
         ("usp_ui_3_image_url", ""),
     ],
+    "hotel_reco_grid_4": [
+        ("hotel_reco_headline", "Recently viewed hotels in {city}"),
+        ("hotel_reco_type", "last_browsed"),
+    ],
 }
 
 
@@ -269,6 +278,14 @@ def _load_design_tokens(brand: str = "vio") -> str:
     tokens_path = _get_design_tokens_path(brand)
     if tokens_path.exists():
         return tokens_path.read_text(encoding="utf-8").strip()
+    return ""
+
+
+def _load_hotel_reco_module() -> str:
+    """Load hotel_reco_grid_4 Liquid module. Uses rec_hotels + reco_city (API data at send time)."""
+    mod_path = Path(__file__).parent / "modules" / "hotel_reco_grid_4.liquid"
+    if mod_path.exists():
+        return mod_path.read_text(encoding="utf-8").strip()
     return ""
 
 
@@ -333,6 +350,20 @@ def get_csv_locales(csv_path: Path) -> list[str]:
     return found if found else ["en"]
 
 
+def _fix_unescaped_quotes_in_csv(raw: str) -> str:
+    """
+    Fix unescaped double-quotes inside CSV/TSV quoted fields.
+    Excel/Sheets often export href="url" without doubling the inner quotes, causing the
+    parser to truncate the field at href=". We double them so CSV parsing succeeds.
+    Only touches " that look like HTML attribute delimiters (= " and " >), not already doubled.
+    """
+    # href=" or other attr=": double the opening quote so CSV treats it as escaped (skip if already ="")
+    raw = re.sub(r'="(?!")', r'=""', raw)
+    # "> closing an attr: double the quote so CSV treats it as escaped
+    raw = re.sub(r'(?<!")"(?=>)', r'""', raw)
+    return raw
+
+
 def load_translations(
     csv_path: Path,
     include_locales: list[str] | None = None,
@@ -347,77 +378,81 @@ def load_translations(
     locales = include_locales or get_csv_locales(csv_path)
     translations: dict[str, dict[str, str]] = {}
     structure: dict[str, str] = {}
-    with open(csv_path, newline="", encoding="utf-8-sig") as f:
-        if csv_path.suffix.lower() == ".tsv":
-            reader = csv.DictReader(f, delimiter="\t")
-        else:
-            sample = f.read(4096)
-            f.seek(0)
-            try:
-                dialect = csv.Sniffer().sniff(sample, delimiters=",\t")
-            except csv.Error:
-                dialect = csv.excel
-            reader = csv.DictReader(f, dialect=dialect)
-        if not reader.fieldnames:
-            return translations, structure
-        fields = reader.fieldnames
-        use_module_format = (
-            len(fields) >= 3
-            and (fields[1] or "").strip().lower() == "module"
-            and (fields[2] or "").strip().lower().replace(" ", "") == "module_index"
-        )
-        locale_start = 3 if use_module_format else 1
-        locale_headers = fields[locale_start:]
-        locale_to_header: dict[str, str] = {}
-        for loc in locales:
-            for h in locale_headers:
-                if not h:
-                    continue
-                hnorm = h.strip().lower().replace(" ", "").replace("_", "-")
-                if loc == hnorm or loc.replace("-", "_") == hnorm.replace("-", "_"):
-                    locale_to_header[loc] = h
-                    break
-            if loc not in locale_to_header and loc in LOCALE_COLUMNS:
-                idx = LOCALE_COLUMNS.index(loc)
-                if idx < len(locale_headers) and (locale_headers[idx] or "").strip():
-                    locale_to_header[loc] = locale_headers[idx].strip()
-        key_col = fields[0]
-        module_col = fields[1] if use_module_format and len(fields) >= 2 else None
-
-        for row in reader:
-            key_raw = (row.get(key_col) or "").strip().lower().replace(" ", "")
-            if not key_raw:
+    raw_content = csv_path.read_text(encoding="utf-8-sig")
+    raw_content = _fix_unescaped_quotes_in_csv(raw_content)
+    f = StringIO(raw_content)
+    if csv_path.suffix.lower() == ".tsv":
+        reader = csv.DictReader(f, delimiter="\t")
+    else:
+        sample = raw_content[:4096]
+        f.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=",\t")
+            # Sniffer can set doublequote=False; our _fix_unescaped_quotes_in_csv relies on "" as escape
+            dialect.doublequote = True
+        except csv.Error:
+            dialect = csv.excel
+        reader = csv.DictReader(f, dialect=dialect)
+    if not reader.fieldnames:
+        return translations, structure
+    fields = reader.fieldnames
+    use_module_format = (
+        len(fields) >= 3
+        and (fields[1] or "").strip().lower() == "module"
+        and (fields[2] or "").strip().lower().replace(" ", "") == "module_index"
+    )
+    locale_start = 3 if use_module_format else 1
+    locale_headers = fields[locale_start:]
+    locale_to_header: dict[str, str] = {}
+    for loc in locales:
+        for h in locale_headers:
+            if not h:
                 continue
-            module_raw = (row.get(module_col, "") or "").strip().lower().replace(" ", "") if module_col else ""
-            values_by_locale: dict[str, str] = {}
+            hnorm = h.strip().lower().replace(" ", "").replace("_", "-")
+            if loc == hnorm or loc.replace("-", "_") == hnorm.replace("-", "_"):
+                locale_to_header[loc] = h
+                break
+        if loc not in locale_to_header and loc in LOCALE_COLUMNS:
+            idx = LOCALE_COLUMNS.index(loc)
+            if idx < len(locale_headers) and (locale_headers[idx] or "").strip():
+                locale_to_header[loc] = locale_headers[idx].strip()
+    key_col = fields[0]
+    module_col = fields[1] if use_module_format and len(fields) >= 2 else None
+
+    for row in reader:
+        key_raw = (row.get(key_col) or "").strip().lower().replace(" ", "")
+        if not key_raw:
+            continue
+        module_raw = (row.get(module_col, "") or "").strip().lower().replace(" ", "") if module_col else ""
+        values_by_locale: dict[str, str] = {}
+        for loc in locales:
+            header = locale_to_header.get(loc)
+            val = ((row.get(header) or "") if header else "").strip()
+            values_by_locale[loc] = val
+
+        if use_module_format and module_raw:
+            internal_key = MODULE_KEY_MAP.get((module_raw, key_raw))
+            if internal_key is None:
+                internal_key = MODULE_KEY_MAP.get((module_raw, key_raw.replace("_", "")))
+            if internal_key is None:
+                continue
+        else:
+            internal_key = key_raw
+
+        if internal_key in STRUCTURE_KEYS:
             for loc in locales:
-                header = locale_to_header.get(loc)
-                val = (row.get(header, "") if header else "").strip()
-                values_by_locale[loc] = val
-
-            if use_module_format and module_raw:
-                internal_key = MODULE_KEY_MAP.get((module_raw, key_raw))
-                if internal_key is None:
-                    internal_key = MODULE_KEY_MAP.get((module_raw, key_raw.replace("_", "")))
-                if internal_key is None:
-                    continue
-            else:
-                internal_key = key_raw
-
-            if internal_key in STRUCTURE_KEYS:
-                for loc in locales:
-                    v = values_by_locale.get(loc, "").strip()
-                    if v:
-                        structure[internal_key] = v
-                        break
-                if internal_key not in structure:
-                    structure[internal_key] = values_by_locale.get("en", "").strip()
-            else:
-                en_val = values_by_locale.get("en", "").strip()
-                for loc in locales:
-                    if not values_by_locale.get(loc, "").strip():
-                        values_by_locale[loc] = en_val
-                translations[internal_key] = values_by_locale
+                v = values_by_locale.get(loc, "").strip()
+                if v:
+                    structure[internal_key] = v
+                    break
+            if internal_key not in structure:
+                structure[internal_key] = values_by_locale.get("en", "").strip()
+        else:
+            en_val = values_by_locale.get("en", "").strip()
+            for loc in locales:
+                if not values_by_locale.get(loc, "").strip():
+                    values_by_locale[loc] = en_val
+            translations[internal_key] = values_by_locale
     return translations, structure
 
 
@@ -443,6 +478,73 @@ def build_content_captures(
         lines.append("  {%- endcase -%}")
         lines.append("{%- endcapture -%}")
     return "\n".join(lines)
+
+
+# Locale derivation block for Customer.io subject/preheader fields (self-contained, no body dependencies)
+LOCALE_KEY_BLOCK = r'''{%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
+{%- assign lang2 = lang | slice: 0, 2 -%}
+{%- assign locale_key = lang2 -%}
+{%- assign country = customer.country_code | default: customer.country | default: customer["cio_iso_country"] | default: "" | upcase | slice: 0, 2 -%}
+{%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
+{%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}{%- assign locale_key = "zh-hk" -%}
+{%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}{%- assign locale_key = "zh-tw" -%}
+{%- elsif lang contains "zh-cn" or lang contains "zh-sg" or lang contains "zh-hans" -%}{%- assign locale_key = "zh-cn" -%}
+{%- elsif lang contains "fr-ca" -%}{%- assign locale_key = "fr-ca" -%}
+{%- elsif lang contains "pt-br" -%}{%- assign locale_key = "pt-br" -%}
+{%- elsif lang contains "pt-pt" -%}{%- assign locale_key = "pt" -%}
+{%- elsif lang contains "en-gb" -%}{%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "es" and lang contains "-" and lang != "es-es" -%}{%- assign locale_key = "es-419" -%}
+{%- elsif lang2 == "tl" or lang contains "fil" -%}{%- assign locale_key = "fil" -%}
+{%- elsif lang2 == "nb" or lang2 == "nn" -%}{%- assign locale_key = "no" -%}
+{%- endif -%}
+{%- assign is_portuguese = false -%}
+{%- if lang2 == "pt" or lang contains "portuguese" -%}{%- assign is_portuguese = true -%}{%- endif -%}
+{%- if is_portuguese -%}
+  {%- if country == "BR" -%}{%- assign locale_key = "pt-br" -%}
+  {%- elsif country == "PT" -%}{%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-pt" -%}{%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-br" -%}{%- assign locale_key = "pt-br" -%}
+  {%- else -%}{%- assign locale_key = "pt-br" -%}
+  {%- endif -%}
+{%- elsif lang2 == "es" and locale_key == "es" -%}
+  {%- assign latam_countries = "MX,AR,CO,CL,PE,VE,EC,GT,HN,SV,NI,PA,PR,DO,CR,BO,PY,UY,CU" | split: "," -%}
+  {%- assign is_latam = false -%}
+  {%- for cc in latam_countries -%}{%- if country == cc -%}{%- assign is_latam = true -%}{%- break -%}{%- endif -%}{%- endfor -%}
+  {%- if is_latam -%}{%- assign locale_key = "es-419" -%}{%- endif -%}
+{%- elsif lang2 == "en" and locale_key == "en" and country == "GB" -%}{%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "fr" and locale_key == "fr" and country == "CA" -%}{%- assign locale_key = "fr-ca" -%}
+{%- endif -%}
+'''
+
+
+def build_customerio_subject_preheader_snippets(
+    translations: dict[str, dict[str, str]],
+    include_locales: list[str] | None = None,
+) -> dict[str, str]:
+    """Generate self-contained Liquid snippets for Customer.io subject line and preheader fields.
+    Each snippet includes locale resolution + case/when output. Paste into Customer.io's subject/preheader fields.
+    Returns dict with 'subject_line' and 'preheader' keys; keys omitted if not in translations."""
+    locales = include_locales or LOCALE_COLUMNS
+    result: dict[str, str] = {}
+
+    def _build_case_block(key: str) -> str:
+        if key not in translations:
+            return ""
+        vals = translations[key]
+        lines = [LOCALE_KEY_BLOCK, "{%- case locale_key -%}"]
+        for loc in locales:
+            v = vals.get(loc, "").strip() or vals.get("en", "").strip()
+            v_esc = _escape_liquid_raw(v)
+            lines.append('  {%- when "' + loc + '" -%}' + v_esc)
+        lines.append('  {%- else -%}' + _escape_liquid_raw(vals.get("en", "").strip()))
+        lines.append("{%- endcase -%}")
+        return "\n".join(lines)
+
+    if "subject_line" in translations:
+        result["subject_line"] = _build_case_block("subject_line")
+    if "preheader" in translations:
+        result["preheader"] = _build_case_block("preheader")
+    return result
 
 
 def build_rows_above_image(translations: dict[str, dict[str, str]]) -> str:
@@ -619,6 +721,89 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
 </table>
 </td></tr>
 {{%- endif -%}}'''
+
+
+def _build_hotel_reco_preview_html() -> str:
+    """Static HTML for hotel_reco_grid_4 preview (4 sample cards). Uses inline styles matching the module."""
+    return '''<tr><td style="padding:0;vertical-align:top;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#ffffff;">
+  <tr>
+    <td align="center" style="padding:24px 16px 16px 16px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:728px;border-collapse:collapse;">
+        <tr>
+          <td style="padding:0 0 20px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:24px;line-height:32px;font-weight:700;color:#000000;">Recently viewed hotels in <span style="color:#7130c9;">Barcelona</span></td>
+        </tr>
+        <tr>
+          <td>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+              <tr>
+                <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+1" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">★★★★★</p>
+                      <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">ibis Styles Barcelona</p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">Barcelona</p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><span style="color:#1A9C4B;font-weight:600;">9.2</span> <span style="color:#000000;font-weight:600;">Superb</span> <span style="color:#000000;">(2,011)</span></p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">Dec 11 - Nov 13 (2 nights)</p>
+                      <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">$127 <span style="font-size:14px;font-weight:400;">/ night</span></p>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color:#7130c9;border-radius:8px;"><a href="#" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;">View price</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                </td>
+                <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+2" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">★★★★★</p>
+                      <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">Vince beach</p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">Barcelona</p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><span style="color:#1A9C4B;font-weight:600;">8.8</span> <span style="color:#000000;font-weight:600;">Fabulous</span> <span style="color:#000000;">(342)</span></p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">Nov 18 - Nov 19 (1 night)</p>
+                      <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">$95 <span style="font-size:14px;font-weight:400;">/ night</span></p>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color:#7130c9;border-radius:8px;"><a href="#" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;">View price</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+3" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">★★★★☆</p>
+                      <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">Le Haus Barcelona</p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">Barcelona</p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><span style="color:#1A9C4B;font-weight:600;">8.5</span> <span style="color:#000000;font-weight:600;">Very good</span> <span style="color:#000000;">(891)</span></p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">Jan 5 - Jan 7 (2 nights)</p>
+                      <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">$142 <span style="font-size:14px;font-weight:400;">/ night</span></p>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color:#7130c9;border-radius:8px;"><a href="#" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;">View price</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                </td>
+                <td valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px 16px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
+                    <tr><td><img src="https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+4" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
+                    <tr><td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">★★★★☆</p>
+                      <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">Moko Hotel</p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">Barcelona</p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;"><span style="color:#1A9C4B;font-weight:600;">9.0</span> <span style="color:#000000;font-weight:600;">Wonderful</span> <span style="color:#000000;">(523)</span></p>
+                      <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">Feb 10 - Feb 12 (2 nights)</p>
+                      <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">$98 <span style="font-size:14px;font-weight:400;">/ night</span></p>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color:#7130c9;border-radius:8px;"><a href="#" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;">View price</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</td></tr>'''
 
 
 def build_hero_two_column_module(translations: dict[str, dict[str, str]], structure: dict[str, str]) -> str:
@@ -839,18 +1024,31 @@ def build_usp_ui_module(translations: dict[str, dict[str, str]], structure: dict
     img2 = img2 or placeholder
     img3 = img3 or placeholder
 
-    def _ui_row(img_url: str, heading_var: str, copy_var: str, image_first: bool) -> str:
-        img_wrapped = f'<a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;"><img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;" /></a>'
-        img_cell = f'<td width="50%" valign="middle" style="padding:0 0 32px 20px;vertical-align:middle;">{img_wrapped}</td>'
-        img_cell_left = f'<td width="50%" valign="middle" style="padding:0 20px 32px 0;vertical-align:middle;">{img_wrapped}</td>'
-        text_cell = f'''<td width="50%" valign="middle" style="padding:0 20px 32px 0;vertical-align:middle;">
+    def _ui_row(img_url: str, heading_var: str, copy_var: str, image_first: bool, last_row: bool) -> str:
+        gap_bottom = "0" if last_row else "10px"
+        img_cell_pad = f"0 0 {gap_bottom} 20px" if not image_first else f"0 20px {gap_bottom} 0"
+        img_cell_left_pad = f"0 20px {gap_bottom} 0"
+        img_wrapped = f'<a href="{_html_escape(img_link)}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;border-radius:{{{{ token_radius_module }}}}"><img src="{_html_escape(img_url)}" alt="" width="280" height="200" style="display:block;max-width:100%;height:auto;border-radius:{{{{ token_radius_module }}}};" /></a>'
+        img_cell = f'<td width="50%" valign="middle" style="padding:{img_cell_pad};vertical-align:middle;">{img_wrapped}</td>'
+        img_cell_left = f'<td width="50%" valign="middle" style="padding:{img_cell_left_pad};vertical-align:middle;">{img_wrapped}</td>'
+        text_cell_pad = f"0 20px {gap_bottom} 0"
+        # Standard text cell (text on left): 20px right padding
+        # Copy indent = width of "1. " in heading font (~24px) so copy aligns under heading text
+        copy_indent = "24px"
+        text_cell = f'''<td width="50%" valign="middle" style="padding:{text_cell_pad};vertical-align:middle;">
               <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_primary }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {heading_var} | strip }}}}</p>
-              <p style="margin:8px 0 0 0;font-family:{{{{ token_font_stack }}}};font-weight:400;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_body }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {copy_var} | strip }}}}</p>
+              <p style="margin:8px 0 0 0;padding-left:{copy_indent};font-family:{{{{ token_font_stack }}}};font-weight:400;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_body }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {copy_var} | strip }}}}</p>
+            </td>'''
+        # Text on right (step 2): wider left padding (~60px total gap) to match design
+        text_cell_right_pad = f"0 20px {gap_bottom} 40px"
+        text_cell_right = f'''<td width="50%" valign="middle" style="padding:{text_cell_right_pad};vertical-align:middle;">
+              <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_primary }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {heading_var} | strip }}}}</p>
+              <p style="margin:8px 0 0 0;padding-left:{copy_indent};font-family:{{{{ token_font_stack }}}};font-weight:400;font-size:{{{{ token_font_size_md }}}};line-height:{{{{ token_line_height_lg }}}};letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_text_body }}}};text-align:{{{{ align }}}};direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ {copy_var} | strip }}}}</p>
             </td>'''
         if image_first:
             return f'''          <tr class="email-usp-ui-row">
             {img_cell_left}
-            {text_cell}
+            {text_cell_right}
           </tr>'''
         return f'''          <tr class="email-usp-ui-row">
             {text_cell}
@@ -859,16 +1057,24 @@ def build_usp_ui_module(translations: dict[str, dict[str, str]], structure: dict
 
     return f'''{{%- if usp_ui_title != blank -%}}
 <tr><td style="padding:0;vertical-align:top;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="email-alternating-text-image-module" style="width:600px;max-width:100%;margin-top:{{{{ token_space_600 }}}};box-sizing:border-box;">
+<table role="presentation" width="{{{{ token_width_content }}}}" cellpadding="0" cellspacing="0" border="0" class="email-usp-ui-container email-alternating-text-image-module" style="width:{{{{ token_width_content }}}}px;max-width:100%;height:770px;margin-top:{{{{ token_space_600 }}}};background-color:{{{{ token_neutral_c050 }}}};border-radius:{{{{ token_radius_container }}}};box-sizing:border-box;overflow:hidden;">
   <tbody>
     <tr>
-      <td align="center" colspan="2" style="padding:0 0 {{{{ token_space_600 }}}} 0;">
-        <p style="margin:0;font-family:{{{{ token_font_stack }}}};font-weight:700;font-size:24px;line-height:32px;letter-spacing:{{{{ token_letter_spacing_md }}}};color:{{{{ token_accent }}}};text-align:center;direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ usp_ui_title | strip }}}}</p>
+      <td style="padding:{{{{ token_space_200 }}}} {{{{ token_space_600 }}}} {{{{ token_space_600 }}}} {{{{ token_space_600 }}}};">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+          <tbody>
+    <tr>
+      <td align="center" colspan="2" style="padding:0 0 5px 0;">
+        <p style="margin:0 auto;width:552px;max-width:100%;height:62px;font-family:{{{{ token_font_stack }}}};font-weight:600;font-size:{{{{ token_font_size_xl }}}};line-height:{{{{ token_line_height_2xl }}}};letter-spacing:{{{{ token_letter_spacing_xl }}}};color:{{{{ token_accent }}}};text-align:center;direction:{{{{ dir }}}};unicode-bidi:plaintext;">{{{{ usp_ui_title | strip }}}}</p>
       </td>
     </tr>
-{_ui_row(img1, "usp_ui_1_heading", "usp_ui_1_copy", False)}
-{_ui_row(img2, "usp_ui_2_heading", "usp_ui_2_copy", True)}
-{_ui_row(img3, "usp_ui_3_heading", "usp_ui_3_copy", False)}
+{_ui_row(img1, "usp_ui_1_heading", "usp_ui_1_copy", False, False)}
+{_ui_row(img2, "usp_ui_2_heading", "usp_ui_2_copy", True, False)}
+{_ui_row(img3, "usp_ui_3_heading", "usp_ui_3_copy", False, True)}
+          </tbody>
+        </table>
+      </td>
+    </tr>
   </tbody>
 </table>
 </td></tr>
@@ -895,6 +1101,16 @@ def build_config_block(
 {{%- comment -%}} App download colour toggle: write LIGHT or DARK (or override via app_download_colour_preset merge field) {{%- endcomment -%}}
 {{%- assign app_download_colour_toggle = "{norm_preset(app_download_colour_preset)}" -%}}
 {{%- assign app_download_colour_preset = app_download_colour_preset | default: app_download_colour_toggle | upcase | strip -%}}'''
+
+
+def _build_hotel_reco_assigns_block(structure: dict[str, str]) -> str:
+    """Build Liquid assigns for hotel_reco_headline and hotel_reco_type from CSV structure."""
+    headline = (structure.get("hotel_reco_headline") or "Recently viewed hotels in {city}").strip()
+    reco_type = (structure.get("hotel_reco_type") or "last_browsed").strip()
+    headline_escaped = headline.replace("\\", "\\\\").replace('"', '\\"')
+    reco_type_escaped = reco_type.replace("\\", "\\\\").replace('"', '\\"')
+    return f'''{{%- assign hotel_reco_headline = hotel_reco_headline | default: "{headline_escaped}" -%}}
+{{%- assign hotel_reco_type = hotel_reco_type | default: "{reco_type_escaped}" -%}}'''
 
 
 # Fallback when no image_deeplink or cta_link is provided. Users customize via CSV (image_deeplink, cta_link).
@@ -1076,6 +1292,7 @@ def get_module_preview_html(
     *,
     app_download_colour_preset: str = "LIGHT",
     design_tokens_brand: str = "vio",
+    include_hotel_reco: bool = False,
 ) -> str:
     """
     Generate HTML preview of selected modules with placeholder content.
@@ -1114,6 +1331,7 @@ def get_module_preview_html(
             show_terms="TRUE" if show_terms else "FALSE",
             app_download_colour_preset=app_download_colour_preset,
             design_tokens_brand=design_tokens_brand,
+            include_hotel_reco=include_hotel_reco,
         )
         translations, structure = load_translations(tmp_path)
         html = liquid_to_preview_html(
@@ -1133,18 +1351,23 @@ def generate_standard_input_template(
     modules: list[str],
     *,
     include_locales: list[str] | None = None,
+    include_hotel_reco: bool = False,
 ) -> tuple[str, dict[str, str]]:
     """
     Generate a blank CSV template and links config for the selected modules.
     modules: e.g. ["hero_module_two_column", "app_download_module"] or ["hero_module"]
     include_locales: locale columns to add (default: ["en"] only for minimal template)
+    include_hotel_reco: when True, add hotel_reco_grid_4 rows (headline, recommender type)
     Returns (csv_content, links_dict).
     """
     import json
     locales = include_locales or ["en"]
+    mods = list(modules)
+    if include_hotel_reco and "hotel_reco_grid_4" not in mods:
+        mods.append("hotel_reco_grid_4")
     rows: list[tuple[str, str, int, list[str]]] = []  # (Key, Module, module_index, [en, ...])
     module_indices: dict[str, int] = {}
-    for mod in modules:
+    for mod in mods:
         if mod not in MODULE_TEMPLATE_ROWS:
             continue
         idx = module_indices.get(mod, len(module_indices) + 1)
@@ -1171,7 +1394,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
 {%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
 {%- assign lang2 = lang | slice: 0, 2 -%}
 {%- assign locale_key = lang2 -%}
-{%- assign country = customer.country_code | default: customer.country | default: customer.cio_iso_country | default: "" | upcase | slice: 0, 2 -%}
+{%- assign country = customer.country_code | default: customer.country | default: customer["cio_iso_country"] | default: "" | upcase | slice: 0, 2 -%}
 {%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
 {%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}{%- assign locale_key = "zh-hk" -%}
 {%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}{%- assign locale_key = "zh-tw" -%}
@@ -1410,7 +1633,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
         .email-img-desktop { display: none !important; }
         .email-img-mobile { display: block !important; }
         .email-outer-pad { padding: 16px 10px !important; }
-        .email-card { width: 100% !important; max-width: 100% !important; border-radius: 12px !important; }
+        .email-card { width: 100% !important; max-width: 100% !important; border-radius: 8px !important; }
         .email-content-above { padding: 20px 20px 0 20px !important; }
         .email-content-below { padding: 0 20px 24px 20px !important; }
         .email-inner-content { width: 100% !important; max-width: 100% !important; }
@@ -1422,6 +1645,8 @@ FULL EMAIL HTML (multi-locale from translations CSV)
         .email-feature-row td:first-child { padding-bottom: 16px !important; }
         .email-usp-feature-row td { display: block !important; width: 100% !important; padding: 0 0 24px 0 !important; }
         .email-usp-feature-row td:first-child { padding-bottom: 16px !important; }
+        .email-usp-ui-container { width: 100% !important; max-width: 100% !important; min-height: 0 !important; border-radius: 8px !important; }
+        .email-usp-ui-container td { padding: 20px !important; }
         .email-usp-ui-row td { display: block !important; width: 100% !important; padding: 0 0 24px 0 !important; }
         .email-usp-ui-row td:first-child { padding-bottom: 16px !important; }
         .email-hero-two-col-headline-box { width: 100% !important; max-width: 100% !important; }
@@ -1439,7 +1664,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="{{ token_bg_page }}" style="width:100%;background:{{ token_bg_page }};">
       <tr>
         <td align="center" class="email-outer-pad" style="padding:{{ token_space_800 }} {{ token_space_300 }};">
-          <table role="presentation" width="{{ token_width_page }}" cellpadding="0" cellspacing="0" border="0" class="email-card" style="width:{{ token_width_page }}px;max-width:{{ token_width_page }}px;background:{{ token_bg_card }};border-radius:{{ token_radius_card }};">
+          <table role="presentation" width="{{ token_width_page }}" cellpadding="0" cellspacing="0" border="0" class="email-card" style="width:{{ token_width_page }}px;max-width:{{ token_width_page }}px;background:{{ token_bg_card }};border-radius:{{ token_radius_container }};">
             <tr>
               <td class="email-content-above" style="padding:{{ token_space_900 }} {{ token_space_1200 }} 0 {{ token_space_1200 }};">
                 <table role="presentation" width="{{ token_width_content }}" cellpadding="0" cellspacing="0" border="0" class="email-inner-content" style="width:{{ token_width_content }}px;max-width:{{ token_width_content }}px;margin:0 auto;border-collapse:collapse;">
@@ -1473,6 +1698,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
 ''' + PLACEHOLDER_ICON_LEFT_TEXT_RIGHT_MODULE + '''
 ''' + PLACEHOLDER_TEXT_LEFT_IMAGE_RIGHT_MODULE + '''
 ''' + PLACEHOLDER_ALTERNATING_TEXT_IMAGE_MODULE + '''
+''' + PLACEHOLDER_HOTEL_RECO_GRID_4 + '''
 ''' + PLACEHOLDER_APP_DOWNLOAD_MODULE + '''
                   </tbody>
                 </table>
@@ -1547,6 +1773,7 @@ def generate_template(
     design_tokens_brand: str = "vio",
     links_config: dict[str, str] | None = None,
     include_locales: list[str] | None = None,
+    include_hotel_reco: bool = False,
 ) -> str:
     """Generate the Liquid email template from a translations CSV. Returns the template string.
     include_locales: locales to include in output (when clauses). If None, inferred from CSV headers."""
@@ -1566,12 +1793,19 @@ def generate_template(
     text_left_image_right_module = build_usp_feature_module(translations, structure)
     alternating_text_image_module = build_usp_ui_module(translations, structure)
     app_download = build_app_download_module(translations, structure)
+    hotel_reco = ""
+    if include_hotel_reco:
+        mod_content = _load_hotel_reco_module()
+        if mod_content:
+            hotel_reco = f'<tr><td style="padding:0;vertical-align:top;">{mod_content}</td></tr>'
     config = build_config_block(
         show_header_logo,
         show_footer,
         show_terms,
         app_download_colour_preset,
     )
+    if include_hotel_reco:
+        config += "\n" + _build_hotel_reco_assigns_block(structure)
     design_tokens = _load_design_tokens(brand=design_tokens_brand)
     app_settings = build_app_download_settings(structure)
     links_block = build_links_block(links_config)
@@ -1587,6 +1821,7 @@ def generate_template(
         .replace(PLACEHOLDER_ICON_LEFT_TEXT_RIGHT_MODULE, icon_left_text_right_module)
         .replace(PLACEHOLDER_TEXT_LEFT_IMAGE_RIGHT_MODULE, text_left_image_right_module)
         .replace(PLACEHOLDER_ALTERNATING_TEXT_IMAGE_MODULE, alternating_text_image_module)
+        .replace(PLACEHOLDER_HOTEL_RECO_GRID_4, hotel_reco)
         .replace(PLACEHOLDER_APP_DOWNLOAD_MODULE, app_download)
         .replace(PLACEHOLDER_TERMS_DEFAULTS, build_terms_defaults_block())
         .replace(PLACEHOLDER_CONFIG, config)
@@ -1626,6 +1861,12 @@ def main():
         default=None,
         help="Comma-separated locale codes, e.g. en,es,fr. Overrides --locale-preset.",
     )
+    parser.add_argument(
+        "--subject-preheader",
+        dest="subject_preheader",
+        action="store_true",
+        help="Also write customerio_subject_preheader.liquid with Liquid snippets for Customer.io subject and preheader fields.",
+    )
     args = parser.parse_args()
     csv_path = Path(args.csv_path)
     if not csv_path.exists():
@@ -1645,6 +1886,22 @@ def main():
         include_locales=include_locales,
     )
     sys.stdout.write(result)
+    if args.subject_preheader:
+        translations, _ = load_translations(csv_path, include_locales=include_locales)
+        snippets = build_customerio_subject_preheader_snippets(
+            translations, include_locales=include_locales
+        )
+        if snippets:
+            out_path = csv_path.parent / "customerio_subject_preheader.liquid"
+            parts = []
+            if "subject_line" in snippets:
+                parts.append("{%- comment -%} PASTE INTO CUSTOMER.IO SUBJECT LINE FIELD {%- endcomment -%}\n")
+                parts.append(snippets["subject_line"])
+            if "preheader" in snippets:
+                parts.append("\n\n{%- comment -%} PASTE INTO CUSTOMER.IO PREHEADER FIELD {%- endcomment -%}\n")
+                parts.append(snippets["preheader"])
+            out_path.write_text("\n".join(parts), encoding="utf-8")
+            sys.stderr.write(f"Wrote {out_path}\n")
 
 
 def _parse_design_tokens(brand: str = "vio") -> dict[str, str]:
@@ -1680,6 +1937,20 @@ def liquid_to_preview_html(
     Does regex substitution of tokens and content; strips Liquid control flow.
     """
     import re
+    html = liquid_content
+    # Replace hotel_reco_grid_4 Liquid block with static preview (module uses API data at send time)
+    if "<!-- MODULE: hotel_reco_grid_4 START -->" in html:
+        start_marker = "<!-- MODULE: hotel_reco_grid_4 START -->"
+        end_marker = "<!-- MODULE: hotel_reco_grid_4 END -->"
+        idx = html.find(start_marker)
+        if idx != -1:
+            row_start = html.rfind("<tr>", max(0, idx - 2000), idx)
+            end_idx = html.find(end_marker, idx)
+            if end_idx != -1 and row_start != -1:
+                row_end = html.find("</td></tr>", end_idx)
+                if row_end != -1:
+                    row_end += len("</td></tr>")
+                    html = html[:row_start] + _build_hotel_reco_preview_html() + html[row_end:]
     tokens = _parse_design_tokens(brand=design_tokens_brand)
     en = "en"
     # Content replacements from translations (en locale)
@@ -1735,7 +2006,7 @@ def liquid_to_preview_html(
     privacy_a = f'<a href="{link_privacy}" target="_blank" style="color:{muted};text-decoration:underline !important">{privacy_lbl}</a>'
     replacements["{{ terms_desc_html }}"] = terms_desc.replace("{terms}", terms_a).replace("{privacyPolicy}", privacy_a)
 
-    html = liquid_content
+    # html already set above (may have been modified for hotel reco)
     for k, v in replacements.items():
         html = html.replace(k, v)
 

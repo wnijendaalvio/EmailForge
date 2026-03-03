@@ -3,6 +3,7 @@ Streamlit app for the Email Template Generator.
 Upload a translations CSV, configure options, and download the generated Liquid template.
 Protected by password authentication (streamlit-authenticator).
 """
+import base64
 import json
 import tempfile
 import yaml
@@ -20,6 +21,7 @@ from csv_translations_to_email import (
     liquid_to_preview_html,
     load_translations,
     load_standard_links,
+    build_customerio_subject_preheader_snippets,
     DEFAULT_LINKS,
     LOCALE_COLUMNS,
     resolve_include_locales,
@@ -31,6 +33,43 @@ st.set_page_config(
     page_icon="✉️",
     layout="centered",
 )
+
+
+def _render_copy_button(text: str, key_suffix: str) -> None:
+    """Render a button that copies text to clipboard via embedded HTML/JS."""
+    b64 = base64.b64encode(text.encode("utf-8")).decode("ascii")
+    html = f"""
+    <div id="copy-container-{key_suffix}">
+        <button onclick="
+            (function(btn) {{
+                const binary = atob('{b64}');
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                const text = new TextDecoder('utf-8').decode(bytes);
+                navigator.clipboard.writeText(text).then(function() {{
+                    btn.textContent = 'Copied!';
+                    btn.style.background = '#2ea043';
+                    btn.style.color = 'white';
+                    setTimeout(function() {{
+                    btn.textContent = 'Copy to clipboard';
+                    btn.style.background = '';
+                    btn.style.color = '';
+                    }}, 1500);
+                }});
+            }})(this);
+        " style="
+            padding: 6px 14px;
+            cursor: pointer;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: #f0f2f6;
+            font-size: 14px;
+            font-family: inherit;
+        ">Copy to clipboard</button>
+    </div>
+    """
+    components.html(html, height=40)
+
 
 # --- Authentication ---
 def _to_dict(obj):
@@ -154,6 +193,12 @@ with tab_generate:
         type=["csv", "tsv"],
         help="Drag and drop or click to browse. Supports legacy (Key, en, ar...) and module format (Key, Module, module_index, en...).",
     )
+    include_hotel_reco_gen = st.checkbox(
+        "Include hotel recommendations module",
+        value=False,
+        key="gen_include_hotel_reco",
+        help="Adds hotel_reco_grid_4 (4 cards). Uses API data: rec_hotels + reco_city at send time.",
+    )
 
     if uploaded_file is not None:
         # Save uploaded file to a temp path (generate_template expects a file path)
@@ -175,20 +220,41 @@ with tab_generate:
                     app_download_colour_preset=app_download_colour_preset,
                     design_tokens_brand=design_tokens_brand,
                     include_locales=include_locales,
+                    include_hotel_reco=include_hotel_reco_gen,
                 )
 
             st.success("Template generated successfully!")
 
-            # Download button
-            st.download_button(
-                label="📥 Download full_email_template.liquid",
-                data=result,
-                file_name="full_email_template.liquid",
-                mime="text/plain",
-            )
+            # Load translations/structure (for snippets and preview)
+            translations, structure = load_translations(Path(tmp_path), include_locales=include_locales)
 
-            # Load translations/structure for preview
-            translations, structure = load_translations(Path(tmp_path))
+            # Customer.io subject & preheader snippets
+            snippets = build_customerio_subject_preheader_snippets(
+                translations, include_locales=include_locales
+            )
+            if snippets:
+                with st.expander("📋 Customer.io subject line & preheader", expanded=True):
+                    st.caption("Paste these Liquid snippets into Customer.io's subject line and preheader fields. They use the same locale logic as the email body.")
+                    if "subject_line" in snippets:
+                        st.markdown("**Subject line** — paste into Customer.io subject field:")
+                        st.code(snippets["subject_line"], language="liquid")
+                        _render_copy_button(snippets["subject_line"], "subject_line")
+                    if "preheader" in snippets:
+                        st.markdown("**Preheader** — paste into Customer.io preheader field:")
+                        st.code(snippets["preheader"], language="liquid")
+                        _render_copy_button(snippets["preheader"], "preheader")
+
+            # Download + Copy
+            col_dl, col_copy, _ = st.columns([1, 1, 2])
+            with col_dl:
+                st.download_button(
+                    label="📥 Download full_email_template.liquid",
+                    data=result,
+                    file_name="full_email_template.liquid",
+                    mime="text/plain",
+                )
+            with col_copy:
+                _render_copy_button(result, "liquid_full")
 
             # Preview options: HTML preview + code
             col_preview, col_code = st.tabs(["📧 HTML preview", "📝 Liquid source"])
@@ -232,15 +298,20 @@ with tab_generate:
                         app_download_colour_preset=app_download_colour_preset,
                         design_tokens_brand=design_tokens_brand,
                         include_locales=include_locales,
+                        include_hotel_reco=include_hotel_reco_gen,
                     )
                 st.success("Template generated!")
-                st.download_button(
-                    label="📥 Download full_email_template.liquid",
-                    data=result,
-                    file_name="full_email_template.liquid",
-                    mime="text/plain",
-                    key="download_sample",
-                )
+                col_dl_s, col_copy_s, _ = st.columns([1, 1, 2])
+                with col_dl_s:
+                    st.download_button(
+                        label="📥 Download full_email_template.liquid",
+                        data=result,
+                        file_name="full_email_template.liquid",
+                        mime="text/plain",
+                        key="download_sample",
+                    )
+                with col_copy_s:
+                    _render_copy_button(result, "liquid_sample")
             except Exception as e:
                 st.error(f"Error: {e}")
 
@@ -263,6 +334,11 @@ with tab_template:
         include_text_left = st.checkbox("Text left, image right", value=False, key="usp_feature", help="All three rows: text left, image right")
         include_alternating = st.checkbox("Alternating text and image", value=True, key="usp_ui", help="Row 1: text left. Row 2: image left. Row 3: text left.")
     include_disclaimer = st.checkbox("Include disclaimer/terms module", value=False)
+    include_hotel_reco = st.checkbox(
+        "Include hotel recommendations module",
+        value=False,
+        help="Adds hotel_reco_grid_4 (4 cards). Uses API data: rec_hotels + reco_city at send time.",
+    )
     modules = [hero_type]
     if include_app_download:
         modules.append("app_download_module")
@@ -281,12 +357,25 @@ with tab_template:
         modules,
         app_download_colour_preset=app_download_colour_preset,
         design_tokens_brand=design_tokens_brand,
+        include_hotel_reco=include_hotel_reco,
     )
     components.html(preview_html, height=500, scrolling=True)
 
     st.subheader("3. Download your input template")
-    csv_content, links_dict = generate_standard_input_template(modules, include_locales=include_locales)
+    csv_content, links_dict = generate_standard_input_template(
+        modules, include_locales=include_locales, include_hotel_reco=include_hotel_reco
+    )
     st.caption(f"Open in Excel, Google Sheets (File → Import → Upload), or any spreadsheet tool. Fill in the locale columns ({', '.join(include_locales)}) with your copy, add image URLs and links where needed.")
+    if include_hotel_reco:
+        with st.expander("Hotel recommendations module — CSV variables", expanded=False):
+            st.markdown("""
+**hotel_reco_headline** — Headline text. Use `{city}` as placeholder for the city (e.g. *"Recently viewed hotels in {city}"*).
+
+**hotel_reco_type** — Recommender type (for API). Use one of:
+- `last_browsed` — Last browsed hotels
+- `similar_to_last_viewed` — Similar to last viewed hotels  
+- `top_in_destination` — Top hotels in last browsed destination
+            """)
     st.download_button(
         label="📥 Download input template (CSV)",
         data=csv_content,

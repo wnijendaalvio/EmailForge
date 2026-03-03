@@ -3,6 +3,7 @@
   Include this at the top of any email template to use standardized tokens.
   Usage: style="color:{{ token_brand_c600 }}; padding:{{ token_space_600 }} 0;"
   Or use utility classes: class="text-brand bg-neutral-c000 py-600 px-800"
+  Aligned with design_tokens.css (--newColors-*, --layout-*). Do not edit directly.
 {%- endcomment -%}
 
 {%- comment -%} COLOURS {%- endcomment -%}
@@ -122,14 +123,18 @@
 {%- comment -%} LAYOUT {%- endcomment -%}
 {%- assign token_width_page = "728" -%}
 {%- assign token_width_content = "600" -%}
+{%- assign token_radius_container = "8px" -%}
 {%- assign token_radius_card = "24px" -%}
 {%- assign token_radius_button = "10px" -%}
 {%- assign token_radius_module = "16px" -%}
 {%- assign token_font_stack = "Campton, Circular, Helvetica, Arial, sans-serif" -%}
-{%- comment -%} Typography (fontFamily/default, fontSize/md, lineHeight/lg, letterSpacing/md) {%- endcomment -%}
+{%- comment -%} Typography (fontFamily/default, fontSize/md, fontSize/xl, lineHeight/lg, lineHeight/2xl, letterSpacing/md, letterSpacing/xl) {%- endcomment -%}
 {%- assign token_font_size_md = "16px" -%}
+{%- assign token_font_size_xl = "20px" -%}
 {%- assign token_line_height_lg = "24px" -%}
+{%- assign token_line_height_2xl = "32px" -%}
 {%- assign token_letter_spacing_md = "0.01em" -%}
+{%- assign token_letter_spacing_xl = "0" -%}
 
 {%- comment -%} Header logo {%- endcomment -%}
 {%- assign token_header_logo_url = "https://userimg-assets.customeriomail.com/images/client-env-124967/1769680583679_Hero_Logo_Vector_4x_01KG4JXF25SSBE0QK36X2MEAXM.png" -%}

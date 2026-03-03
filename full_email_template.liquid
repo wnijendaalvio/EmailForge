@@ -6,7 +6,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
 {%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
 {%- assign lang2 = lang | slice: 0, 2 -%}
 {%- assign locale_key = lang2 -%}
-{%- assign country = customer.country_code | default: customer.country | default: customer.cio_iso_country | default: "" | upcase | slice: 0, 2 -%}
+{%- assign country = customer.country_code | default: customer.country | default: customer["cio_iso_country"] | default: "" | upcase | slice: 0, 2 -%}
 {%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
 {%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}{%- assign locale_key = "zh-hk" -%}
 {%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}{%- assign locale_key = "zh-tw" -%}

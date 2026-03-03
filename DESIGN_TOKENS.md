@@ -2,6 +2,28 @@
 
 Design tokens standardize colors, spacing, and layout across all email templates. Edit `design_tokens.liquid` to change the design system; templates use these tokens.
 
+## CSS tokens (`design_tokens.css`)
+
+For web/UI contexts, `design_tokens.css` provides CSS custom properties (`:root` / `[data-theme="vio"]`):
+
+- **Layout**: `--layout-radius-lg` (8px), `--layout-radius-xl` (12px), `--layout-spacing-s300` (8px), etc.
+- **Colors**: `--newColors-neutral-c050`, `--newColors-brand-c600`, etc.
+- **Shadows**: `--shadow-action`, `--shadow-raised`, etc.
+
+Values are aligned with `design_tokens.liquid`. Include the CSS file in web apps or previews.
+
+## JSON tokens (`design_tokens.json`)
+
+For JS/TS applications (React, Vue, etc.), `design_tokens.json` provides a structured API that references CSS variables via `var(--...)`. Use with `design_tokens.css` loaded so variables resolve. Structure:
+
+- **layout**: `borderWidth`, `maxPageWidth`, `radius`, `spacing`
+- **opacity**: `o50`, `o60`
+- **shadow**: `action`, `fixed`, `raised`, `hover`, etc.
+- **newComponents**: `alert`, `badge`, `button`, `tabs`, `input`, `pill`, `tag`, etc.
+- **newCustom**: `homepage`, `srp`, `hotelCard`, `datePicker`, etc.
+- **newSemantic**: `background`, `content`, `border` by role
+- **newPrimitive**: `neutral`, `brand`, `interactive`, `success`, `warning`, `danger`, `accent`
+
 ## Usage
 
 `design_tokens.liquid` is injected into the generated template. Use tokens in inline styles:
@@ -62,6 +84,7 @@ Full scale per primitive: `token_{scale}_c{step}` (steps 050, 100, 200, 300, 400
 |-------|-------|
 | `token_width_page` | 728 |
 | `token_width_content` | 600 |
+| `token_radius_container` | 8px |
 | `token_radius_card` | 24px |
 | `token_radius_button` | 10px |
 | `token_radius_module` | 16px |

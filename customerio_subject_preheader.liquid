@@ -1,0 +1,152 @@
+{%- comment -%} PASTE INTO CUSTOMER.IO SUBJECT LINE FIELD {%- endcomment -%}
+
+{%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
+{%- assign lang2 = lang | slice: 0, 2 -%}
+{%- assign locale_key = lang2 -%}
+{%- assign country = customer.country_code | default: customer.country | default: customer["cio_iso_country"] | default: "" | upcase | slice: 0, 2 -%}
+{%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
+{%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}{%- assign locale_key = "zh-hk" -%}
+{%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}{%- assign locale_key = "zh-tw" -%}
+{%- elsif lang contains "zh-cn" or lang contains "zh-sg" or lang contains "zh-hans" -%}{%- assign locale_key = "zh-cn" -%}
+{%- elsif lang contains "fr-ca" -%}{%- assign locale_key = "fr-ca" -%}
+{%- elsif lang contains "pt-br" -%}{%- assign locale_key = "pt-br" -%}
+{%- elsif lang contains "pt-pt" -%}{%- assign locale_key = "pt" -%}
+{%- elsif lang contains "en-gb" -%}{%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "es" and lang contains "-" and lang != "es-es" -%}{%- assign locale_key = "es-419" -%}
+{%- elsif lang2 == "tl" or lang contains "fil" -%}{%- assign locale_key = "fil" -%}
+{%- elsif lang2 == "nb" or lang2 == "nn" -%}{%- assign locale_key = "no" -%}
+{%- endif -%}
+{%- assign is_portuguese = false -%}
+{%- if lang2 == "pt" or lang contains "portuguese" -%}{%- assign is_portuguese = true -%}{%- endif -%}
+{%- if is_portuguese -%}
+  {%- if country == "BR" -%}{%- assign locale_key = "pt-br" -%}
+  {%- elsif country == "PT" -%}{%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-pt" -%}{%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-br" -%}{%- assign locale_key = "pt-br" -%}
+  {%- else -%}{%- assign locale_key = "pt-br" -%}
+  {%- endif -%}
+{%- elsif lang2 == "es" and locale_key == "es" -%}
+  {%- assign latam_countries = "MX,AR,CO,CL,PE,VE,EC,GT,HN,SV,NI,PA,PR,DO,CR,BO,PY,UY,CU" | split: "," -%}
+  {%- assign is_latam = false -%}
+  {%- for cc in latam_countries -%}{%- if country == cc -%}{%- assign is_latam = true -%}{%- break -%}{%- endif -%}{%- endfor -%}
+  {%- if is_latam -%}{%- assign locale_key = "es-419" -%}{%- endif -%}
+{%- elsif lang2 == "en" and locale_key == "en" and country == "GB" -%}{%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "fr" and locale_key == "fr" and country == "CA" -%}{%- assign locale_key = "fr-ca" -%}
+{%- endif -%}
+
+{%- case locale_key -%}
+  {%- when "en" -%}See the full picture
+  {%- when "ar" -%}See the full picture
+  {%- when "zh-cn" -%}See the full picture
+  {%- when "zh-tw" -%}See the full picture
+  {%- when "zh-hk" -%}See the full picture
+  {%- when "hr" -%}See the full picture
+  {%- when "cs" -%}See the full picture
+  {%- when "da" -%}See the full picture
+  {%- when "nl" -%}See the full picture
+  {%- when "en-gb" -%}See the full picture
+  {%- when "fil" -%}See the full picture
+  {%- when "fi" -%}See the full picture
+  {%- when "fr" -%}See the full picture
+  {%- when "fr-ca" -%}See the full picture
+  {%- when "de" -%}See the full picture
+  {%- when "el" -%}See the full picture
+  {%- when "he" -%}See the full picture
+  {%- when "hu" -%}See the full picture
+  {%- when "id" -%}See the full picture
+  {%- when "it" -%}See the full picture
+  {%- when "ja" -%}See the full picture
+  {%- when "ko" -%}See the full picture
+  {%- when "ms" -%}See the full picture
+  {%- when "no" -%}See the full picture
+  {%- when "pl" -%}See the full picture
+  {%- when "pt" -%}See the full picture
+  {%- when "pt-br" -%}See the full picture
+  {%- when "ro" -%}See the full picture
+  {%- when "ru" -%}See the full picture
+  {%- when "es" -%}See the full picture
+  {%- when "es-419" -%}See the full picture
+  {%- when "sv" -%}See the full picture
+  {%- when "th" -%}See the full picture
+  {%- when "tr" -%}See the full picture
+  {%- when "uk" -%}See the full picture
+  {%- when "vi" -%}See the full picture
+  {%- else -%}See the full picture
+{%- endcase -%}
+
+
+{%- comment -%} PASTE INTO CUSTOMER.IO PREHEADER FIELD {%- endcomment -%}
+
+{%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
+{%- assign lang2 = lang | slice: 0, 2 -%}
+{%- assign locale_key = lang2 -%}
+{%- assign country = customer.country_code | default: customer.country | default: customer["cio_iso_country"] | default: "" | upcase | slice: 0, 2 -%}
+{%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
+{%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}{%- assign locale_key = "zh-hk" -%}
+{%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}{%- assign locale_key = "zh-tw" -%}
+{%- elsif lang contains "zh-cn" or lang contains "zh-sg" or lang contains "zh-hans" -%}{%- assign locale_key = "zh-cn" -%}
+{%- elsif lang contains "fr-ca" -%}{%- assign locale_key = "fr-ca" -%}
+{%- elsif lang contains "pt-br" -%}{%- assign locale_key = "pt-br" -%}
+{%- elsif lang contains "pt-pt" -%}{%- assign locale_key = "pt" -%}
+{%- elsif lang contains "en-gb" -%}{%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "es" and lang contains "-" and lang != "es-es" -%}{%- assign locale_key = "es-419" -%}
+{%- elsif lang2 == "tl" or lang contains "fil" -%}{%- assign locale_key = "fil" -%}
+{%- elsif lang2 == "nb" or lang2 == "nn" -%}{%- assign locale_key = "no" -%}
+{%- endif -%}
+{%- assign is_portuguese = false -%}
+{%- if lang2 == "pt" or lang contains "portuguese" -%}{%- assign is_portuguese = true -%}{%- endif -%}
+{%- if is_portuguese -%}
+  {%- if country == "BR" -%}{%- assign locale_key = "pt-br" -%}
+  {%- elsif country == "PT" -%}{%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-pt" -%}{%- assign locale_key = "pt" -%}
+  {%- elsif lang contains "pt-br" -%}{%- assign locale_key = "pt-br" -%}
+  {%- else -%}{%- assign locale_key = "pt-br" -%}
+  {%- endif -%}
+{%- elsif lang2 == "es" and locale_key == "es" -%}
+  {%- assign latam_countries = "MX,AR,CO,CL,PE,VE,EC,GT,HN,SV,NI,PA,PR,DO,CR,BO,PY,UY,CU" | split: "," -%}
+  {%- assign is_latam = false -%}
+  {%- for cc in latam_countries -%}{%- if country == cc -%}{%- assign is_latam = true -%}{%- break -%}{%- endif -%}{%- endfor -%}
+  {%- if is_latam -%}{%- assign locale_key = "es-419" -%}{%- endif -%}
+{%- elsif lang2 == "en" and locale_key == "en" and country == "GB" -%}{%- assign locale_key = "en-gb" -%}
+{%- elsif lang2 == "fr" and locale_key == "fr" and country == "CA" -%}{%- assign locale_key = "fr-ca" -%}
+{%- endif -%}
+
+{%- case locale_key -%}
+  {%- when "en" -%}Up front with no hidden fees.
+  {%- when "ar" -%}Up front with no hidden fees.
+  {%- when "zh-cn" -%}Up front with no hidden fees.
+  {%- when "zh-tw" -%}Up front with no hidden fees.
+  {%- when "zh-hk" -%}Up front with no hidden fees.
+  {%- when "hr" -%}Up front with no hidden fees.
+  {%- when "cs" -%}Up front with no hidden fees.
+  {%- when "da" -%}Up front with no hidden fees.
+  {%- when "nl" -%}Up front with no hidden fees.
+  {%- when "en-gb" -%}Up front with no hidden fees.
+  {%- when "fil" -%}Up front with no hidden fees.
+  {%- when "fi" -%}Up front with no hidden fees.
+  {%- when "fr" -%}Up front with no hidden fees.
+  {%- when "fr-ca" -%}Up front with no hidden fees.
+  {%- when "de" -%}Up front with no hidden fees.
+  {%- when "el" -%}Up front with no hidden fees.
+  {%- when "he" -%}Up front with no hidden fees.
+  {%- when "hu" -%}Up front with no hidden fees.
+  {%- when "id" -%}Up front with no hidden fees.
+  {%- when "it" -%}Up front with no hidden fees.
+  {%- when "ja" -%}Up front with no hidden fees.
+  {%- when "ko" -%}Up front with no hidden fees.
+  {%- when "ms" -%}Up front with no hidden fees.
+  {%- when "no" -%}Up front with no hidden fees.
+  {%- when "pl" -%}Up front with no hidden fees.
+  {%- when "pt" -%}Up front with no hidden fees.
+  {%- when "pt-br" -%}Up front with no hidden fees.
+  {%- when "ro" -%}Up front with no hidden fees.
+  {%- when "ru" -%}Up front with no hidden fees.
+  {%- when "es" -%}Up front with no hidden fees.
+  {%- when "es-419" -%}Up front with no hidden fees.
+  {%- when "sv" -%}Up front with no hidden fees.
+  {%- when "th" -%}Up front with no hidden fees.
+  {%- when "tr" -%}Up front with no hidden fees.
+  {%- when "uk" -%}Up front with no hidden fees.
+  {%- when "vi" -%}Up front with no hidden fees.
+  {%- else -%}Up front with no hidden fees.
+{%- endcase -%}

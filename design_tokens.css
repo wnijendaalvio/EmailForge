@@ -1,0 +1,145 @@
+/**
+ * Vio Design Tokens - CSS custom properties
+ * Do not edit directly. Source of truth for web/UI contexts.
+ * Email templates use design_tokens.liquid (Liquid variables) - values aligned with this file.
+ */
+
+:root,
+[data-theme="vio"] {
+  /* Layout */
+  --layout-borderWidth-bw100: 1px;
+  --layout-borderWidth-bw150: 1.5px;
+  --layout-borderWidth-bw200: 2px;
+  --layout-maxPageWidth: 1152px;
+  --layout-radius-none: 0;
+  --layout-radius-xs: 2px;
+  --layout-radius-sm: 4px;
+  --layout-radius-md: 6px;
+  --layout-radius-lg: 8px;
+  --layout-radius-xl: 12px;
+  --layout-radius-xxl: 16px;
+  --layout-radius-rounded: 1000px;
+  --layout-spacing-s000: 0;
+  --layout-spacing-s100: 2px;
+  --layout-spacing-s200: 4px;
+  --layout-spacing-s250: 6px;
+  --layout-spacing-s300: 8px;
+  --layout-spacing-s400: 12px;
+  --layout-spacing-s500: 16px;
+  --layout-spacing-s600: 24px;
+  --layout-spacing-s700: 32px;
+  --layout-spacing-s800: 40px;
+  --layout-spacing-s900: 48px;
+  --layout-spacing-s950: 64px;
+  /* Opacity */
+  --opacity-o50: 0.5;
+  --opacity-o60: 0.6;
+  /* Shadows */
+  --shadow-action: 0px 1px 4px 0px rgba(39,36,41,0.12), 0px 0px 1px 0px rgba(39,36,41,0.08);
+  --shadow-fixed: 0px 2px 8px 0px rgba(39,36,41,0.1), 0px 0px 2px 0px rgba(39,36,41,0.1);
+  --shadow-raised: 0px 3px 12px 0px rgba(39,36,41,0.12), 0px 0px 3px 0px rgba(39,36,41,0.1);
+  --shadow-hover: 0px 4px 16px 0px rgba(39,36,41,0.12), 0px 3px 4px 0px rgba(39,36,41,0.12);
+  --shadow-floating: 0px 6px 24px 0px rgba(39,36,41,0.12), 0px 4px 8px 0px rgba(39,36,41,0.14);
+  --shadow-modal: 0px 8px 32px 0px rgba(39,36,41,0.16), 0px 6px 8px 0px rgba(39,36,41,0.16);
+  --shadow-fixedReverse: 0px -2px 8px 0px rgba(39,36,41,0.1), 0px 0px 2px 0px rgba(39,36,41,0.1);
+  --shadow-bottomSheets: 0px -6px 24px 0px rgba(39,36,41,0.12), 0px -4px 8px 0px rgba(39,36,41,0.12);
+  --shadow-anchor: 0px 3px 12px 0px rgba(27,47,110,0.16), 0px 0px 3px 0px rgba(27,47,110,0.12);
+  --shadow-anchorHover: 0px 4px 16px 0px rgba(27,47,110,0.2), 0px 3px 4px 0px rgba(27,47,110,0.16);
+  --shadow-inputInner: 0px 2px 4px 0px rgba(23,0,51,0.05) inset;
+  /* Neutral */
+  --newColors-neutral-c000: #ffffff;
+  --newColors-neutral-c050: #fcf7f5;
+  --newColors-neutral-c100: #eee9e7;
+  --newColors-neutral-c200: #ddd7d5;
+  --newColors-neutral-c300: #c5bdba;
+  --newColors-neutral-c400: #9b9392;
+  --newColors-neutral-c500: #807775;
+  --newColors-neutral-c600: #615a56;
+  --newColors-neutral-c700: #524947;
+  --newColors-neutral-c800: #3b3430;
+  --newColors-neutral-c900: #2c2421;
+  --newColors-neutral-c950: #180c06;
+  --newColors-neutral-c999: #000000;
+  /* Brand */
+  --newColors-brand-c050: #f8f5ff;
+  --newColors-brand-c100: #f2e5ff;
+  --newColors-brand-c200: #e1ceff;
+  --newColors-brand-c300: #c8b0ff;
+  --newColors-brand-c400: #b193f6;
+  --newColors-brand-c500: #9865fc;
+  --newColors-brand-c600: #7130c9;
+  --newColors-brand-c700: #5700a9;
+  --newColors-brand-c800: #3d0083;
+  --newColors-brand-c900: #25005b;
+  --newColors-brand-c950: #1a003a;
+  /* Interactive */
+  --newColors-interactive-c050: #f9f5ff;
+  --newColors-interactive-c100: #f2e5ff;
+  --newColors-interactive-c200: #e1ceff;
+  --newColors-interactive-c300: #c8b0ff;
+  --newColors-interactive-c400: #b193f6;
+  --newColors-interactive-c500: #9865fc;
+  --newColors-interactive-c600: #7130c9;
+  --newColors-interactive-c700: #5700a9;
+  --newColors-interactive-c800: #3d0083;
+  --newColors-interactive-c900: #25005b;
+  --newColors-interactive-c950: #1a003a;
+  /* Success */
+  --newColors-success-c050: #ebffec;
+  --newColors-success-c100: #d6fada;
+  --newColors-success-c200: #b5f1b1;
+  --newColors-success-c300: #9ce2a4;
+  --newColors-success-c400: #66d976;
+  --newColors-success-c500: #43c05c;
+  --newColors-success-c600: #2ea54a;
+  --newColors-success-c700: #0e812a;
+  --newColors-success-c800: #145e27;
+  --newColors-success-c900: #0d441c;
+  --newColors-success-c950: #082c12;
+  /* Warning */
+  --newColors-warning-c050: #fff9f3;
+  --newColors-warning-c100: #fff0e3;
+  --newColors-warning-c200: #ffdab8;
+  --newColors-warning-c300: #ffb670;
+  --newColors-warning-c400: #ff912e;
+  --newColors-warning-c500: #ff7105;
+  --newColors-warning-c600: #e25c00;
+  --newColors-warning-c700: #c24a00;
+  --newColors-warning-c800: #9a3b00;
+  --newColors-warning-c900: #6f2900;
+  --newColors-warning-c950: #4a1c00;
+  /* Danger */
+  --newColors-danger-c050: #fff2f4;
+  --newColors-danger-c100: #ffe7eb;
+  --newColors-danger-c200: #ffc5cc;
+  --newColors-danger-c300: #ff99a4;
+  --newColors-danger-c400: #ff5b70;
+  --newColors-danger-c500: #ff2444;
+  --newColors-danger-c600: #d91b38;
+  --newColors-danger-c700: #b2142e;
+  --newColors-danger-c800: #8b0f23;
+  --newColors-danger-c900: #5e0a18;
+  --newColors-danger-c950: #3d0710;
+  /* Accent */
+  --newColors-accent-c050: #fffbf0;
+  --newColors-accent-c100: #fff6da;
+  --newColors-accent-c200: #ffecb1;
+  --newColors-accent-c300: #ffe183;
+  --newColors-accent-c400: #ffd44f;
+  --newColors-accent-c500: #ffc103;
+  --newColors-accent-c600: #faab00;
+  --newColors-accent-c700: #cc8800;
+  --newColors-accent-c800: #a77200;
+  --newColors-accent-c900: #6d4b00;
+  --newColors-accent-c950: #342700;
+  /* Semantic mappings (subset used by email templates) */
+  --newColors-background-neutral-primary: var(--newColors-neutral-c000);
+  --newColors-background-neutral-secondary: var(--newColors-neutral-c050);
+  --newColors-background-brand-primary: var(--newColors-brand-c600);
+  --newColors-background-brand-tertiary: var(--newColors-brand-c050);
+  --newColors-content-neutral-primary: var(--newColors-neutral-c950);
+  --newColors-content-neutral-secondary: var(--newColors-neutral-c600);
+  --newColors-content-brand-primary: var(--newColors-brand-c600);
+  --newColors-content-neutral-inverse: var(--newColors-neutral-c000);
+  --newColors-border-neutral-secondary: var(--newColors-neutral-c200);
+}

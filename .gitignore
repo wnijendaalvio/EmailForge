@@ -23,5 +23,5 @@ Thumbs.db
 # Streamlit
 .streamlit/secrets.toml
 
-# Auth (contains hashed passwords)
+# Auth (contains hashed passwords - keep private; use Secrets on Cloud)
 config.yaml

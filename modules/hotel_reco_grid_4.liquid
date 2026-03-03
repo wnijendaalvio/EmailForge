@@ -1,0 +1,148 @@
+{%- comment -%}
+  MODULE: hotel_reco_grid_4
+  Data: rec_hotels (array 0-4), reco_city (string)
+  Config (from CSV): hotel_reco_headline, hotel_reco_type
+  hotel_reco_headline: use {city} as placeholder for reco_city. E.g. "Recently viewed hotels in {city}"
+  hotel_reco_type: last_browsed | similar_to_last_viewed | top_in_destination
+  Renders header + 4 hotel cards in 2x2 grid. Desktop: 2 per row. Mobile: stacked.
+{%- endcomment -%}
+{%- assign CONTAINER_WIDTH = 728 -%}
+{%- assign CARD_GUTTER = 16 -%}
+{%- assign PLACEHOLDER_IMAGE_URL = "https://via.placeholder.com/340x200/E6E6E6/999999?text=Hotel+image" -%}
+
+{%- if rec_hotels != blank and rec_hotels.size > 0 -%}
+<style type="text/css">
+  @media only screen and (max-width: 600px) {
+    .hotel-reco-card-wrap { display: block !important; width: 100% !important; max-width: 100% !important; }
+    .hotel-reco-card-inner { width: 100% !important; max-width: 100% !important; }
+  }
+</style>
+<!-- MODULE: hotel_reco_grid_4 START -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#ffffff;">
+  <tr>
+    <td align="center" style="padding:24px 16px 16px 16px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:{{ CONTAINER_WIDTH }}px;border-collapse:collapse;">
+        <tr>
+          <td style="padding:0 0 20px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:24px;line-height:32px;font-weight:700;color:#000000;">
+            {%- assign _city = reco_city | default: "your city" -%}
+            {%- assign _h = hotel_reco_headline | default: "Recently viewed hotels in {city}" -%}
+            {%- assign _parts = _h | split: "{city}" -%}
+            {{ _parts | first }}<span style="color:#7130c9;">{{ _city }}</span>{% if _parts.size > 1 %}{{ _parts | last }}{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            {%- comment -%} Row 1: cards 0,1 {%- endcomment -%}
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+              <tr>
+                {%- for hotel in rec_hotels limit: 4 -%}
+                {%- assign idx = forloop.index0 -%}
+                {%- if idx == 2 -%}
+              </tr>
+              <tr>
+                {%- endif -%}
+                <td class="hotel-reco-card-wrap" valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px {{ CARD_GUTTER }}px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="hotel-reco-card-inner" style="width:100%;max-width:356px;border-collapse:collapse;border:1px solid #E6E6E6;border-radius:12px;overflow:hidden;background-color:#ffffff;">
+                    <tr>
+                      <td>
+                        {%- if hotel.image_url != blank -%}
+                          {%- assign img_url = hotel.image_url -%}
+                        {%- else -%}
+                          {%- assign img_url = PLACEHOLDER_IMAGE_URL -%}
+                        {%- endif -%}
+                        {%- assign link_url = hotel.deeplink | default: "#" -%}
+                        <a href="{{ link_url }}" target="_blank" style="display:block;text-decoration:none;border:0;outline:none;">
+                          <img src="{{ img_url }}" alt="{{ hotel.name | escape }}" width="340" height="200" style="display:block;width:100%;max-width:340px;height:200px;object-fit:cover;border:0;outline:none;" />
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                        {%- assign stars = hotel.stars | default: 5 -%}
+                        <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#615a56;">
+                          {%- for i in (1..5) -%}{%- if i <= stars -%}&#9733;{%- else -%}&#9734;{%- endif -%}{%- endfor -%}
+                        </p>
+                        {%- assign name_len = hotel.name | size -%}
+                        {%- if name_len > 36 -%}
+                          {%- assign name_display = hotel.name | slice: 0, 33 | append: "…" -%}
+                        {%- else -%}
+                          {%- assign name_display = hotel.name -%}
+                        {%- endif -%}
+                        <p style="margin:0 0 4px 0;font-size:18px;line-height:24px;font-weight:700;color:#000000;">
+                          <a href="{{ link_url }}" target="_blank" style="color:#000000;text-decoration:none;font-weight:700;">{{ name_display }}</a>
+                        </p>
+                        <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#807775;">{{ hotel.city | default: "" }}</p>
+                        {%- if hotel.review_score != blank -%}
+                        <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;">
+                          <span style="color:#1A9C4B;font-weight:600;">{{ hotel.review_score }}</span>
+                          <span style="color:#000000;font-weight:600;"> {{ hotel.review_label | default: "" }}</span>
+                          <span style="color:#000000;"> ({{ hotel.review_count | default: 0 }})</span>
+                        </p>
+                        {%- endif -%}
+                        {%- assign nights = hotel.nights | default: 1 -%}
+                        {%- if nights == 1 -%}
+                          {%- assign nights_label = "1 night" -%}
+                        {%- else -%}
+                          {%- assign nights_label = nights | append: " nights" -%}
+                        {%- endif -%}
+                        <p style="margin:0 0 8px 0;font-size:14px;line-height:20px;color:#000000;">{{ hotel.checkin | default: "" }} - {{ hotel.checkout | default: "" }} ({{ nights_label }})</p>
+                        {%- assign has_price = false -%}
+                        {%- if hotel.price != blank -%}
+                          {%- assign price_num = hotel.price | times: 1 -%}
+                          {%- if price_num > 0 -%}{%- assign has_price = true -%}{%- endif -%}
+                        {%- endif -%}
+                        {%- if has_price -%}
+                        <p style="margin:0 0 12px 0;font-size:24px;line-height:32px;font-weight:700;color:#000000;">
+                          {{ hotel.currency_symbol | default: "$" }}{{ hotel.price | round }} <span style="font-size:14px;font-weight:400;">/ night</span>
+                        </p>
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                          <tr>
+                            <td align="center" style="background-color:#7130c9;border-radius:8px;">
+                              <a href="{{ link_url }}" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">View price</a>
+                            </td>
+                          </tr>
+                        </table>
+                        {%- else -%}
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                          <tr>
+                            <td align="center" style="background-color:#7130c9;border-radius:8px;">
+                              <a href="{{ link_url }}" target="_blank" style="display:inline-block;padding:12px 24px;font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">View hotel</a>
+                            </td>
+                          </tr>
+                        </table>
+                        {%- endif -%}
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+                {%- if idx == 2 and rec_hotels.size == 3 -%}
+                <td class="hotel-reco-card-wrap" valign="top" width="50%" style="width:50%;max-width:356px;vertical-align:top;padding:0 8px {{ CARD_GUTTER }}px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:collapse;">
+                    <tr><td style="height:1px;line-height:1px;font-size:1px;border:0;">&nbsp;</td></tr>
+                  </table>
+                </td>
+                {%- endif -%}
+                {%- endfor -%}
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- MODULE: hotel_reco_grid_4 END -->
+{%- endif -%}
+
+{%- comment -%}
+EXAMPLE DATA (2 hotels). CSV variables: hotel_reco_headline, hotel_reco_type
+{
+  "reco_city": "Barcelona",
+  "hotel_reco_headline": "Recently viewed hotels in {city}",
+  "hotel_reco_type": "last_browsed",
+  "rec_hotels": [
+    { "id": "1", "name": "ibis Styles Barcelona", "city": "Barcelona", "image_url": "https://...", "stars": 4, "review_score": 9.2, "review_label": "Superb", "review_count": 2011, "checkin": "Dec 11", "checkout": "Nov 13", "nights": 2, "price": 127, "currency_symbol": "$", "deeplink": "https://app.vio.com/..." },
+    { "id": "2", "name": "Vince beach", "city": "Barcelona", "image_url": "https://...", "stars": 5, "review_score": 8.8, "review_label": "Fabulous", "review_count": 342, "checkin": "Nov 18", "checkout": "Nov 19", "nights": 1, "price": 95, "currency_symbol": "$", "deeplink": "https://app.vio.com/..." }
+  ]
+}
+{%- endcomment -%}
