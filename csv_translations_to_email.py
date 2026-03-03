@@ -427,7 +427,7 @@ def load_translations(
         values_by_locale: dict[str, str] = {}
         for loc in locales:
             header = locale_to_header.get(loc)
-            val = ((row.get(header) or "") if header else "").strip()
+            val = ((row.get(header, "") or "") if header else "").strip()
             values_by_locale[loc] = val
 
         if use_module_format and module_raw:
@@ -441,16 +441,16 @@ def load_translations(
 
         if internal_key in STRUCTURE_KEYS:
             for loc in locales:
-                v = values_by_locale.get(loc, "").strip()
+                v = (values_by_locale.get(loc, "") or "").strip()
                 if v:
                     structure[internal_key] = v
                     break
             if internal_key not in structure:
-                structure[internal_key] = values_by_locale.get("en", "").strip()
+                structure[internal_key] = (values_by_locale.get("en", "") or "").strip()
         else:
-            en_val = values_by_locale.get("en", "").strip()
+            en_val = (values_by_locale.get("en", "") or "").strip()
             for loc in locales:
-                if not values_by_locale.get(loc, "").strip():
+                if not (values_by_locale.get(loc, "") or "").strip():
                     values_by_locale[loc] = en_val
             translations[internal_key] = values_by_locale
     return translations, structure

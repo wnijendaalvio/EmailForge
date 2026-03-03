@@ -58,7 +58,7 @@ def load_translations(csv_path: Path) -> dict[str, dict[str, str]]:
             values_by_locale = {}
             for loc in LOCALE_COLUMNS:
                 header = locale_to_header.get(loc)
-                val = (row.get(header, "") if header else "").strip()
+                val = ((row.get(header, "") or "") if header else "").strip()
                 values_by_locale[loc] = val
             en_val = values_by_locale.get("en", "").strip()
             for loc in LOCALE_COLUMNS:
