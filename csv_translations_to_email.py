@@ -728,6 +728,15 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
 
 
 _PLACEHOLDER_HOTEL_IMAGE = "https://userimg-assets.customeriomail.com/images/client-env-124967/1746098547647_hotel_card_3_01JT5SAV0XEHV7NKYWXWKKM4RB.png"
+_STAR_ICON_URL = "https://userimg-assets.customeriomail.com/images/client-env-124967/1772547474163_Icon_01KJT102V5026THVFGFMGC6AQM.png"
+
+
+def _star_row( filled: int ) -> str:
+    """Return HTML for 5-star row: filled stars (full opacity), rest with opacity 0.35."""
+    s_full = f'<img src="{_STAR_ICON_URL}" alt="★" width="12" height="12" style="display:inline-block;vertical-align:middle;width:12px;height:12px;border:0;" />'
+    s_dim = f'<img src="{_STAR_ICON_URL}" alt="★" width="12" height="12" style="display:inline-block;vertical-align:middle;width:12px;height:12px;border:0;opacity:0.35;" />'
+    parts = [s_full] * filled + [s_dim] * (5 - filled)
+    return "".join(parts)
 
 
 def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> str:
@@ -764,10 +773,16 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
     <td align="center" style="padding:24px 16px 16px 16px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:728px;border-collapse:collapse;">
         <tr>
-          <td style="padding:0 0 8px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:0.2px;color:#0F0E0F;">{before_city}<span style="color:#7130c9;">{city}</span>{after_city}</td>
-        </tr>
-        <tr>
-          <td style="padding:0 0 16px 0;font-size:14px;line-height:22px;color:#0F0E0F;letter-spacing:0.14px;"><span style="color:#0F0E0F;">&#128197;</span> Nov 4 - Nov 7 (3 nights)&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#0F0E0F;">&#128100;</span> 2 Guests, 1 room</td>
+          <td style="padding:0;text-align:left;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+              <tr>
+                <td style="padding:0 0 8px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:0.2px;color:#0F0E0F;text-align:left;">{before_city}<span style="color:#7130c9;">{city}</span>{after_city}</td>
+              </tr>
+              <tr>
+                <td style="padding:0 0 16px 0;font-size:14px;line-height:22px;color:#0F0E0F;letter-spacing:0.14px;text-align:left;"><span style="color:#0F0E0F;">&#128197;</span> Nov 4 - Nov 7 (3 nights)&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:#0F0E0F;">&#128100;</span> 2 Guests, 1 room</td>
+              </tr>
+            </table>
+          </td>
         </tr>
         <tr>
           <td>
@@ -777,7 +792,7 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
                     <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
                     <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">{_star_row(5)}</p>
                       <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Hotel Ramblas International</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
                       <p style="margin:0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$112 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
@@ -788,7 +803,7 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
                     <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
                     <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">{_star_row(5)}</p>
                       <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Moko Hotel</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
                       <p style="margin:0 0 0 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$79 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
@@ -801,7 +816,7 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
                     <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
                     <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">{_star_row(5)}</p>
                       <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">May Ramblas Hotel</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
                       <p style="margin:0 0 0 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$135 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
@@ -812,7 +827,7 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
                     <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
                     <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9734;</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">{_star_row(4)}</p>
                       <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Leonardo Royal Hotel</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
                       <p style="margin:0 0 0 0;font-size:20px;line-height:28px;font-weight:500;color:#0F0E0F;">$132 <span style="font-size:12px;font-weight:450;color:#696663;">/ night</span></p>
@@ -843,7 +858,16 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
     <td align="center" style="padding:24px 16px 16px 16px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:728px;border-collapse:collapse;">
         <tr>
-          <td style="padding:0 0 24px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:0.2px;color:#0F0E0F;">{before_city}<span style="color:#7130c9;">{city}</span>{after_city}</td>
+          <td style="padding:0;text-align:left;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+              <tr>
+                <td style="padding:0 0 24px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;font-weight:600;letter-spacing:0.2px;color:#0F0E0F;text-align:left;">{before_city}<span style="color:#7130c9;">{city}</span>{after_city}</td>
+              </tr>
+              <tr>
+                <td style="padding:0 0 16px 0;"></td>
+              </tr>
+            </table>
+          </td>
         </tr>
         <tr>
           <td>
@@ -853,7 +877,7 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
                     <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
                     <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">{_star_row(5)}</p>
                       <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">ibis Styles Barcelona</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#696663;">Barcelona</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.2</span> <span style="color:#0F0E0F;font-weight:500;">Superb</span> <span style="color:#6C6770;font-weight:450;">(2,011)</span></p>
@@ -866,7 +890,7 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
                     <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
                     <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">{_star_row(5)}</p>
                       <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Vince beach</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#696663;">Venice</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">8.8</span> <span style="color:#0F0E0F;font-weight:500;">Fabulous</span> <span style="color:#6C6770;font-weight:450;">(342)</span></p>
@@ -881,7 +905,7 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
                     <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
                     <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9734;</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">{_star_row(4)}</p>
                       <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Le Haus Barcelona</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#696663;">Barcelona</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">8.5</span> <span style="color:#0F0E0F;font-weight:500;">Very good</span> <span style="color:#6C6770;font-weight:450;">(891)</span></p>
@@ -894,7 +918,7 @@ def _build_hotel_reco_preview_html(structure: dict[str, str] | None = None) -> s
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:356px;border-collapse:separate;border-spacing:0;border:1px solid #EDEAE7;border-radius:8px;overflow:hidden;background-color:#ffffff;">
                     <tr><td><img src="{_PLACEHOLDER_HOTEL_IMAGE}" alt="Hotel" width="340" height="200" style="display:block;width:100%;height:200px;object-fit:cover;" /></td></tr>
                     <tr><td style="padding:8px 8px 12px 8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">&#9733;&#9733;&#9733;&#9733;&#9734;</p>
+                      <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#505050;">{_star_row(4)}</p>
                       <p style="margin:0 0 4px 0;font-size:16px;line-height:24px;font-weight:500;color:#0F0E0F;">Moko Hotel</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;color:#696663;">Dublin</p>
                       <p style="margin:0 0 4px 0;font-size:12px;line-height:16px;"><span style="color:#3E9C32;font-weight:500;">9.0</span> <span style="color:#0F0E0F;font-weight:500;">Wonderful</span> <span style="color:#6C6770;font-weight:450;">(523)</span></p>

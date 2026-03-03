@@ -25,3 +25,4 @@ Thumbs.db
 
 # Auth (contains hashed passwords - keep private; use Secrets on Cloud)
 config.yaml
+LOGIN_EDITOR.md
