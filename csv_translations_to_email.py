@@ -488,7 +488,7 @@ def build_content_captures(
 LOCALE_KEY_BLOCK = r'''{%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
 {%- assign lang2 = lang | slice: 0, 2 -%}
 {%- assign locale_key = lang2 -%}
-{%- assign country = customer.country_code | default: customer.country | default: customer["cio_iso_country"] | default: "" | upcase | slice: 0, 2 -%}
+{%- assign country = customer.country_code | default: customer.country | default: "" | upcase | slice: 0, 2 -%}
 {%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
 {%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}{%- assign locale_key = "zh-hk" -%}
 {%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}{%- assign locale_key = "zh-tw" -%}
@@ -728,13 +728,13 @@ def build_app_download_module(translations: dict[str, dict[str, str]], structure
 
 
 _PLACEHOLDER_HOTEL_IMAGE = "https://userimg-assets.customeriomail.com/images/client-env-124967/1746098547647_hotel_card_3_01JT5SAV0XEHV7NKYWXWKKM4RB.png"
-_STAR_ICON_URL = "https://userimg-assets.customeriomail.com/images/client-env-124967/1772547474163_Icon_01KJT102V5026THVFGFMGC6AQM.png"
+_STAR_ICON_URL = "https://userimg-assets.customeriomail.com/images/client-env-124967/1772554872554_Icon_V3_01KJT81STKGWBRBWNSNCBKHVYK.png"
 
 
 def _star_row( filled: int ) -> str:
     """Return HTML for 5-star row: filled stars (full opacity), rest with opacity 0.35."""
-    s_full = f'<img src="{_STAR_ICON_URL}" alt="★" width="12" height="12" style="display:inline-block;vertical-align:middle;width:12px;height:12px;border:0;" />'
-    s_dim = f'<img src="{_STAR_ICON_URL}" alt="★" width="12" height="12" style="display:inline-block;vertical-align:middle;width:12px;height:12px;border:0;opacity:0.35;" />'
+    s_full = f'<img src="{_STAR_ICON_URL}" alt="★" width="12" height="12" style="display:inline-block;vertical-align:middle;width:12px;height:12px;margin-right:4px;border:0;" />'
+    s_dim = f'<img src="{_STAR_ICON_URL}" alt="★" width="12" height="12" style="display:inline-block;vertical-align:middle;width:12px;height:12px;margin-right:4px;border:0;opacity:0.35;" />'
     parts = [s_full] * filled + [s_dim] * (5 - filled)
     return "".join(parts)
 
@@ -1541,7 +1541,7 @@ FULL EMAIL HTML (multi-locale from translations CSV)
 {%- assign lang = customer.language | default: "en" | downcase | replace: "_", "-" -%}
 {%- assign lang2 = lang | slice: 0, 2 -%}
 {%- assign locale_key = lang2 -%}
-{%- assign country = customer.country_code | default: customer.country | default: customer["cio_iso_country"] | default: "" | upcase | slice: 0, 2 -%}
+{%- assign country = customer.country_code | default: customer.country | default: "" | upcase | slice: 0, 2 -%}
 {%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
 {%- if lang contains "zh-hk" or lang contains "zh-hant-hk" -%}{%- assign locale_key = "zh-hk" -%}
 {%- elsif lang contains "zh-tw" or lang contains "zh-hant" -%}{%- assign locale_key = "zh-tw" -%}

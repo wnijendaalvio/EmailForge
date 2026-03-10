@@ -12,8 +12,8 @@
 {%- assign locale_key = lang2 -%}
 
 {%- comment -%} Country code for resolving ambiguous locales (pt vs pt-br, es vs es-419, etc.)
-  Supports: customer.country, customer.country_code, customer.cio_iso_country (Customer.io geo) {%- endcomment -%}
-{%- assign country = customer.country_code | default: customer.country | default: customer["cio_iso_country"] | default: "" | upcase | slice: 0, 2 -%}
+  Supports: customer.country, customer.country_code (customer.cio_iso_country removed - causes undefined variable in some workspaces) {%- endcomment -%}
+{%- assign country = customer.country_code | default: customer.country | default: "" | upcase | slice: 0, 2 -%}
 
 {%- if lang2 == "iw" -%}{%- assign locale_key = "he" -%}{%- endif -%}
 
